@@ -1,0 +1,19 @@
+services:
+  windows:
+    command: python3 example.py
+    build: .
+    volumes:
+      - ./src:/src
+      - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix
+      - /run/desktop/mnt/host/wslg:/mnt/wslg
+    environment:
+      - DISPLAY=:0
+      - WAYLAND_DISPLAY=wayland-0
+      - XDG_RUNTIME_DIR=/mnt/wslg/runtime-dir # this is the only one necessary for me on windows
+      - PULSE_SERVER=/mnt/wslg/PulseServer
+#   TODO: set up volume mappings and env for linux gui server
+#   linux:
+#     command: python3 example.py
+#     build: .
+#     volumes:
+#     environment:
