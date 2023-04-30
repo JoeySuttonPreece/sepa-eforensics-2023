@@ -8,10 +8,10 @@
 version: "3.9"
 services:
   windows:
-    command: python3 example.py
+    command: pnpm run start
     build: .
     volumes:
-      - ./src:/src
+      - .:/project
       # X11
       - /run/desktop/mnt/host/wslg/.X11-unix:/tmp/.X11-unix
       # Wayland / PulseAudio
@@ -25,10 +25,10 @@ services:
       # PulseAudio
       - PULSE_SERVER=/mnt/wslg/PulseServer
   wsl:
-    command: python3 example.py
+    command: pnpm run start
     build: .
     volumes:
-      - ./src:/src
+      - .:/project
       # X11
       - /tmp/.X11-unix:/tmp/.X11-unix
       # Wayland / PulseAudio
@@ -42,10 +42,10 @@ services:
       # PulseAudio
       - PULSE_SERVER=$PULSE_SERVER
   linux:
-    command: python3 example.py
+    command: pnpm run start
     build: .
     volumes:
-      - ./src:/src
+      - .:/project
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=${DISPLAY}

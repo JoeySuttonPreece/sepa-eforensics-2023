@@ -1,14 +1,19 @@
 FROM debian:latest
 
-RUN apt-get update && \
-    apt-get upgrade -y
+RUN apt-get update
 
-RUN apt-get install x11-apps python3 python3-tk python3-setuptools python3-dev build-essential automake libtool git -y
+RUN apt-get install curl -y
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash
+RUN apt-get install -y nodejs
 
-RUN git clone https://github.com/py4n6/pytsk
-WORKDIR pytsk
-RUN python3 setup.py update && \
-    python3 setup.py build && \
-    python3 setup.py install
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 
-WORKDIR /src
+#This is for when we actually use electron, not including it here for time saving
+RUN apt-get install chromium -y
+RUN apt-get install sleuthkit -y
+
+COPY * /project
+WORKDIR /project
+
+RUN pnpm install
