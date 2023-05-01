@@ -9,11 +9,10 @@ RUN apt-get install -y nodejs
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
 
-#This is for when we actually use electron, not including it here for time saving
 RUN apt-get install chromium -y
 RUN apt-get install sleuthkit -y
 
-COPY * /project
+#COPY * /project
 WORKDIR /project
 
-RUN pnpm install
+#RUN pnpm install
