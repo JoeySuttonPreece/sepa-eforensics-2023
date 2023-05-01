@@ -44,6 +44,7 @@ services:
   linux:
     command: bash -c "pnpm install && pnpm run start"
     build: .
+    privileged: true
     volumes:
       - .:/project
       - /tmp/.X11-unix:/tmp/.X11-unix
