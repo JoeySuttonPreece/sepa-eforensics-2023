@@ -47,6 +47,7 @@ services:
     privileged: true
     volumes:
       - .:/project
+      - ../images:/images
       - /tmp/.X11-unix:/tmp/.X11-unix
     environment:
       - DISPLAY=${DISPLAY}
