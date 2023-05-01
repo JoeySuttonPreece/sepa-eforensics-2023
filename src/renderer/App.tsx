@@ -1,40 +1,26 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
 import './App.css';
+
+function getPartitions() {
+  window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [ document.getElementById('imagePath').value ]);
+}
 
 function Hello() {
   return (
     <div>
-      <div className="Hello">
-        <img width="200" alt="icon" src={icon} />
-      </div>
-      <h1>electron-react-boilerplate</h1>
-      <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="folded hands">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
-      </div>
+      <input type="text" id="imagePath" />
+      <br />
+      <button type="button" onClick={getPartitions}>
+        Get Disk Partitions
+      </button>
+      <br />
+      <br />
+      <span id="type" />
+      <br />
+      <span id="sectorSize" />
+      <br />
+      <span id="partitions" style={{whiteSpace: 'pre'}} />
+      <br />
     </div>
   );
 }
