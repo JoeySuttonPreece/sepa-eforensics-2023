@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { runTool } from './runner'
+import { runVolumeSystemTool } from './runner'
 
 type Partition = {
   start: number,
@@ -28,7 +28,7 @@ class PartitionTable {
 }
 
 ipcMain.on('volume-system:getPartitions', async(event, arg) => {
-  runTool(`mmls ${arg[0]}`, async (matrix) => {
+  runVolumeSystemTool(`mmls ${arg[0]}`, async (matrix) => {
     let partitionTable = new PartitionTable(matrix);
     event.reply('volume-system:getPartitions', partitionTable);
   })  
