@@ -46,7 +46,7 @@ export default class MenuBuilder {
           label: 'Inspect element',
           click: () => {
             this.mainWindow.webContents.inspectElement(x, y);
-          },
+          }, 
         },
       ]).popup({ window: this.mainWindow });
     });
