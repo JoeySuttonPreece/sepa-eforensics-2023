@@ -1,25 +1,57 @@
-import { ipcMain } from 'electron';
+function handleZIP(filePath: string): string {
+  return '';
+}
 
-// MD5 Hashing function
-ipcMain.on('other-cli:getMD5Hash', async (event, arg) => {
+function handleE01(filePath: string): string {
+  return '';
+}
 
-  let fileName: string = arg[0];  
+function handleDD(filePath: string): string {
+  return '';
+}
 
-  const regex: RegExp = /(\.zip$)|(\.e01$)|(\.dd$)|(\.lef$)|(\.dmg$)/
+function handleLEF(filePath: string): string {
+  return '';
+}
 
-  if (fileName.search(regex) == -1) {
-    console.log(fileName);
+function handleDMG(filePath: string): string {
+  return '';
+}
 
-    event.reply('other-cli:getMD5Hash', 'File type not supported.')
-    return;
+function tryGetMD5Hash(filePath: string): string {
+  let output: string = '';
+
+  const regex: RegExp = /(\.zip$)|(\.e01$)|(\.dd$)|(\.lef$)|(\.dmg$)/;
+
+  if (filePath.search(regex) === -1) {
+    throw new Error('File type not supported!');
   }
 
-  // TODO: 
-  // Convert different file types to DD
-  // Run MD5Sum
+  const fileExtension: string = filePath.slice(-4);
 
-  // runTool(`md5sum ${arg[0]}`, async (matrix) => {
-  //   event.reply('other-cli:getMD5Hash', partitionTable);
-  // })
+  switch (fileExtension) {
+    case '.zip':
+      output = handleZIP(filePath);
+      break;
+    case '.e01':
+      output = handleE01(filePath);
+      break;
+    case '.dd':
+      // TODO: Due to slice(-4), this case won't be picked up
+      // without some kind of '*.dd' syntax - fix needed.
+      output = handleDD(filePath);
+      break;
+    case '.lef':
+      output = handleLEF(filePath);
+      break;
+    case '.dmg':
+      output = handleDMG(filePath);
+      break;
+    default:
+      throw new Error('Unknown file extension!');
+  }
 
-});
+  return output;
+}
+
+export default tryGetMD5Hash;

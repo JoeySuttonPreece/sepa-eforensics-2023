@@ -13,6 +13,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import './domain/file-system-tools';
 import './domain/volume-system-tools';
 import './domain/other-cli-tools';
+import './ipc-main-hooks';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
