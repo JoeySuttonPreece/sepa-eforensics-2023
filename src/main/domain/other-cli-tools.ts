@@ -78,5 +78,4 @@ async function getMD5HashAsync(filePath: string): Promise<string> {
 
 /////////
 
-
 export default getMD5HashAsync;
