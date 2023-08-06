@@ -1,4 +1,5 @@
 function handleZIP(filePath: string): string {
+  output = run('md5sum ' + filePath);
   return '';
 }
 
@@ -18,6 +19,25 @@ function handleDMG(filePath: string): string {
   return '';
 }
 
+function getFileExtension(filePath: string): string {
+  const regexDict: { [key: string]: RegExp } = {
+    zip: /(\.zip$)/,
+    e01: /(\.e01$)/,
+    dd: /(\.dd$)/,
+    lef: /(\.lef$)/,
+    dmg: /(\.dmg$)/,
+  };
+
+  for (const [extensionName, extensionRegex] of Object.entries(regexDict)) {
+    console.log(extensionName, extensionRegex);
+    if (filePath.search(extensionRegex) !== -1) {
+      return extensionName;
+    }
+  }
+
+  throw Error('File type not supported!');
+}
+
 function tryGetMD5Hash(filePath: string): string {
   let output: string = '';
 
@@ -27,24 +47,20 @@ function tryGetMD5Hash(filePath: string): string {
     throw new Error('File type not supported!');
   }
 
-  const fileExtension: string = filePath.slice(-4);
-
-  switch (fileExtension) {
-    case '.zip':
+  switch (getFileExtension(filePath)) {
+    case 'zip':
       output = handleZIP(filePath);
       break;
-    case '.e01':
+    case 'e01':
       output = handleE01(filePath);
       break;
-    case '.dd':
-      // TODO: Due to slice(-4), this case won't be picked up
-      // without some kind of '*.dd' syntax - fix needed.
+    case 'dd':
       output = handleDD(filePath);
       break;
-    case '.lef':
+    case 'lef':
       output = handleLEF(filePath);
       break;
-    case '.dmg':
+    case 'dmg':
       output = handleDMG(filePath);
       break;
     default:
