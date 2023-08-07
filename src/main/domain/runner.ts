@@ -39,4 +39,4 @@ async function runCliTool(cmdString: string) {
   return { stdout, stderr };
 }
 
-export { runVolumeSystemTool, runFileSystemTool };
+export { runVolumeSystemTool, runFileSystemTool, runCliTool };
