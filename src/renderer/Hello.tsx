@@ -1,12 +1,22 @@
 import { Partition, PartitionTable } from '../main/domain/volume-system-tools'
 import { useState } from 'react';
+import PartitionTableComponent from './PartitionTable';
 
 export default function Hello() {
 
   const [MD5String, setMD5String] = useState('');
+  const [PartitionTableData, setPartitionTableData] = useState<{header: string, partitionTable: PartitionTable | undefined}>({header: "", partitionTable: undefined });
 
   function getPartitions() {
-    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [ document.getElementById('imagePath').value ]);
+    let imagePathInput: HTMLInputElement | null = document.getElementById('imagePath') as HTMLInputElement;
+    if (imagePathInput == null) return;
+    let fileName: string | null = imagePathInput.value;
+    if (fileName == '') {
+      setPartitionTableData({header: "No Partitions", partitionTable: undefined});
+      return;
+    }
+
+    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [fileName]);
   }
   
   function getMD5Hash() {
@@ -27,13 +37,17 @@ export default function Hello() {
   // calling IPC exposed from preload script
   window.electron.ipcRenderer.on('volume-system:getPartitions', (object) => {
     let partitionTable: PartitionTable = object;
-    document.getElementById('type')!.innerText = partitionTable.type;
-    document.getElementById('sectorSize')!.innerText = partitionTable.sectorSize.toString();
-    document.getElementById('partitions')!.innerText = `Partitions: 
-    ${JSON.stringify(partitionTable.partitions, null, 2)}`;
-    for(let i = 0; i < partitionTable.partitions.length; i++) {
-      window.electron.ipcRenderer.sendMessage('file-name:listFiles', [ document.getElementById('imagePath').value, partitionTable.partitions[i].start ]) 
-    }
+    setPartitionTableData({
+      header: "Partion Table",
+      partitionTable,
+  })
+    // document.getElementById('type')!.innerText = partitionTable.type;
+    // document.getElementById('sectorSize')!.innerText = partitionTable.sectorSize.toString();
+    // document.getElementById('partitions')!.innerText = `Partitions: 
+    // ${JSON.stringify(partitionTable.partitions, null, 2)}`;
+    // for(let i = 0; i < partitionTable.partitions.length; i++) {
+    //   window.electron.ipcRenderer.sendMessage('file-name:listFiles', [ document.getElementById('imagePath').value, partitionTable.partitions[i].start ]) 
+    // }
   });
   
   window.electron.ipcRenderer.on('file-name:listFiles', (object) => {
@@ -66,6 +80,7 @@ export default function Hello() {
       <p>
         {MD5String}
       </p>
+      <PartitionTableComponent header={PartitionTableData.header} partitionTable={PartitionTableData.partitionTable}/>
     </div>
   );
 } 
