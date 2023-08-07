@@ -1,22 +1,28 @@
-function handleZIP(filePath: string): string {
-  output = run('md5sum ' + filePath);
-  return '';
+import { runCliTool } from './runner';
+
+async function handleZIPAsync(filePath: string): Promise<string> {
+  const output = await runCliTool(`md5sum ${filePath}`);
+  return output.stdout;
 }
 
-function handleE01(filePath: string): string {
-  return '';
+async function handleE01Async(filePath: string): Promise<string> {
+  const output = await runCliTool(`md5sum ${filePath}`);
+  return output.stdout;
 }
 
-function handleDD(filePath: string): string {
-  return '';
+async function handleDDAsync(filePath: string): Promise<string> {
+  const output = await runCliTool(`md5sum ${filePath}`);
+  return output.stdout;
 }
 
-function handleLEF(filePath: string): string {
-  return '';
+async function handleLEFAsync(filePath: string): Promise<string> {
+  const output = await runCliTool(`md5sum ${filePath}`);
+  return output.stdout;
 }
 
-function handleDMG(filePath: string): string {
-  return '';
+async function handleDMGAsync(filePath: string): Promise<string> {
+  const output = await runCliTool(`md5sum ${filePath}`);
+  return output.stdout;
 }
 
 function getFileExtension(filePath: string): string {
@@ -29,7 +35,7 @@ function getFileExtension(filePath: string): string {
   };
 
   for (const [extensionName, extensionRegex] of Object.entries(regexDict)) {
-    console.log(extensionName, extensionRegex);
+    // console.log(extensionName, extensionRegex);
     if (filePath.search(extensionRegex) !== -1) {
       return extensionName;
     }
@@ -38,7 +44,7 @@ function getFileExtension(filePath: string): string {
   throw Error('File type not supported!');
 }
 
-function tryGetMD5Hash(filePath: string): string {
+async function getMD5HashAsync(filePath: string): Promise<string> {
   let output: string = '';
 
   const regex: RegExp = /(\.zip$)|(\.e01$)|(\.dd$)|(\.lef$)|(\.dmg$)/;
@@ -49,19 +55,19 @@ function tryGetMD5Hash(filePath: string): string {
 
   switch (getFileExtension(filePath)) {
     case 'zip':
-      output = handleZIP(filePath);
+      output = await handleZIPAsync(filePath);
       break;
     case 'e01':
-      output = handleE01(filePath);
+      output = await handleE01Async(filePath);
       break;
     case 'dd':
-      output = handleDD(filePath);
+      output = await handleDDAsync(filePath);
       break;
     case 'lef':
-      output = handleLEF(filePath);
+      output = await handleLEFAsync(filePath);
       break;
     case 'dmg':
-      output = handleDMG(filePath);
+      output = await handleDMGAsync(filePath);
       break;
     default:
       throw new Error('Unknown file extension!');
@@ -70,4 +76,4 @@ function tryGetMD5Hash(filePath: string): string {
   return output;
 }
 
-export default tryGetMD5Hash;
+export default getMD5HashAsync;
