@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { runCliTool } from './runner'
 
+
 type Partition = {
   start: number,
   end: number,

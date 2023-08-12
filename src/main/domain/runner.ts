@@ -1,5 +1,5 @@
 import { exec } from 'node:child_process';
-import util from 'node:util';
+import util, { callbackify } from 'node:util';
 
 const promisifiedExec = util.promisify(exec);
 
@@ -32,6 +32,18 @@ async function runFileSystemTool(
     callback(matrix);
   });
 }
+ // async funciton buufered(cmd, callback) : {} {
+//  let arrayresults
+ // spawn> ()=> buffer {
+  // buffer healing
+
+  //
+//  callbackresult = callback(line) -> callback is procesing
+// if(callbackresult) {arrayreults.oush(callbakcresults)}
+//}
+//}
+// return arrayresults;
+ //}
 
 async function runCliTool(cmdString: string) {
   const { stdout, stderr } = await promisifiedExec(cmdString);
