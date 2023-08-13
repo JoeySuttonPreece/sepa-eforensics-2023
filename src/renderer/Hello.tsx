@@ -1,69 +1,100 @@
-import { Partition, PartitionTable } from '../main/domain/volume-system-tools'
+import { Partition, PartitionTable } from '../main/domain/volume-system-tools';
 import { useState } from 'react';
 import PartitionTableComponent from './PartitionTable';
 import RenamedFilesComponent from './RenamedFiles';
-import { RenamedFile } from 'main/domain/file-system-tools';
+
+// REMEMBER TO UNCOMMENT AT THE END OF TESTING
+
+// import { RenamedFile } from 'main/domain/file-system-tools';
 
 export default function Hello() {
-
   const [MD5String, setMD5String] = useState('');
-  const [PartitionTableData, setPartitionTableData] = useState<{header: string, partitionTable: PartitionTable | undefined}>({header: "", partitionTable: undefined });
-  const [RenamedFilesData, setRenamedFilesData] = useState<{header: string, renamedFiles: RenamedFile[] | undefined}>({header: "", renamedFiles: undefined });
+
+  // const [PartitionTableData, setPartitionTableData] = useState<{
+  //   header: string;
+  //   partitionTable: PartitionTable | undefined;
+  // }>({ header: '', partitionTable: undefined });
+  // const [RenamedFilesData, setRenamedFilesData] = useState<{
+  //   header: string;
+  //   renamedFiles: RenamedFile[] | undefined;
+  // }>({ header: '', renamedFiles: undefined });
+
+  const [errors, setErrors] = useState('');
 
   function getPartitions() {
-    let imagePathInput: HTMLInputElement | null = document.getElementById('imagePath') as HTMLInputElement;
+    let imagePathInput: HTMLInputElement | null = document.getElementById(
+      'imagePath'
+    ) as HTMLInputElement;
     if (imagePathInput == null) return;
     let fileName: string | null = imagePathInput.value;
     if (fileName == '') {
-      setPartitionTableData({header: "No Partitions", partitionTable: undefined});
+      setPartitionTableData({
+        header: 'No Partitions',
+        partitionTable: undefined,
+      });
       return;
     }
 
-    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [fileName]);
+    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [
+      fileName,
+    ]);
   }
 
   function getRenamed() {
     //Need to wait for restructure as can't get parameters required from here.
   }
-  
-  function getMD5Hash() {
-    let imagePathInput: HTMLInputElement | null = document.getElementById('imagePath') as HTMLInputElement;
-    
-    if (imagePathInput == null) return;
-    
-    let fileName: string | null = imagePathInput.value;
 
-    if (fileName == '') {
+  function getMD5Hash() {
+    let imagePathInput: HTMLInputElement | null = document.getElementById(
+      'imagePath'
+    ) as HTMLInputElement;
+
+    if (imagePathInput == null) return;
+
+    let filePath: string | null = imagePathInput.value;
+
+    if (filePath == '') {
       setMD5String('Please specify a file path!');
       return;
     }
 
-    window.electron.ipcRenderer.sendMessage('other-cli:getMD5Hash', [ fileName ]); 
+    window.electron.ipcRenderer.sendMessage('other-cli:getMD5Hash', [filePath]);
   }
-  
+
+  function validateFileType() {
+    let imagePathInput: HTMLInputElement | null = document.getElementById(
+      'imagePath'
+    ) as HTMLInputElement;
+
+    let filePath: string | null = imagePathInput.value;
+
+    const regex: RegExp = /(\.zip$)|(\.e01$)|(\.dd$)|(\.lef$)|(\.dmg$)/;
+
+    try {
+      if ((filePath as string).search(regex) === -1) {
+        throw new Error('File type not supported!');
+      }
+    } catch (err) {
+      setErrors('File type not supported');
+    }
+  }
+
   // calling IPC exposed from preload script
   window.electron.ipcRenderer.on('volume-system:getPartitions', (object) => {
     let partitionTable: PartitionTable = object;
     setPartitionTableData({
-      header: "Partion Table",
+      header: 'Partion Table',
       partitionTable,
-  })
-    // document.getElementById('type')!.innerText = partitionTable.type;
-    // document.getElementById('sectorSize')!.innerText = partitionTable.sectorSize.toString();
-    // document.getElementById('partitions')!.innerText = `Partitions: 
-    // ${JSON.stringify(partitionTable.partitions, null, 2)}`;
-    // for(let i = 0; i < partitionTable.partitions.length; i++) {
-    //   window.electron.ipcRenderer.sendMessage('file-name:listFiles', [ document.getElementById('imagePath').value, partitionTable.partitions[i].start ]) 
-    // }
-  });
-  
-  window.electron.ipcRenderer.on('file-name:listFiles', (object) => {
-    console.log(object)
+    });
   });
 
-  window.electron.ipcRenderer.on('other-cli:getMD5Hash', (obj) => {
+  window.electron.ipcRenderer.on('file-name:listFiles', (object) => {
+    console.log(object);
+  });
+
+  window.electron.ipcRenderer.on('other-cli:getMD5Hash', (obj: string) => {
     setMD5String(obj);
-  })
+  });
 
   return (
     <div>
@@ -75,20 +106,28 @@ export default function Hello() {
       <button type="button" onClick={getMD5Hash}>
         Get MD5 Hash
       </button>
+      <button type="button" onClick={validateFileType}>
+        Validate File Type
+      </button>
+      <div id="Errors">{errors}</div>
       <br />
       <br />
       <span id="type" />
       <br />
       <span id="sectorSize" />
       <br />
-      <span id="partitions" style={{ whiteSpace: 'pre' }}/>
+      <span id="partitions" style={{ whiteSpace: 'pre' }} />
       <br />
 
-      <p>
-        {MD5String}
-      </p>
-      <PartitionTableComponent header={PartitionTableData.header} partitionTable={PartitionTableData.partitionTable}/>
-      <RenamedFilesComponent header={RenamedFilesData.header} renamedFiles={RenamedFilesData.renamedFiles}/>
+      <p>{MD5String}</p>
+      <PartitionTableComponent
+        header={PartitionTableData.header}
+        partitionTable={PartitionTableData.partitionTable}
+      />
+      <RenamedFilesComponent
+        header={RenamedFilesData.header}
+        renamedFiles={RenamedFilesData.renamedFiles}
+      />
     </div>
   );
-} 
+}

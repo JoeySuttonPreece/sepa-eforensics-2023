@@ -224,3 +224,5 @@ const getExtensionFromHeader = (header: bigint | number): string[] => {
 
   return [''];
 };
+
+export { File };
