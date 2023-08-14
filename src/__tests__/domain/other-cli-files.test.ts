@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { getMD5HashAsync } from '../../main/domain/other-cli-tools';
-import { DownloaderHelper } from 'node-downloader-helper';
+import download from 'download';
 import { exec } from 'child_process';
 import util, { callbackify } from 'node:util';
 
@@ -21,26 +21,37 @@ test('Test getMD5HashAsync works with E01.', async () => {
 
   // Download to this folder
 
-  const dl = new DownloaderHelper(url, downloadFolder, {
-    fileName: fileName,
+  await download(url, downloadFolder, {
+    filename: fileName,
   });
 
-  dl.on('end', async () => {
-    console.log('Done');
-    console.log(`Downloaded to ${downloadFolder}`);
+  console.log('Done');
+  console.log(`Downloaded to ${downloadFolder}`);
 
-    let md5Hash = '';
+  let data = '';
+  let md5Hash = '';
 
-    const { stdout, stderr } = await promisifiedExec(
-      `md5sum ${downloadedFilePath}`
-    );
+  const { stdout, stderr } = await promisifiedExec(
+    `md5sum ${downloadedFilePath}`
+  );
 
-    md5Hash = stdout;
+  md5Hash = stdout;
 
-    const data = await getMD5HashAsync(downloadedFilePath);
+  data = await getMD5HashAsync(downloadedFilePath);
 
-    expect(data).toBe(md5Hash);
-  });
-
-  await dl.start();
+  expect(data).toBe(md5Hash);
 }, 60000);
+
+//////////////////////////////////////////////////
+function download(callback: () => void) {
+  // some download
+  // once finsihed:
+  callback();
+}
+
+function callback() {
+  console.log('this is inside the callback.');
+}
+
+download(callback);
+//////////////////////////////////////////////////
