@@ -1,4 +1,4 @@
-import { runCliTool } from './runner';
+import { runCliTool } from './runners';
 
 async function getMD5HashAsync(filePath: string): Promise<string> {
   let output: any = '';

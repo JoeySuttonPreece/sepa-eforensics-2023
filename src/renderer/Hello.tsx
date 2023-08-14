@@ -1,4 +1,7 @@
-import { Partition, PartitionTable } from '../main/domain/volume-system-tools';
+import {
+  Partition,
+  PartitionTable,
+} from '../app-core/domain/volume-system-tools';
 import { useState } from 'react';
 import PartitionTableComponent from './PartitionTable';
 import RenamedFilesComponent from './RenamedFiles';
@@ -10,14 +13,14 @@ import RenamedFilesComponent from './RenamedFiles';
 export default function Hello() {
   const [MD5String, setMD5String] = useState('');
 
-  // const [PartitionTableData, setPartitionTableData] = useState<{
-  //   header: string;
-  //   partitionTable: PartitionTable | undefined;
-  // }>({ header: '', partitionTable: undefined });
-  // const [RenamedFilesData, setRenamedFilesData] = useState<{
-  //   header: string;
-  //   renamedFiles: RenamedFile[] | undefined;
-  // }>({ header: '', renamedFiles: undefined });
+  const [PartitionTableData, setPartitionTableData] = useState<{
+    header: string;
+    partitionTable: PartitionTable | undefined;
+  }>({ header: '', partitionTable: undefined });
+  const [RenamedFilesData, setRenamedFilesData] = useState<{
+    header: string;
+    renamedFiles: RenamedFile[] | undefined;
+  }>({ header: '', renamedFiles: undefined });
 
   const [errors, setErrors] = useState('');
 
