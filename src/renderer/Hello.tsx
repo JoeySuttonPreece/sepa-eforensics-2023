@@ -1,48 +1,55 @@
-import { Partition, PartitionTable } from '../main/domain/volume-system-tools'
+import { Partition, PartitionTable } from '../domain/volume-system-tools';
 import { useState } from 'react';
 
 export default function Hello() {
-
   const [MD5String, setMD5String] = useState('');
 
   function getPartitions() {
-    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [ document.getElementById('imagePath').value ]);
+    window.electron.ipcRenderer.sendMessage('volume-system:getPartitions', [
+      document.getElementById('imagePath').value,
+    ]);
   }
-  
+
   function getMD5Hash() {
-    let imagePathInput: HTMLInputElement | null = document.getElementById('imagePath') as HTMLInputElement;
-    
+    const imagePathInput: HTMLInputElement | null = document.getElementById(
+      'imagePath'
+    ) as HTMLInputElement;
+
     if (imagePathInput == null) return;
-    
-    let fileName: string | null = imagePathInput.value;
+
+    const fileName: string | null = imagePathInput.value;
 
     if (fileName == '') {
       setMD5String('Please specify a file path!');
       return;
     }
 
-    window.electron.ipcRenderer.sendMessage('other-cli:getMD5Hash', [ fileName ]); 
+    window.electron.ipcRenderer.sendMessage('other-cli:getMD5Hash', [fileName]);
   }
-  
+
   // calling IPC exposed from preload script
   window.electron.ipcRenderer.on('volume-system:getPartitions', (object) => {
-    let partitionTable: PartitionTable = object;
+    const partitionTable: PartitionTable = object;
     document.getElementById('type')!.innerText = partitionTable.type;
-    document.getElementById('sectorSize')!.innerText = partitionTable.sectorSize.toString();
-    document.getElementById('partitions')!.innerText = `Partitions: 
+    document.getElementById('sectorSize')!.innerText =
+      partitionTable.sectorSize.toString();
+    document.getElementById('partitions')!.innerText = `Partitions:
     ${JSON.stringify(partitionTable.partitions, null, 2)}`;
-    for(let i = 0; i < partitionTable.partitions.length; i++) {
-      window.electron.ipcRenderer.sendMessage('file-name:listFiles', [ document.getElementById('imagePath').value, partitionTable.partitions[i].start ]) 
+    for (let i = 0; i < partitionTable.partitions.length; i++) {
+      window.electron.ipcRenderer.sendMessage('file-name:listFiles', [
+        document.getElementById('imagePath').value,
+        partitionTable.partitions[i].start,
+      ]);
     }
   });
-  
+
   window.electron.ipcRenderer.on('file-name:listFiles', (object) => {
-    console.log(object)
+    console.log(object);
   });
 
   window.electron.ipcRenderer.on('other-cli:getMD5Hash', (obj) => {
     setMD5String(obj);
-  })
+  });
 
   return (
     <div>
@@ -60,12 +67,10 @@ export default function Hello() {
       <br />
       <span id="sectorSize" />
       <br />
-      <span id="partitions" style={{ whiteSpace: 'pre' }}/>
+      <span id="partitions" style={{ whiteSpace: 'pre' }} />
       <br />
 
-      <p>
-        {MD5String}
-      </p>
+      <p>{MD5String}</p>
     </div>
   );
-} 
+}

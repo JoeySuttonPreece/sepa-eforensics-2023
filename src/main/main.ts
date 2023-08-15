@@ -8,13 +8,14 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
-import path from 'path';
 import { app, BrowserWindow, shell } from 'electron';
-import './domain/file-system-tools';
-import './domain/volume-system-tools';
-import './domain/other-cli-tools';
 import { autoUpdater } from 'electron-updater';
-import log from 'electron-log';
+import path from 'path';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
+
+import { orchestrator } from '../domain/orchestrator';
+import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 
@@ -132,12 +133,25 @@ app.on('window-all-closed', () => {
 
 app
   .whenReady()
-  .then(() => {
-    createWindow();
-    app.on('activate', () => {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
-    });
+  .then(async () => {
+    const { commandLine, imagePath } = yargs(hideBin(process.argv))
+      .boolean('commandLine')
+      .option('imagePath', {
+        demandOption: false,
+        type: 'string',
+      }).argv;
+
+    if (commandLine) {
+      console.log(
+        await orchestrator({ imagePath, output: { partitions: true } })
+      );
+    } else {
+      createWindow();
+      app.on('activate', () => {
+        // On macOS it's common to re-create a window in the app when the
+        // dock icon is clicked and there are no other windows open.
+        if (mainWindow === null) createWindow();
+      });
+    }
   })
   .catch(console.log);
