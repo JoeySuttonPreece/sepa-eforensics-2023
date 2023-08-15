@@ -1,10 +1,13 @@
-import { ipcMain } from 'electron';
-import { runCliTool, runFileSystemTool } from './runner';
-import { Linter } from 'eslint';
+import { runCliTool } from './runner';
+
+export const listFiles = async (volume: string, offset: number) => {
+  // TODO: parse text output into object
+  return runCliTool(`fls ${volume} -o ${offset}`);
+};
 
 //https://wiki.sleuthkit.org/index.php?title=Fls
 //LONG FORMAT!!!
-type File = {
+export type File = {
   //x/y in output, these can be different for deleted files, cant come up with a better name
   fileNameFileType: string;
   metadataFileType: string;
@@ -22,14 +25,6 @@ type File = {
   uid: string;
   gid: string;
 };
-
-//This may (also) become legacy
-ipcMain.on('file-name:listFiles', async (event, arg) => {
-  runFileSystemTool(`fls ${arg[0]} -o ${arg[1]}`, async (matrix) => {
-    console.log(matrix);
-    event.reply('file-name:listFiles', matrix);
-  });
-});
 
 // /// Retrieve file header
 // const getFileHeader = async (filecontent: string) : number => {
@@ -224,5 +219,3 @@ const getExtensionFromHeader = (header: bigint | number): string[] => {
 
   return [''];
 };
-
-export { File };

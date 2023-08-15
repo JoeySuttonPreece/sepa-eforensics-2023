@@ -1,6 +1,6 @@
-import { RenamedFile } from "main/domain/file-system-tools";
+import { File } from "../domain/file-system-tools";
 
-const RenamedFilesComponent =  ({header, renamedFiles} : {header: string, renamedFiles: RenamedFile[]| undefined}) => {
+const RenamedFilesComponent =  ({header, renamedFiles} : {header: string, renamedFiles: File[]| undefined}) => {
     return (
         <table>
             <caption>{header}</caption>
@@ -23,7 +23,7 @@ const RenamedFilesComponent =  ({header, renamedFiles} : {header: string, rename
                     );
                 })
             }
-           
+
         </table>
     )
 }

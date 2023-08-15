@@ -1,23 +1,20 @@
-import { Partition, PartitionTable } from '../main/domain/volume-system-tools';
 import { useState } from 'react';
+import { File } from '../domain/file-system-tools';
+import { PartitionTable } from '../domain/volume-system-tools';
 import PartitionTableComponent from './PartitionTable';
 import RenamedFilesComponent from './RenamedFiles';
-
-// REMEMBER TO UNCOMMENT AT THE END OF TESTING
-
-// import { RenamedFile } from 'main/domain/file-system-tools';
 
 export default function Hello() {
   const [MD5String, setMD5String] = useState('');
 
-  // const [PartitionTableData, setPartitionTableData] = useState<{
-  //   header: string;
-  //   partitionTable: PartitionTable | undefined;
-  // }>({ header: '', partitionTable: undefined });
-  // const [RenamedFilesData, setRenamedFilesData] = useState<{
-  //   header: string;
-  //   renamedFiles: RenamedFile[] | undefined;
-  // }>({ header: '', renamedFiles: undefined });
+  const [PartitionTableData, setPartitionTableData] = useState<{
+    header: string;
+    partitionTable: PartitionTable | undefined;
+  }>({ header: '', partitionTable: undefined });
+  const [RenamedFilesData, setRenamedFilesData] = useState<{
+    header: string;
+    renamedFiles: File[] | undefined;
+  }>({ header: '', renamedFiles: undefined });
 
   const [errors, setErrors] = useState('');
 

@@ -1,4 +1,4 @@
-import { PartitionTable } from "main/domain/volume-system-tools";
+import { PartitionTable } from "../domain/volume-system-tools";
 
 const PartitionTableComponent =  ({header, partitionTable} : {header: string, partitionTable: PartitionTable| undefined}) => {
     return (
@@ -26,7 +26,7 @@ const PartitionTableComponent =  ({header, partitionTable} : {header: string, pa
                     );
                 })
             }
-           
+
         </table>
     )
 }
