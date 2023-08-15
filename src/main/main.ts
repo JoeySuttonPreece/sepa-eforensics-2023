@@ -10,9 +10,9 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell } from 'electron';
-import '../app-core/domain/file-system-tools';
-import '../app-core/domain/volume-system-tools';
-import '../app-core/domain/other-cli-tools';
+import './domain/file-system-tools';
+import './domain/volume-system-tools';
+import './domain/other-cli-tools';
 import './ipc-main-hooks';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';

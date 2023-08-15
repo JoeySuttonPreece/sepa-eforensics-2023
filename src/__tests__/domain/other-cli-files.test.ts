@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { getMD5HashAsync } from '../../app-core/domain/other-cli-tools';
+import { getMD5HashAsync } from '../../main/domain/other-cli-tools';
 import download from 'download';
 import { exec } from 'child_process';
 import util, { callbackify } from 'node:util';

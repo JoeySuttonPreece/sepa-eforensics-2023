@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { runCliTool, runFileSystemTool } from './runners';
+import { runCliTool, runFileSystemTool } from './runner';
 import { Linter } from 'eslint';
 
 //https://wiki.sleuthkit.org/index.php?title=Fls
@@ -23,7 +23,6 @@ type File = {
   gid: string;
 };
 
-// TODO: Move into ipc-main-hooks.ts
 //This may (also) become legacy
 ipcMain.on('file-name:listFiles', async (event, arg) => {
   runFileSystemTool(`fls ${arg[0]} -o ${arg[1]}`, async (matrix) => {

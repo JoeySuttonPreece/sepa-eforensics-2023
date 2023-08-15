@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { getMD5HashAsync } from '../app-core/domain/other-cli-tools';
+import { getMD5HashAsync } from './domain/other-cli-tools';
 /*
 // Example API:
 
