@@ -1,6 +1,6 @@
 import { exec } from 'node:child_process';
 
-export const runCliTool = async (bin: string): Promise<string[][]> => {
+export const runCliTool = async (bin: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     exec(bin, (error, stdout, stderr) => {
       if (error) {
@@ -9,10 +9,7 @@ export const runCliTool = async (bin: string): Promise<string[][]> => {
         reject(error);
         return;
       }
-
-      const lines = stdout.split('\n');
-      const matrix = lines.map((line: string) => line.split(/\s+/));
-      resolve(matrix);
+      resolve(stdout);
     });
   });
 };
