@@ -1,4 +1,6 @@
+import { match } from 'assert';
 import { runCliTool } from './runner';
+import { Partition } from './volume-system-tools';
 
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
@@ -11,9 +13,9 @@ export type File = {
   //x/y in output, these can be different for deleted files, cant come up with a better name
   fileNameFileType: string;
   metadataFileType: string;
-  deleted: bool;
+  deleted: boolean;
   inode: string;
-  reallocated: bool;
+  reallocated: boolean;
   //THIS IS THE ACTUAL FILE NAME
   fileName: string;
   //maybe parse these to dates? help with timeline or something
@@ -21,16 +23,16 @@ export type File = {
   atime: string;
   ctime: string;
   crtime: string;
-  size: int;
+  size: number;
   uid: string;
   gid: string;
 };
 
-// /// Retrieve file header
-// const getFileHeader = async (filecontent: string) : number => {
-//   const HEADERBYTES = 16; // this determines the number of Headerbytes we will retrieve.
-
-// }
+export type RenamedFile = {
+  file: File,
+  matchedSignature : string,
+  trueExtensions: string[]
+}
 
 // listfiles(){
 //   foreach -> Line
@@ -45,66 +47,66 @@ export type File = {
 //reutrn renamed
 //  }
 
-const getRenamedFile = async (file): Promise<RenamedFile[]> => {
-  let renamedFiles = [];
-  for (let file of fileList) {
-    //get header
-    let header = 0xff4fff5143453464363n; //from function
-    let extensions = getExtensionFromHeader(header);
-    let match = false;
-    for (let ext of extensions) {
-      if (ext == file.ext) {
-        match = true;
-        break;
-      }
-    }
 
-    if (match) continue;
+//// ---------------------------- Renamed Processing ---------------------------------------------
+///
+// imagePath: path to the image being investigated
+// partition: the partition that the file is located in
+// file: file to be investigated
+///
+export const processForRenamedFile = async (imagePath: string, partition: Partition, file :File): Promise<RenamedFile | false> => {
+  const HEADERBYTES = 16;
+  let header = await runCliTool(`icat -o ${partition.start} ${imagePath} ${file.inode} | xxd -l ${HEADERBYTES}  --plain`);
+  let match = matchSignature(header);
 
-    renamedFiles.push({ file, true_ext: extensions.join(',') });
-  }
+  if(!match.result) return false;
 
-  return renamedFiles;
-};
+  let splitFileName = file.fileName.split(".");
+  let suspectExtension = splitFileName[splitFileName.length-1]
+
+  if(match.extensions.includes(suspectExtension)) return false;
+
+  return {file, matchedSignature: match.match, trueExtensions: match.extensions}  
+}
 
 const SIGNATURES = [
-  { sig: 0x50575333, ext: ['psafe3'] },
-  { sig: 0xd4c3b2a1, ext: ['pcap'] },
-  { sig: 0xa1b2c3d4, ext: ['pcap'] },
-  { sig: 0x4d3cb2a1, ext: ['pcap'] },
-  { sig: 0xa1b23c4d, ext: ['pcap'] },
-  { sig: 0x0a0d0d0a, ext: ['pcapng'] },
-  { sig: 0xedabeedb, ext: ['rpm'] },
+  { sig: "50575333", ext: ['psafe3'] },
+  { sig: "d4c3b2a1", ext: ['pcap'] },
+  { sig: "a1b2c3d4", ext: ['pcap'] },
+  { sig: "4d3cb2a1", ext: ['pcap'] },
+  { sig: "a1b23c4d", ext: ['pcap'] },
+  { sig: "0a0d0d0a", ext: ['pcapng'] },
+  { sig: "edabeedb", ext: ['rpm'] },
   {
-    sig: 0x53514c69746520666f726d6174203300n,
+    sig: "53514c69746520666f726d6174203300",
     ext: ['sqlitedb', 'sqlite', 'db'],
   },
-  { sig: 0x53503031, ext: ['bin'] },
-  { sig: 0x49574144, ext: ['wad'] },
-  { sig: 0x00000100, ext: ['ico'] },
-  { sig: 0x69636e73, ext: ['icns'] },
-  { sig: 0x667479703367, ext: ['3gp', '3g2'] },
-  { sig: 0x1f9d, ext: ['tar.z', 'z'] },
-  { sig: 0x1fa0, ext: ['tar.z', 'z'] },
-  { sig: 0x2d686c302d, ext: ['lzh'] },
-  { sig: 0x2d686c352d, ext: ['lzh'] },
-  { sig: 0x425a68, ext: ['bz2'] },
-  { sig: 0x47494638376147494638396n, ext: ['gif'] },
-  { sig: 0x425047fb, ext: ['bpg'] },
-  { sig: 0xffd8ffe0, ext: ['jpg', 'jpeg'] },
-  { sig: 0xffd8ffee, ext: ['jpg', 'jpeg'] },
+  { sig: "53503031", ext: ['bin'] },
+  { sig: "49574144", ext: ['wad'] },
+  { sig: "00000100", ext: ['ico'] },
+  { sig: "69636e73", ext: ['icns'] },
+  { sig: "667479703367", ext: ['3gp', '3g2'] },
+  { sig: "1f9d", ext: ['tar.z', 'z'] },
+  { sig: "1fa0", ext: ['tar.z', 'z'] },
+  { sig: "2d686c302d", ext: ['lzh'] },
+  { sig: "2d686c352d", ext: ['lzh'] },
+  { sig: "425a68", ext: ['bz2'] },
+  { sig: "47494638376147494638396", ext: ['gif'] },
+  { sig: "425047fb", ext: ['bpg'] },
+  { sig: "ffd8ffe0", ext: ['jpg', 'jpeg'] },
+  { sig: "ffd8ffee", ext: ['jpg', 'jpeg'] },
   {
-    sig: 0x0000000c6a5020200d0a870an,
+    sig: "0000000c6a5020200d0a870a",
     ext: ['jp2', 'j2k', 'jpf', 'jpm', 'jpg2', 'j2c', 'jpc', 'jpx', 'mj2'],
   },
   {
-    sig: 0xff4fff51,
+    sig: "ff4fff51",
     ext: ['jp2', 'j2k', 'jpf', 'jpm', 'jpg2', 'j2c', 'jpc', 'jpx', 'mj2'],
   },
-  { sig: 0x4c5a4950, ext: ['lz'] },
-  { sig: 0x303730373037, ext: ['cpio'] },
+  { sig: "4c5a4950", ext: ['lz'] },
+  { sig: "303730373037", ext: ['cpio'] },
   {
-    sig: 0x4d5a,
+    sig: "4d5a",
     ext: [
       'exe',
       'dll',
@@ -123,9 +125,9 @@ const SIGNATURES = [
       'efi',
     ],
   },
-  { sig: 0x5a4d, ext: ['exe'] },
+  { sig: "5a4d", ext: ['exe'] },
   {
-    sig: 0x504b0304504b0506n,
+    sig: "504b0304504b0506",
     ext: [
       'zip',
       'aar',
@@ -150,7 +152,7 @@ const SIGNATURES = [
     ],
   },
   {
-    sig: 0x504b070,
+    sig: "504b070",
     ext: [
       'zip',
       'aar',
@@ -174,48 +176,41 @@ const SIGNATURES = [
       'xpi',
     ],
   },
-  { sig: 0x526172211a0700n, ext: ['rar'] },
-  { sig: 0x526172211a070100n, ext: ['rar'] },
-  { sig: 0x89504e470d0a1a0an, ext: ['png'] },
-  { sig: 0xc9, ext: ['com'] },
-  { sig: 0xcafebabe, ext: ['class'] },
-  { sig: 0xefbbbf, ext: ['txt'] },
-  { sig: 0xfffe, ext: ['txt'] },
-  { sig: 0xfeff, ext: ['txt'] },
-  { sig: 0xfffe0000, ext: ['txt'] },
-  { sig: 0x0000feff, ext: ['txt'] },
-  { sig: 0x0efeff, ext: ['txt'] },
-  { sig: 0x255044462d, ext: ['pdf'] },
-  { sig: 0x38425053, ext: ['psd'] },
-  { sig: 0x424d, ext: ['bmp'] },
-  { sig: 0xfffb, ext: ['mp3'] },
-  { sig: 0xfff3, ext: ['mp3'] },
-  { sig: 0xfff2, ext: ['mp3'] },
-  { sig: 0x494433, ext: ['mp3'] },
-  { sig: 0x4344303031, ext: ['iso'] },
-  { sig: 0x4344303031, ext: ['cdi'] },
-  { sig: 0xd0cf11e0a1b11ae1n, ext: ['doc', 'xls', 'ppt', 'msi', 'msg'] },
-  { sig: 0x7573746172003030n, ext: ['tar'] },
-  { sig: 0x7573746172202000n, ext: ['tar'] },
-  { sig: 0x377abcaf271c, ext: ['7z'] },
-  { sig: 0x1f8b, ext: ['gz', 'tar.gz'] },
-  { sig: 0xfd377a585a00, ext: ['xz', 'tar.xz'] },
-  { sig: 0x7b5c72746631, ext: ['rtf'] },
-  { sig: 0x6674797069736f6dn, ext: ['mp4'] },
-  { sig: 0x52656365697665643an, ext: ['eml'] },
+  { sig: "526172211a0700", ext: ['rar'] },
+  { sig: "526172211a070100", ext: ['rar'] },
+  { sig: "89504e470d0a1a0a", ext: ['png'] },
+  { sig: "c9", ext: ['com'] },
+  { sig: "cafebabe", ext: ['class'] },
+  { sig: "efbbbf", ext: ['txt'] },
+  { sig: "fffe", ext: ['txt'] },
+  { sig: "feff", ext: ['txt'] },
+  { sig: "fffe0000", ext: ['txt'] },
+  { sig: "0000feff", ext: ['txt'] },
+  { sig: "0efeff", ext: ['txt'] },
+  { sig: "255044462d", ext: ['pdf'] },
+  { sig: "38425053", ext: ['psd'] },
+  { sig: "424d", ext: ['bmp'] },
+  { sig: "fffb", ext: ['mp3'] },
+  { sig: "fff3", ext: ['mp3'] },
+  { sig: "fff2", ext: ['mp3'] },
+  { sig: "494433", ext: ['mp3'] },
+  { sig: "4344303031", ext: ['iso'] },
+  { sig: "4344303031", ext: ['cdi'] },
+  { sig: "d0cf11e0a1b11ae1", ext: ['doc', 'xls', 'ppt', 'msi', 'msg'] },
+  { sig: "7573746172003030", ext: ['tar'] },
+  { sig: "7573746172202000", ext: ['tar'] },
+  { sig: "377abcaf271c", ext: ['7z'] },
+  { sig: "1f8b", ext: ['gz', 'tar.gz'] },
+  { sig: "fd377a585a00", ext: ['xz', 'tar.xz'] },
+  { sig: "7b5c72746631", ext: ['rtf'] },
+  { sig: "6674797069736f6d", ext: ['mp4'] },
+  { sig: "52656365697665643a", ext: ['eml'] },
 ];
 
-const getExtensionFromHeader = (header: bigint | number): string[] => {
-  if (typeof header == 'number') header = BigInt(header);
-  for (let sig_ext of SIGNATURES) {
-    let hexValuesInSignature = sig_ext.sig.toString(16).length; // can't do following cos bigints -> Math.ceil((Math.log2(sig_ext.sig)/4));
-    // gets a mask if all ones that is the exact length of signature being checked.
-    const mask = BigInt((1 << (hexValuesInSignature * 4)) - 1);
-
-    if ((header & mask) == sig_ext.sig) {
-      return sig_ext.ext;
-    }
+const matchSignature = (header: string): {result: boolean, extensions: string[], match: string } => {
+  for(let sig_ext of SIGNATURES) {
+      if (header.includes(sig_ext.sig)) return {result: true, extensions: sig_ext.ext, match:sig_ext.sig}
   }
 
-  return [''];
+  return {result: false, extensions: [""], match: ""}
 };
