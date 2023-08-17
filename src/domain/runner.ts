@@ -21,20 +21,26 @@ export const runCliTool = async (bin: string): Promise<string> => {
 // This function will return the an array of all the processed data, as computed by each lineProcessor function
 export const runBufferedCliTool = async (bin: string, lineProcessor: (line: string) => any): Promise<any[]> => {
   return new Promise<string[]>((resolve, reject) => {
+    // Spawn expects a command, and then an array of arguments - this just allows us to run commands the same way as runCliTool/exec
     let command = bin.split(' ');
     let process = spawn(command[0], command.slice(1));
+
     let outputArray = [];
-    
+
+    // Create a readline interface based on the stdout stream produced by the spawned process - this is how we get output line by line    
     let lineReader = createInterface({
       input: process.stdout,
       terminal: false
     });
 
+    // For every line, run the callback function and append its return value to the final outputArray
     lineReader.on('line', (line: string) => {
       let processedLine = lineProcessor(line);
       outputArray.push(processedLine);
     });
 
+    // Once the process is finished executing, we can 'return' the output array
+    // One thing that I have no verified, is if the lineProcessor performs a long-running task, what actually happens here - theoretically this should wait for it to finish
     process.on('exit', (code: number) => {
       if(code === 0) {
         resolve(outputArray);
