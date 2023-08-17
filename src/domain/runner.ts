@@ -1,4 +1,5 @@
-import { exec } from 'node:child_process';
+import { exec, spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
 
 export const runCliTool = async (bin: string): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -19,8 +20,32 @@ export const runCliTool = async (bin: string): Promise<string> => {
 // NOTE: The return value for lineProcessor, and this function as a whole are both strings, this is purely for early development / demonstration / testing. This will be updated to a different type down the line
 
 // This function will return the an array of all the processed data, as computed by each lineProcessor function
-export const runBufferedCliTool = async (bin: string, lineProcessor: (line: string) => string): Promise<string[]> {
+export const runBufferedCliTool = async (bin: string, lineProcessor: (line: string) => any): Promise<any[]> => {
   return new Promise<string[]>((resolve, reject) => {
+    let command = bin.split(' ');
+    let process = spawn(command[0], command.slice(1));
+    let outputArray = [];
     
+    let lineReader = createInterface({
+      input: process.stdout,
+      terminal: false
+    });
+
+    lineReader.on('line', (line: string) => {
+      let processedLine = lineProcessor(line);
+      outputArray.push(processedLine);
+    });
+
+    process.on('exit', (code: number) => {
+      if(code === 0) {
+        resolve(outputArray);
+      } else {
+        reject(new Error(`Child process exited with code ${code}`))
+      }
+    });
+
+    process.on('error', (err: Error) => {
+      reject(err);
+    });
   }); 
 }
