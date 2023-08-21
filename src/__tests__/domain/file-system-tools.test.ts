@@ -17,7 +17,7 @@ jest.mock('../../domain/runner', () => {
 
 test("Renamed File Processing", async () => {
     let partition : Partition = {start: 63, end: 128, length: 128-63, description: ""}
-    let file : File = {inode: "143", fileName: "user/images/renamed.png", fileNameFileType:"", metadataFileType: "", deleted:false, reallocated:false, crtime: "", atime: "", ctime: "", mtime: "", size:64, uid: "", gid: ""}
+    let file : File = {inode: "143", fileName: "user/images/renamed.png", fileNameFileType:"", metadataFileType: "", deleted:false, reallocated:false, crtime: "", atime: "", ctime: "", mtime: "", size:64, uid: "", gid: "", hash:""}
     
     let noMatchResult = await processForRenamedFile("path", partition, file)
     expect(noMatchResult).toBe(false);
