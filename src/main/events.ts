@@ -5,9 +5,12 @@ import { OrchestratorOptions, orchestrator } from '../domain/orchestrator';
 import { getMD5Hash } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
 
-ipcMain.on('do-everything', async (event, arg: OrchestratorOptions) => {
-  const output = await orchestrator(arg);
-  event.reply('do-everything', output);
+ipcMain.on('do-everything', async (event, [options]) => {
+  const output = await orchestrator(options);
+  // insert loading while orchestraotr is going, this means we can;t await, perhaps a callback is put into orchestroator to defien what it should do??
+  
+  //first send event that route should be changed to report then:
+  event.sender.send('report:details', output);
 });
 
 ipcMain.on('volume-system:getPartitions', async (event, arg) => {
