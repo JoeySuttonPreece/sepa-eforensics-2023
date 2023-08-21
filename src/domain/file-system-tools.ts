@@ -26,6 +26,8 @@ export type File = {
   size: number;
   uid: string;
   gid: string;
+
+  hash: string;
 };
 
 export type RenamedFile = {
