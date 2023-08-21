@@ -17,7 +17,11 @@ export const getPartitionTable = async (
   imagePath: string
 ): Promise<PartitionTable> => {
   const TABLESTARTINDEX = 5; // this is the line in mmls output where the beginning of the partion starts
-  const matrix = await runCliTool(`mmls ${imagePath}`);
+  const output = await runCliTool(`mmls ${imagePath}`);
+
+  //Parsing stdout to string matrix
+  let lines = output.split('\n');
+  let matrix = lines.map((line) => line.split(/\s+/));
 
   //Partition Table Info
   let tableType = matrix[0].join(' ');
