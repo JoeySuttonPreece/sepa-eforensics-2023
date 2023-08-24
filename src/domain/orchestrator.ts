@@ -24,7 +24,7 @@ export type ReportDetails = {
 export const orchestrator = async (args: OrchestratorOptions) : Promise<ReportDetails> => {
   let { imagePath, output } = args;
 
-  console.log(imagePath);
+  //console.log(imagePath);
   const hash = await getMD5Hash(imagePath);
   const partitionTable = await getPartitionTable(imagePath);
 
