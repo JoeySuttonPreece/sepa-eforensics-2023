@@ -1,13 +1,13 @@
 export interface File {
-  //x/y in output, these can be different for deleted files, cant come up with a better name
+  // x/y in output, these can be different for deleted files, cant come up with a better name
   fileNameFileType: string;
   metadataFileType: string;
   deleted: boolean;
   inode: string;
   reallocated: boolean;
-  //THIS IS THE ACTUAL FILE NAME
+  // THIS IS THE ACTUAL FILE NAME
   fileName: string;
-  //maybe parse these to dates? help with timeline or something
+  // maybe parse these to dates? help with timeline or something
   mtime: string;
   atime: string;
   ctime: string;
@@ -21,19 +21,31 @@ export interface File {
 
 export class File implements File {
   fileNameFileType: string;
+
   metadataFileType: string;
+
   deleted: boolean;
+
   inode: string;
+
   reallocated: boolean;
-  //THIS IS THE ACTUAL FILE NAME
+
+  // THIS IS THE ACTUAL FILE NAME
   fileName: string;
-  //maybe parse these to dates? help with timeline or something
+
+  // maybe parse these to dates? help with timeline or something
   mtime: string;
+
   atime: string;
+
   ctime: string;
+
   crtime: string;
+
   size: number;
+
   uid: string;
+
   gid: string;
 
   hash: string;

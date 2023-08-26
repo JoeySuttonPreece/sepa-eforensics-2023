@@ -1,4 +1,3 @@
-import { match } from 'assert';
 import { runCliTool } from './runner';
 import { Partition } from './volume-system-tools';
 
@@ -7,18 +6,18 @@ export const listFiles = async (volume: string, offset: number) => {
   return runCliTool(`fls ${volume} -o ${offset}`);
 };
 
-//https://wiki.sleuthkit.org/index.php?title=Fls
-//LONG FORMAT!!!
+// https://wiki.sleuthkit.org/index.php?title=Fls
+// LONG FORMAT!!!
 export type File = {
-  //x/y in output, these can be different for deleted files, cant come up with a better name
+  // x/y in output, these can be different for deleted files, cant come up with a better name
   fileNameFileType: string;
   metadataFileType: string;
   deleted: boolean;
   inode: string;
   reallocated: boolean;
-  //THIS IS THE ACTUAL FILE NAME
+  // THIS IS THE ACTUAL FILE NAME
   fileName: string;
-  //maybe parse these to dates? help with timeline or something
+  // maybe parse these to dates? help with timeline or something
   mtime: string;
   atime: string;
   ctime: string;
@@ -44,41 +43,12 @@ export type RenamedFile = {
 //  getRenamedFile(File, content, renamedObject)
 //   ifgetDeltedFile(line)
 
-//runCliTool(callbakcs)
+// runCliTool(callbakcs)
 
-//reutrn renamed
+// reutrn renamed
 //  }
 
-//// ---------------------------- Renamed Processing ---------------------------------------------
-///
-// imagePath: path to the image being investigated
-// partition: the partition that the file is located in
-// file: file to be investigated
-///
-export const processForRenamedFile = async (
-  imagePath: string,
-  partition: Partition,
-  file: File
-): Promise<RenamedFile | false> => {
-  const HEADERBYTES = 16;
-  let header = await runCliTool(
-    `icat -o ${partition.start} ${imagePath} ${file.inode} | xxd -l ${HEADERBYTES}  --plain`
-  );
-  let match = matchSignature(header);
-
-  if (!match.result) return false;
-
-  let splitFileName = file.fileName.split('.');
-  let suspectExtension = splitFileName[splitFileName.length - 1];
-
-  if (match.extensions.includes(suspectExtension)) return false;
-
-  return {
-    file,
-    matchedSignature: match.match,
-    trueExtensions: match.extensions,
-  };
-};
+/// / ---------------------------- Renamed Processing ---------------------------------------------
 
 const SIGNATURES = [
   { sig: '50575333', ext: ['psafe3'] },
@@ -221,10 +191,39 @@ const SIGNATURES = [
 const matchSignature = (
   header: string
 ): { result: boolean; extensions: string[]; match: string } => {
-  for (let sig_ext of SIGNATURES) {
-    if (header.includes(sig_ext.sig))
-      return { result: true, extensions: sig_ext.ext, match: sig_ext.sig };
+  for (const sigExt of SIGNATURES) {
+    if (header.includes(sigExt.sig))
+      return { result: true, extensions: sigExt.ext, match: sigExt.sig };
   }
 
   return { result: false, extensions: [''], match: '' };
+};
+
+// imagePath: path to the image being investigated
+// partition: the partition that the file is located in
+// file: file to be investigated
+///
+export const processForRenamedFile = async (
+  imagePath: string,
+  partition: Partition,
+  file: File
+): Promise<RenamedFile | false> => {
+  const HEADERBYTES = 16;
+  const header = await runCliTool(
+    `icat -o ${partition.start} ${imagePath} ${file.inode} | xxd -l ${HEADERBYTES}  --plain`
+  );
+  const match = matchSignature(header);
+
+  if (!match.result) return false;
+
+  const splitFileName = file.fileName.split('.');
+  const suspectExtension = splitFileName[splitFileName.length - 1];
+
+  if (match.extensions.includes(suspectExtension)) return false;
+
+  return {
+    file,
+    matchedSignature: match.match,
+    trueExtensions: match.extensions,
+  };
 };

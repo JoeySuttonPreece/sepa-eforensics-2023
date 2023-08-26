@@ -145,7 +145,10 @@ app
       }).argv;
 
     if (commandLine) {
-      let output = await orchestrator({ imagePath, output: { partitions: true } })
+      const output = await orchestrator({
+        imagePath,
+        output: { partitions: true },
+      });
       OutputParser(output, 'stdout');
     } else {
       createWindow();

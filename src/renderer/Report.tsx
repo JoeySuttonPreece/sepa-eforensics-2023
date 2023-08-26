@@ -6,7 +6,7 @@ import KeywordFilesComponent from './KeywordFiles';
 import DeletedFilesComponent from './DeletedFiles';
 import './Report.css';
 
-const ReportComponent = () => {
+function ReportComponent() {
   const [details, setDetails] = useState<ReportDetails>();
 
   useEffect(() => {
@@ -48,4 +48,4 @@ const ReportComponent = () => {
       )}
     </article>
   );
-};
+}

@@ -1,14 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { OrchestratorOptions } from 'domain/orchestrator';
 import { File } from '../domain/file-system-tools';
 import { PartitionTable } from '../domain/volume-system-tools';
 import PartitionTableComponent from './PartitionTable';
 import RenamedFilesComponent from './RenamedFiles';
-import { OrchestratorOptions } from 'domain/orchestrator';
 import ReportComponent from './Report';
-import { useNavigate } from 'react-router-dom';
 
 export default function Hello() {
-  ///The below logic for retrieving Report Details is now in the report details component using orchestrator
+  /// The below logic for retrieving Report Details is now in the report details component using orchestrator
 
   // const [MD5String, setMD5String] = useState('');
 
@@ -101,7 +101,7 @@ export default function Hello() {
   const navigate = useNavigate();
 
   function handleStartAnalysis() {
-    let settings = getOrchestratorOptions();
+    const settings = getOrchestratorOptions();
     if (settings) {
       window.electron.ipcRenderer.sendMessage('do-everything', [settings]);
       navigate('/report');
@@ -109,17 +109,17 @@ export default function Hello() {
   }
 
   function getOrchestratorOptions(): OrchestratorOptions | undefined {
-    let imagePathInput: HTMLInputElement | null = document.getElementById(
+    const imagePathInput: HTMLInputElement | null = document.getElementById(
       'imagePath'
     ) as HTMLInputElement;
     if (imagePathInput == null || imagePathInput.value.trim() == '')
       return undefined;
-    let imagePath: string = imagePathInput.value;
+    const imagePath: string = imagePathInput.value;
 
     return {
       imagePath,
       output: {
-        //the below will need to actually be processed
+        // the below will need to actually be processed
         partitions: true,
         renamedFiles: true,
         deletedFiles: true,
