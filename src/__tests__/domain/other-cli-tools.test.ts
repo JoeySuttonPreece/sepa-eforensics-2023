@@ -1,8 +1,8 @@
+import util from 'node:util';
 import '@testing-library/jest-dom';
-import { getMD5HashAsync } from '../../main/domain/other-cli-tools';
-import download from 'download';
 import { exec } from 'child_process';
-import util, { callbackify } from 'node:util';
+import download from 'download';
+import { getMD5Hash } from '../../domain/other-cli-tools';
 
 const promisifiedExec = util.promisify(exec);
 
@@ -15,7 +15,7 @@ afterAll(async () => {
   console.log(stdout);
 });
 
-test('Test getMD5HashAsync works with E01.', async () => {
+test('getMD5Hash works with E01.', async () => {
   const url: string =
     'https://digitalcorpora.s3.amazonaws.com/corpora/drives/nps-2009-casper-rw/ubnist1.casper-rw.gen0.E01';
 
@@ -37,21 +37,7 @@ test('Test getMD5HashAsync works with E01.', async () => {
 
   md5Hash = stdout;
 
-  data = await getMD5HashAsync(downloadedFilePath);
+  data = await getMD5Hash(downloadedFilePath);
 
   expect(data).toBe(md5Hash);
 }, 60000);
-
-//////////////////////////////////////////////////
-function download(callback: () => void) {
-  // some download
-  // once finsihed:
-  callback();
-}
-
-function callback() {
-  console.log('this is inside the callback.');
-}
-
-download(callback);
-//////////////////////////////////////////////////

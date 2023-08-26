@@ -12,6 +12,7 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
+    'no-console': 'off',
   },
   parserOptions: {
     ecmaVersion: 2020,

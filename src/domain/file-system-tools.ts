@@ -31,10 +31,10 @@ export type File = {
 };
 
 export type RenamedFile = {
-  file: File,
-  matchedSignature : string,
-  trueExtensions: string[]
-}
+  file: File;
+  matchedSignature: string;
+  trueExtensions: string[];
+};
 
 // listfiles(){
 //   foreach -> Line
@@ -49,66 +49,75 @@ export type RenamedFile = {
 //reutrn renamed
 //  }
 
-
 //// ---------------------------- Renamed Processing ---------------------------------------------
 ///
 // imagePath: path to the image being investigated
 // partition: the partition that the file is located in
 // file: file to be investigated
 ///
-export const processForRenamedFile = async (imagePath: string, partition: Partition, file :File): Promise<RenamedFile | false> => {
+export const processForRenamedFile = async (
+  imagePath: string,
+  partition: Partition,
+  file: File
+): Promise<RenamedFile | false> => {
   const HEADERBYTES = 16;
-  let header = await runCliTool(`icat -o ${partition.start} ${imagePath} ${file.inode} | xxd -l ${HEADERBYTES}  --plain`);
+  let header = await runCliTool(
+    `icat -o ${partition.start} ${imagePath} ${file.inode} | xxd -l ${HEADERBYTES}  --plain`
+  );
   let match = matchSignature(header);
 
-  if(!match.result) return false;
+  if (!match.result) return false;
 
-  let splitFileName = file.fileName.split(".");
-  let suspectExtension = splitFileName[splitFileName.length-1]
+  let splitFileName = file.fileName.split('.');
+  let suspectExtension = splitFileName[splitFileName.length - 1];
 
-  if(match.extensions.includes(suspectExtension)) return false;
+  if (match.extensions.includes(suspectExtension)) return false;
 
-  return {file, matchedSignature: match.match, trueExtensions: match.extensions}  
-}
+  return {
+    file,
+    matchedSignature: match.match,
+    trueExtensions: match.extensions,
+  };
+};
 
 const SIGNATURES = [
-  { sig: "50575333", ext: ['psafe3'] },
-  { sig: "d4c3b2a1", ext: ['pcap'] },
-  { sig: "a1b2c3d4", ext: ['pcap'] },
-  { sig: "4d3cb2a1", ext: ['pcap'] },
-  { sig: "a1b23c4d", ext: ['pcap'] },
-  { sig: "0a0d0d0a", ext: ['pcapng'] },
-  { sig: "edabeedb", ext: ['rpm'] },
+  { sig: '50575333', ext: ['psafe3'] },
+  { sig: 'd4c3b2a1', ext: ['pcap'] },
+  { sig: 'a1b2c3d4', ext: ['pcap'] },
+  { sig: '4d3cb2a1', ext: ['pcap'] },
+  { sig: 'a1b23c4d', ext: ['pcap'] },
+  { sig: '0a0d0d0a', ext: ['pcapng'] },
+  { sig: 'edabeedb', ext: ['rpm'] },
   {
-    sig: "53514c69746520666f726d6174203300",
+    sig: '53514c69746520666f726d6174203300',
     ext: ['sqlitedb', 'sqlite', 'db'],
   },
-  { sig: "53503031", ext: ['bin'] },
-  { sig: "49574144", ext: ['wad'] },
-  { sig: "00000100", ext: ['ico'] },
-  { sig: "69636e73", ext: ['icns'] },
-  { sig: "667479703367", ext: ['3gp', '3g2'] },
-  { sig: "1f9d", ext: ['tar.z', 'z'] },
-  { sig: "1fa0", ext: ['tar.z', 'z'] },
-  { sig: "2d686c302d", ext: ['lzh'] },
-  { sig: "2d686c352d", ext: ['lzh'] },
-  { sig: "425a68", ext: ['bz2'] },
-  { sig: "47494638376147494638396", ext: ['gif'] },
-  { sig: "425047fb", ext: ['bpg'] },
-  { sig: "ffd8ffe0", ext: ['jpg', 'jpeg'] },
-  { sig: "ffd8ffee", ext: ['jpg', 'jpeg'] },
+  { sig: '53503031', ext: ['bin'] },
+  { sig: '49574144', ext: ['wad'] },
+  { sig: '00000100', ext: ['ico'] },
+  { sig: '69636e73', ext: ['icns'] },
+  { sig: '667479703367', ext: ['3gp', '3g2'] },
+  { sig: '1f9d', ext: ['tar.z', 'z'] },
+  { sig: '1fa0', ext: ['tar.z', 'z'] },
+  { sig: '2d686c302d', ext: ['lzh'] },
+  { sig: '2d686c352d', ext: ['lzh'] },
+  { sig: '425a68', ext: ['bz2'] },
+  { sig: '47494638376147494638396', ext: ['gif'] },
+  { sig: '425047fb', ext: ['bpg'] },
+  { sig: 'ffd8ffe0', ext: ['jpg', 'jpeg'] },
+  { sig: 'ffd8ffee', ext: ['jpg', 'jpeg'] },
   {
-    sig: "0000000c6a5020200d0a870a",
+    sig: '0000000c6a5020200d0a870a',
     ext: ['jp2', 'j2k', 'jpf', 'jpm', 'jpg2', 'j2c', 'jpc', 'jpx', 'mj2'],
   },
   {
-    sig: "ff4fff51",
+    sig: 'ff4fff51',
     ext: ['jp2', 'j2k', 'jpf', 'jpm', 'jpg2', 'j2c', 'jpc', 'jpx', 'mj2'],
   },
-  { sig: "4c5a4950", ext: ['lz'] },
-  { sig: "303730373037", ext: ['cpio'] },
+  { sig: '4c5a4950', ext: ['lz'] },
+  { sig: '303730373037', ext: ['cpio'] },
   {
-    sig: "4d5a",
+    sig: '4d5a',
     ext: [
       'exe',
       'dll',
@@ -127,9 +136,9 @@ const SIGNATURES = [
       'efi',
     ],
   },
-  { sig: "5a4d", ext: ['exe'] },
+  { sig: '5a4d', ext: ['exe'] },
   {
-    sig: "504b0304504b0506",
+    sig: '504b0304504b0506',
     ext: [
       'zip',
       'aar',
@@ -154,7 +163,7 @@ const SIGNATURES = [
     ],
   },
   {
-    sig: "504b070",
+    sig: '504b070',
     ext: [
       'zip',
       'aar',
@@ -178,41 +187,44 @@ const SIGNATURES = [
       'xpi',
     ],
   },
-  { sig: "526172211a0700", ext: ['rar'] },
-  { sig: "526172211a070100", ext: ['rar'] },
-  { sig: "89504e470d0a1a0a", ext: ['png'] },
-  { sig: "c9", ext: ['com'] },
-  { sig: "cafebabe", ext: ['class'] },
-  { sig: "efbbbf", ext: ['txt'] },
-  { sig: "fffe", ext: ['txt'] },
-  { sig: "feff", ext: ['txt'] },
-  { sig: "fffe0000", ext: ['txt'] },
-  { sig: "0000feff", ext: ['txt'] },
-  { sig: "0efeff", ext: ['txt'] },
-  { sig: "255044462d", ext: ['pdf'] },
-  { sig: "38425053", ext: ['psd'] },
-  { sig: "424d", ext: ['bmp'] },
-  { sig: "fffb", ext: ['mp3'] },
-  { sig: "fff3", ext: ['mp3'] },
-  { sig: "fff2", ext: ['mp3'] },
-  { sig: "494433", ext: ['mp3'] },
-  { sig: "4344303031", ext: ['iso'] },
-  { sig: "4344303031", ext: ['cdi'] },
-  { sig: "d0cf11e0a1b11ae1", ext: ['doc', 'xls', 'ppt', 'msi', 'msg'] },
-  { sig: "7573746172003030", ext: ['tar'] },
-  { sig: "7573746172202000", ext: ['tar'] },
-  { sig: "377abcaf271c", ext: ['7z'] },
-  { sig: "1f8b", ext: ['gz', 'tar.gz'] },
-  { sig: "fd377a585a00", ext: ['xz', 'tar.xz'] },
-  { sig: "7b5c72746631", ext: ['rtf'] },
-  { sig: "6674797069736f6d", ext: ['mp4'] },
-  { sig: "52656365697665643a", ext: ['eml'] },
+  { sig: '526172211a0700', ext: ['rar'] },
+  { sig: '526172211a070100', ext: ['rar'] },
+  { sig: '89504e470d0a1a0a', ext: ['png'] },
+  { sig: 'c9', ext: ['com'] },
+  { sig: 'cafebabe', ext: ['class'] },
+  { sig: 'efbbbf', ext: ['txt'] },
+  { sig: 'fffe', ext: ['txt'] },
+  { sig: 'feff', ext: ['txt'] },
+  { sig: 'fffe0000', ext: ['txt'] },
+  { sig: '0000feff', ext: ['txt'] },
+  { sig: '0efeff', ext: ['txt'] },
+  { sig: '255044462d', ext: ['pdf'] },
+  { sig: '38425053', ext: ['psd'] },
+  { sig: '424d', ext: ['bmp'] },
+  { sig: 'fffb', ext: ['mp3'] },
+  { sig: 'fff3', ext: ['mp3'] },
+  { sig: 'fff2', ext: ['mp3'] },
+  { sig: '494433', ext: ['mp3'] },
+  { sig: '4344303031', ext: ['iso'] },
+  { sig: '4344303031', ext: ['cdi'] },
+  { sig: 'd0cf11e0a1b11ae1', ext: ['doc', 'xls', 'ppt', 'msi', 'msg'] },
+  { sig: '7573746172003030', ext: ['tar'] },
+  { sig: '7573746172202000', ext: ['tar'] },
+  { sig: '377abcaf271c', ext: ['7z'] },
+  { sig: '1f8b', ext: ['gz', 'tar.gz'] },
+  { sig: 'fd377a585a00', ext: ['xz', 'tar.xz'] },
+  { sig: '7b5c72746631', ext: ['rtf'] },
+  { sig: '6674797069736f6d', ext: ['mp4'] },
+  { sig: '52656365697665643a', ext: ['eml'] },
 ];
 
-const matchSignature = (header: string): {result: boolean, extensions: string[], match: string } => {
-  for(let sig_ext of SIGNATURES) {
-      if (header.includes(sig_ext.sig)) return {result: true, extensions: sig_ext.ext, match:sig_ext.sig}
+const matchSignature = (
+  header: string
+): { result: boolean; extensions: string[]; match: string } => {
+  for (let sig_ext of SIGNATURES) {
+    if (header.includes(sig_ext.sig))
+      return { result: true, extensions: sig_ext.ext, match: sig_ext.sig };
   }
 
-  return {result: false, extensions: [""], match: ""}
+  return { result: false, extensions: [''], match: '' };
 };
