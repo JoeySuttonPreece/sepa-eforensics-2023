@@ -145,7 +145,10 @@ app
       }).argv;
 
     if (commandLine) {
-      let output = await orchestrator({ imagePath, output: { partitions: true } })
+      let output = await orchestrator(
+        { imagePath, output: { partitions: true } },
+        (msg) => {} //don't want to log it to prevent cluttering cli output
+      );
       OutputParser(output, 'stdout');
     } else {
       createWindow();
