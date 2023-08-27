@@ -6,7 +6,7 @@ import KeywordFilesComponent from './KeywordFiles';
 import DeletedFilesComponent from './DeletedFiles';
 import './Report.css';
 
-function ReportComponent() {
+export default function Report() {
   const [details, setDetails] = useState<ReportDetails>();
 
   useEffect(() => {
@@ -28,24 +28,16 @@ function ReportComponent() {
       </p>
       {details?.partitionTable ? (
         <PartitionTableComponent partitionTable={details.partitionTable} />
-      ) : (
-        <></>
-      )}
+      ) : null}
       {details?.keywordFiles ? (
         <KeywordFilesComponent keywordFiles={details.keywordFiles} />
-      ) : (
-        <></>
-      )}
+      ) : null}
       {details?.renamedFiles ? (
         <RenamedFilesComponent renamedFiles={details.renamedFiles} />
-      ) : (
-        <></>
-      )}
+      ) : null}
       {details?.deletedFiles ? (
         <DeletedFilesComponent deletedFiles={details.deletedFiles} />
-      ) : (
-        <></>
-      )}
+      ) : null}
     </article>
   );
 }
