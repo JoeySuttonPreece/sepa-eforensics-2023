@@ -41,7 +41,7 @@ export const orchestrator = async (
     deletedFiles,
     keywordFiles,
   }: { renamedFiles: RenamedFile[]; deletedFiles: File[]; keywordFiles: any } =
-    { renamedFiles: [], deletedFiles: [], keywordFiles: [] }; //= await getSuspicsousFiles();
+    { renamedFiles: [], deletedFiles: [], keywordFiles: [] }; //= await getSuspiciousFiles();
 
   return {
     imageName: imagePath,

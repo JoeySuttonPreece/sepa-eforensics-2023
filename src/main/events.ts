@@ -12,7 +12,7 @@ ipcMain.on('do-everything', async (event, [options]) => {
   });
   // insert loading while orchestraotr is going, this means we can;t await, perhaps a callback is put into orchestroator to defien what it should do??
 
-  //first send event that route should be changed to report then:
+  // first send event that route should be changed to report then:
   event.sender.send('report:details', output);
 });
 

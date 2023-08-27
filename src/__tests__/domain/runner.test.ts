@@ -1,24 +1,23 @@
 import '@testing-library/jest-dom';
 import { runBufferedCliTool } from '../../domain/runner';
-import { File } from '../../domain/file-system-tools';
+import { File } from '../../types/types';
 
 function lineProcessor(line: string): File {
-  let split = line.split(/\s+/);
-  let file = new File();
+  const split = line.split(/\s+/);
 
-  let fileType = split[0].split('/');
-  file.fileNameFileType = fileType[0];
-  file.metadataFileType = fileType[1];
+  const file: File = new File();
 
-  file.deleted = split[1] == '*' ? true : false;
+  const fileType = split[0].split('/');
+  [file.fileNameFileType, file.metadataFileType] = fileType;
+
+  file.deleted = split[1] === '*';
 
   let deletedOffset = 0;
-  if(file.deleted)
-    deletedOffset = 1;
+  if (file.deleted) deletedOffset = 1;
 
   file.inode = split[1 + deletedOffset];
-  //TODO: IMPLEMENT
-  //Would be similar to deleted with a check for (REALLOCATED), no offset? 
+  // TODO: IMPLEMENT
+  // Would be similar to deleted with a check for (REALLOCATED), no offset?
   file.reallocated = false;
 
   file.fileName = split[2 + deletedOffset];
@@ -29,12 +28,17 @@ function lineProcessor(line: string): File {
   file.size = +split[15 + deletedOffset];
   file.uid = split[16 + deletedOffset];
   file.gid = split[17 + deletedOffset];
-  
+
   return file;
 }
 
-test('DEBUG: RUN FUNCTION', async () => {  
-  let output = await runBufferedCliTool('fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l', lineProcessor);
+test('DEBUG: RUN FUNCTION', async () => {
+  const output = await runBufferedCliTool(
+    // 'fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l',
+    'fls /home/admin/res/dfr-01-fat.dd -o 128 -l',
+    lineProcessor
+  );
   // This is now, an array of `File`s based on the output of the above command - WARNING: If used in production in its current state, reallocated files may not work as intended
-  console.log(output)
+  console.log(output);
+  expect(output).toBe(''); // Put expected output here
 }, 60000);

@@ -113,6 +113,7 @@
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.2",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
+    "@types/download": "^8.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "18.13.0",
     "@types/react": "^18.0.27",
