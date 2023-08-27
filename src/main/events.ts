@@ -2,7 +2,10 @@ import { ipcMain } from 'electron';
 
 import { listFiles } from '../domain/file-system-tools';
 import { OrchestratorOptions, orchestrator } from '../domain/orchestrator';
-import { getMD5Hash } from '../domain/other-cli-tools';
+import {
+  getMD5HashAsync,
+  getSearchStringAsync,
+} from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
 import { waitFor } from '@testing-library/react';
 
@@ -22,8 +25,22 @@ ipcMain.on('volume-system:getPartitions', async (event, arg) => {
 });
 
 ipcMain.on('other-cli:getMD5Hash', async (event, arg) => {
-  const md5Hash = await getMD5Hash(arg[0]);
+  const md5Hash = await getMD5HashAsync(arg[0]);
   event.reply('other-cli:getMD5Hash', md5Hash);
+});
+
+ipcMain.on(
+  'file-name:listFiles',
+  async (event, [volume, offset]: [string, number]) => {
+    const files = await listFiles(volume, offset);
+    event.reply('file-name:listFiles', files);
+  }
+);
+
+ipcMain.on('other-cli: getSearchStringAsync ', async (event, arg) => {
+  const searchString = await getSearchStringAsync(arg[0], arg[1]);
+
+  event.reply('other-cli: getSearchStringAsync ', searchString);
 });
 
 ipcMain.on(

@@ -1,6 +1,6 @@
 import { stat } from 'fs';
 import { File, RenamedFile } from './file-system-tools';
-import { getMD5Hash } from './other-cli-tools';
+import { getMD5HashAsync, getSearchStringAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 
 export type OrchestratorOptions = {
@@ -11,6 +11,7 @@ export type OrchestratorOptions = {
     deletedFiles: boolean;
     keywordFiles: boolean;
   };
+  searchString: string;
 };
 
 export type ReportDetails = {
@@ -19,7 +20,7 @@ export type ReportDetails = {
   partitionTable: PartitionTable | undefined;
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
-  keywordFiles: any; //KeywordFile[] | undefined;
+  keywordFiles: any; // KeywordFile[] | undefined;
 };
 
 export const orchestrator = async (
@@ -33,11 +34,9 @@ export const orchestrator = async (
     return '';
   });
 
-  statusCallback('Retrieving Partitions...');
-  const partitionTable = await getPartitionTable(imagePath).catch((reason) => {
-    statusCallback(reason as string);
-    return undefined;
-  });
+  // console.log(imagePath);
+  const hash = await getMD5Hash(imagePath);
+  const partitionTable = await getPartitionTable(imagePath);
 
   //need to figure out how to exclude some of these depending on orchestraotr options
   statusCallback('Processing Files...');
