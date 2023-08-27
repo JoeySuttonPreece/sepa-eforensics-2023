@@ -12,9 +12,9 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
-    'no-console': 'off',
+    'no-console': 'warn',
     'no-plusplus': 'off',
-    'no-use-before-define': 'off',
+    'no-use-before-define': 'warn',
     'no-restricted-syntax': 'off',
   },
   parserOptions: {
