@@ -1,4 +1,9 @@
+
+
+
 table, th, td {
+  margin:auto;
+  margin-top: 2em;
     border: 1px solid black;
     border-collapse: collapse;
 }
@@ -7,7 +12,35 @@ caption {
     font-weight: bolder;
 }
 
+.report-header {
+  display: flex;
+  justify-content: center;
+}
+
+.report-header *{
+  display: inline-block;
+  margin: 0em 2em;
+}
+
+.report {
+ min-width: 800px;
+ width: 50vw;
+ margin: auto;
+  display: flex;
+  flex-direction: column;
+ align-items: center;
+}
+
 /* Styling for Loading Spinner */
+.load-view {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.load-view > div {
+  margin: 4em;
+}
 .loader {
     border: 16px solid #f3f3f3; /* Light grey */
     border-top: 16px solid #3498db; /* Blue */

@@ -1,3 +1,4 @@
+import { stat } from 'fs';
 import { File, RenamedFile } from './file-system-tools';
 import { getMD5Hash } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
@@ -26,13 +27,17 @@ export const orchestrator = async (
   statusCallback: (msg: string) => void
 ): Promise<ReportDetails> => {
   let { imagePath, output } = args;
-
-  //console.log(imagePath);
   statusCallback('Hashing Drive...');
-  const hash = await getMD5Hash(imagePath);
+  const hash = await getMD5Hash(imagePath).catch((reason) => {
+    statusCallback(reason as string);
+    return '';
+  });
 
   statusCallback('Retrieving Partitions...');
-  const partitionTable = await getPartitionTable(imagePath);
+  const partitionTable = await getPartitionTable(imagePath).catch((reason) => {
+    statusCallback(reason as string);
+    return undefined;
+  });
 
   //need to figure out how to exclude some of these depending on orchestraotr options
   statusCallback('Processing Files...');
@@ -40,8 +45,11 @@ export const orchestrator = async (
     renamedFiles,
     deletedFiles,
     keywordFiles,
-  }: { renamedFiles: RenamedFile[]; deletedFiles: File[]; keywordFiles: any } =
-    { renamedFiles: [], deletedFiles: [], keywordFiles: [] }; //= await getSuspiciousFiles();
+  }: {
+    renamedFiles: RenamedFile[];
+    deletedFiles: File[];
+    keywordFiles: any;
+  } = { renamedFiles: [], deletedFiles: [], keywordFiles: [] }; //= await getSuspiciousFiles();
 
   return {
     imageName: imagePath,
