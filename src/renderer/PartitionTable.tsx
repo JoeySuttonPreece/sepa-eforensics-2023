@@ -20,22 +20,24 @@ function PartitionTableComponent({
           </td>
         </tr>
       </thead>
-      <tr>
-        <th>Description</th>
-        <th>Start</th>
-        <th>End</th>
-        <th>Length</th>
-      </tr>
-      {partitionTable.partitions.map((partition, index) => {
-        return (
-          <tr key={index}>
-            <td>{partition.description}</td>
-            <td>{partition.start}</td>
-            <td>{partition.end}</td>
-            <td>{partition.length}</td>
-          </tr>
-        );
-      })}
+      <tbody>
+        <tr>
+          <th>Description</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Length</th>
+        </tr>
+        {partitionTable.partitions.map((partition, index) => {
+          return (
+            <tr key={index}>
+              <td>{partition.description}</td>
+              <td>{partition.start}</td>
+              <td>{partition.end}</td>
+              <td>{partition.length}</td>
+            </tr>
+          );
+        })}
+      </tbody>
     </table>
   );
 }
