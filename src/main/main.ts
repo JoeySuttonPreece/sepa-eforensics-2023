@@ -147,7 +147,7 @@ app
     if (commandLine) {
       let output = await orchestrator(
         { imagePath, output: { partitions: true } },
-        (msg) => {} //don't want to log it to prevent cluttering cli output
+        (msg) => {} // don't want to log it to prevent cluttering cli output
       );
       OutputParser(output, 'stdout');
     } else {

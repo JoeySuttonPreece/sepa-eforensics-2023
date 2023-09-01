@@ -16,6 +16,7 @@ module.exports = {
     'no-plusplus': 'off',
     'no-use-before-define': 'warn',
     'no-restricted-syntax': 'off',
+    'prettier/prettier': 'warn',
   },
   parserOptions: {
     ecmaVersion: 2020,

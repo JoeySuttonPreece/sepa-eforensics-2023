@@ -1,7 +1,7 @@
-import { stat } from 'fs';
-import { File, RenamedFile } from './file-system-tools';
+import { File } from '../types/types';
 import { getMD5HashAsync, getSearchStringAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
+import { runBufferedCliTool } from './runner';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -23,32 +23,44 @@ export type ReportDetails = {
   keywordFiles: any; // KeywordFile[] | undefined;
 };
 
+const getDeletedAndRenamedFiles = (line: string): File => {
+  const file = new File();
+
+  const lineElements: string[] = line.split(' ');
+
+  if (lineElements[1] === '*') {
+    console.log('Deleted file found.');
+  } else {
+    console.log('Checking for renamed file...');
+  }
+
+  return file;
+};
+
 export const orchestrator = async (
   args: OrchestratorOptions,
   statusCallback: (msg: string) => void
 ): Promise<ReportDetails> => {
-  let { imagePath, output } = args;
+  const { imagePath, output } = args;
+
   statusCallback('Hashing Drive...');
-  const hash = await getMD5Hash(imagePath).catch((reason) => {
+  const hash = await getMD5HashAsync(imagePath).catch((reason) => {
     statusCallback(reason as string);
     return '';
   });
 
   // console.log(imagePath);
-  const hash = await getMD5Hash(imagePath);
+  statusCallback('Reading Partition Table...');
   const partitionTable = await getPartitionTable(imagePath);
 
-  //need to figure out how to exclude some of these depending on orchestraotr options
+  // TODO:
+  // need to figure out how to exclude some of these depending on orchestrator options
   statusCallback('Processing Files...');
-  const {
-    renamedFiles,
-    deletedFiles,
-    keywordFiles,
-  }: {
-    renamedFiles: RenamedFile[];
-    deletedFiles: File[];
-    keywordFiles: any;
-  } = { renamedFiles: [], deletedFiles: [], keywordFiles: [] }; //= await getSuspiciousFiles();
+  const [renamedFiles, deletedFiles, keywordFiles] =
+    await runBufferedCliTool<File>(
+      `fls -f ${partitionTable.tableType} -o ${partitionTable.partitions[1]} -r ${imagePath}`,
+      getDeletedAndRenamedFiles
+    );
 
   return {
     imageName: imagePath,

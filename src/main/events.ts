@@ -1,23 +1,26 @@
 import { ipcMain } from 'electron';
 
 import { listFiles } from '../domain/file-system-tools';
-import { OrchestratorOptions, orchestrator } from '../domain/orchestrator';
+import { orchestrator } from '../domain/orchestrator';
 import {
   getMD5HashAsync,
   getSearchStringAsync,
 } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
-import { waitFor } from '@testing-library/react';
 
 ipcMain.on('do-everything', async (event, [options]) => {
+  // insert loading while orchestrator is going, this means we can't await, perhaps a callback is put into orchestrator to define what it should do??
   const output = await orchestrator(options, (msg) => {
     event.sender.send('status:update', msg);
   });
-  // insert loading while orchestraotr is going, this means we can;t await, perhaps a callback is put into orchestroator to defien what it should do??
 
   // first send event that route should be changed to report then:
   event.sender.send('report:details', output);
 });
+
+//
+// TO BE REMOVED (NOT NECESSARY IN FINAL APP)
+//
 
 ipcMain.on('volume-system:getPartitions', async (event, arg) => {
   const partitionTable = await getPartitionTable(arg[0]);
@@ -38,7 +41,7 @@ ipcMain.on(
 );
 
 ipcMain.on('other-cli: getSearchStringAsync ', async (event, arg) => {
-  const searchString = await getSearchStringAsync(arg[0], arg[1]);
+  const searchString = await getSearchStringAsync(arg[0], arg[1], arg[3]);
 
   event.reply('other-cli: getSearchStringAsync ', searchString);
 });
@@ -50,3 +53,15 @@ ipcMain.on(
     event.reply('file-name:listFiles', files);
   }
 );
+
+const startSectorList: number[] = [];
+
+ipcMain.on(' other-cli: getSearchStringAsync ', async (event, arg) => {
+  const FileDetails = await getSearchStringAsync(
+    arg[0],
+    arg[1],
+    startSectorList
+  );
+
+  event.reply(' other-cli: getSearchStringAsync ', FileDetails);
+});
