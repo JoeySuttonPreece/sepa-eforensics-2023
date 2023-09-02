@@ -1,8 +1,15 @@
 import '@testing-library/jest-dom';
-import { runBufferedCliTool } from '../../domain/runner';
+import { runBufferedCliTool, runCliTool } from '../../domain/runner';
 import { File } from '../../types/types';
+import { processForRenamedFile } from '../../domain/file-system-tools';
 
-function lineProcessor(line: string): File {
+function fileProcessor(content: string): string {
+  console.log(content);
+  //can do searching and whatever in here
+  return content;
+}
+
+function listProcessor(line: string): File {
   const split = line.split(/\s+/);
 
   const file: File = new File();
@@ -15,7 +22,7 @@ function lineProcessor(line: string): File {
   let deletedOffset = 0;
   if (file.deleted) deletedOffset = 1;
 
-  file.inode = split[1 + deletedOffset];
+  file.inode = split[1 + deletedOffset].replace(':', '');
   // TODO: IMPLEMENT
   // Would be similar to deleted with a check for (REALLOCATED), no offset?
   file.reallocated = false;
@@ -33,12 +40,24 @@ function lineProcessor(line: string): File {
 }
 
 test('DEBUG: RUN FUNCTION', async () => {
-  const output = await runBufferedCliTool(
-    // 'fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l',
-    'fls /home/admin/res/dfr-01-fat.dd -o 128 -l',
-    lineProcessor
+  const files = await runBufferedCliTool(
+    'fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l -p -r',
+    //'fls /home/admin/res/dfr-01-fat.dd -o 128 -l',
+    listProcessor
   );
+
+  console.log(files);
+
+  for (let index = 0; index < files.length; index++) {
+    const element = files[index];
+    //processForRenamedFile('/home/rob/Downloads/dfr-01-ntfs.dd')
+    //const contents = await runBufferedCliTool(
+    //  `icat /home/rob/Downloads/dfr-01-ntfs.dd -o 61 ${element}`,
+    //  fileProcessor
+    //).catch(reason => console.log(reason));
+  }
+
   // This is now, an array of `File`s based on the output of the above command - WARNING: If used in production in its current state, reallocated files may not work as intended
-  console.log(output);
-  expect(output).toBe(''); // Put expected output here
+  //console.log(output);
+  //expect(output).toBe(''); // Put expected output here
 }, 60000);

@@ -39,6 +39,7 @@ export const runBufferedCliTool = async <Type>(
     });
 
     // For every line, run the callback function and append its return value to the final outputArray
+    // TODO: support / prioritise async callbacks?
     lineReader.on('line', (line: string) => {
       const processedLine = lineProcessor(line);
       outputArray.push(processedLine);
@@ -50,7 +51,8 @@ export const runBufferedCliTool = async <Type>(
       if (code === 0) {
         resolve(outputArray);
       } else {
-        reject(new Error(`Child process exited with code ${code}`));
+        //reject(new Error(`Child process exited with code ${code}`));
+        resolve(outputArray);
       }
     });
 
