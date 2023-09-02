@@ -2,7 +2,7 @@ import { File } from '../types/types';
 import { Hash, getHashAsync, getSearchStringAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool } from './runner';
-import { RenamedFile } from './file-system-tools';
+import { RenamedFile, KeywordFile } from './file-system-tools';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -21,7 +21,7 @@ export type ReportDetails = {
   partitionTable: PartitionTable | undefined;
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
-  keywordFiles: any; // KeywordFile[] | undefined;
+  keywordFiles: KeywordFile[] | undefined;
 };
 
 const getDeletedAndRenamedFiles = (line: string): File => {
@@ -57,15 +57,10 @@ export const orchestrator = async (
   // need to figure out how to exclude some of these depending on orchestrator options
   statusCallback('Processing Files...');
 
-  const {
-    renamedFiles,
-    deletedFiles,
-    keywordFiles,
-  }: {
-    renamedFiles: RenamedFile[];
-    deletedFiles: File[];
-    keywordFiles: any;
-  } = await getSuspiciousFiles(args, partitionTable); //= await getSuspiciousFiles();
+  const { renamedFiles, deletedFiles, keywordFiles } = await getSuspiciousFiles(
+    args,
+    partitionTable
+  );
 
   return {
     imageName: imagePath,
@@ -80,7 +75,11 @@ export const orchestrator = async (
 export const getSuspiciousFiles = async (
   args: OrchestratorOptions,
   partitionTable: PartitionTable
-): Promise<{ renamedFiles: RenamedFile[], deletedFiles: File[], keywordFiles: File[] }> => {
+): Promise<{
+  renamedFiles: RenamedFile[];
+  deletedFiles: File[];
+  keywordFiles: KeywordFile[];
+}> => {
   await runBufferedCliTool<File>(
     `fls -f ${partitionTable.tableType} -o ${partitionTable.partitions[1]} -r ${args.imagePath}`,
     getDeletedAndRenamedFiles

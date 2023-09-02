@@ -1,10 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { RenamedFile, File } from 'domain/file-system-tools';
+import { RenamedFile, File, KeywordFile } from 'domain/file-system-tools';
 import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
 
-type KeywordFile = any; // to be replaced with proper imort
 type Writer = (data: string, section: string) => void;
 
 export const OutputParser = (output: ReportDetails, destination: string) => {

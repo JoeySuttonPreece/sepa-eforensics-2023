@@ -35,6 +35,11 @@ export type RenamedFile = {
   trueExtensions: string[];
 };
 
+export type KeywordFile = {
+  file: File;
+  matches: string[];
+};
+
 // listfiles(){
 //   foreach -> Line
 // file : processFILe(line),
