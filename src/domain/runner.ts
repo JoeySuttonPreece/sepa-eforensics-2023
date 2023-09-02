@@ -51,8 +51,7 @@ export const runBufferedCliTool = async <Type>(
       if (code === 0) {
         resolve(outputArray);
       } else {
-        //reject(new Error(`Child process exited with code ${code}`));
-        resolve(outputArray);
+        reject(new Error(`Child process exited with code ${code}`));
       }
     });
 
