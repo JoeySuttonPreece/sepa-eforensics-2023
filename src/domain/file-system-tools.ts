@@ -209,9 +209,9 @@ const matchSignature = (
 // file: file to be investigated
 ///
 export const processForRenamedFile = async (
+  file: File,
   imagePath: string,
-  partition: Partition,
-  file: File
+  partition: Partition
 ): Promise<RenamedFile | false> => {
   const HEADERBYTES = 16;
   const header = await runCliTool(

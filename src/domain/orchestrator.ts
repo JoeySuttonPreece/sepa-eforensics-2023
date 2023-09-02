@@ -1,8 +1,12 @@
 import { File } from '../types/types';
-import { Hash, getHashAsync, getSearchStringAsync } from './other-cli-tools';
+import { Hash, getHashAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool } from './runner';
-import { RenamedFile, KeywordFile } from './file-system-tools';
+import {
+  RenamedFile,
+  KeywordFile,
+  processForRenamedFile,
+} from './file-system-tools';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -22,20 +26,6 @@ export type ReportDetails = {
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
   keywordFiles: KeywordFile[] | undefined;
-};
-
-const getDeletedAndRenamedFiles = (line: string): File => {
-  const file = new File();
-
-  const lineElements: string[] = line.split(' ');
-
-  if (lineElements[1] === '*') {
-    console.log('Deleted file found.');
-  } else {
-    console.log('Checking for renamed file...');
-  }
-
-  return file;
 };
 
 export const orchestrator = async (
@@ -80,19 +70,49 @@ export const getSuspiciousFiles = async (
   deletedFiles: File[];
   keywordFiles: KeywordFile[];
 }> => {
-  await runBufferedCliTool<File>(
-    `fls -f ${partitionTable.tableType} -o ${partitionTable.partitions[1]} -r ${args.imagePath}`,
-    getDeletedAndRenamedFiles
-  );
-  return { renamedFiles: [], deletedFiles: [], keywordFiles: [] };
-}
+  console.log('Suspicious files called');
+  const renamedFiles: RenamedFile[] = [];
+  const deletedFiles: File[] = [];
+  const keywordFiles: KeywordFile[] = [];
 
-export const fileListProcessor = (
-  line: string
-  ): File => {
+  for await (const partition of partitionTable.partitions) {
+    console.log(partition);
+    const files = await runBufferedCliTool<File>(
+      `fls -o ${partition.start} -l -p -r ${args.imagePath}`,
+      fileListProcessor
+    ).catch((reason) =>
+      console.log(`runBufferedCliTool failed with: ${reason}`)
+    );
+
+    if (!files) continue;
+
+    for await (const file of files) {
+      // renamed
+      const renamedFile = await processForRenamedFile(
+        file,
+        args.imagePath,
+        partition
+      );
+      if (renamedFile) {
+        renamedFiles.push(renamedFile);
+      }
+
+      // deleted
+      if (file.deleted) {
+        deletedFiles.push(file);
+      }
+
+      // keyword //////////// SUS
+    }
+  }
+
+  return { renamedFiles, deletedFiles, keywordFiles };
+};
+
+export const fileListProcessor = (line: string): File => {
   const split = line.split(/\s+/);
 
-  let file: File = new File();
+  const file: File = new File();
 
   const fileType = split[0].split('/');
   [file.fileNameFileType, file.metadataFileType] = fileType;
@@ -117,4 +137,4 @@ export const fileListProcessor = (
   file.gid = split[17 + deletedOffset];
 
   return file;
-}
+};
