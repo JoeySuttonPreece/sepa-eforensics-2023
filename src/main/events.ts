@@ -2,10 +2,7 @@ import { ipcMain } from 'electron';
 
 import { listFiles } from '../domain/file-system-tools';
 import { orchestrator } from '../domain/orchestrator';
-import {
-  getMD5HashAsync,
-  getSearchStringAsync,
-} from '../domain/other-cli-tools';
+import { getHashAsync, getSearchStringAsync } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
 
 ipcMain.on('do-everything', async (event, [options]) => {
@@ -27,9 +24,9 @@ ipcMain.on('volume-system:getPartitions', async (event, arg) => {
   event.reply('volume-system:getPartitions', partitionTable);
 });
 
-ipcMain.on('other-cli:getMD5Hash', async (event, arg) => {
-  const md5Hash = await getMD5HashAsync(arg[0]);
-  event.reply('other-cli:getMD5Hash', md5Hash);
+ipcMain.on('other-cli:getHash', async (event, arg) => {
+  const hash = await getHashAsync(arg[0]);
+  event.reply('other-cli:getHash', hash);
 });
 
 ipcMain.on(

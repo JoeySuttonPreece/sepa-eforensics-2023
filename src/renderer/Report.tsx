@@ -42,6 +42,8 @@ export default function ReportComponent() {
           <p>
             <strong>Image:</strong> {details?.imageName}
           </p>
+          <h3>Image Hashes</h3>
+          <p>{JSON.stringify(details?.imageHash)}</p>
           {details?.partitionTable ? (
             <PartitionTableComponent partitionTable={details.partitionTable} />
           ) : null}

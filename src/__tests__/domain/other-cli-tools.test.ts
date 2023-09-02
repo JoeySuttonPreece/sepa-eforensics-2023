@@ -2,7 +2,7 @@ import util from 'node:util';
 import '@testing-library/jest-dom';
 import { exec } from 'child_process';
 import download from 'download';
-import { getMD5HashAsync } from '../../domain/other-cli-tools';
+import { getHashAsync } from '../../domain/other-cli-tools';
 
 const promisifiedExec = util.promisify(exec);
 
@@ -37,7 +37,7 @@ test('getMD5Hash works with E01.', async () => {
 
   md5Hash = stdout;
 
-  data = await getMD5HashAsync(downloadedFilePath);
+  data = await getHashAsync(downloadedFilePath);
 
   expect(data).toBe(md5Hash);
 }, 60000);

@@ -1,5 +1,5 @@
 import { File } from '../types/types';
-import { getMD5HashAsync, getSearchStringAsync } from './other-cli-tools';
+import { Hash, getHashAsync, getSearchStringAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool } from './runner';
 import { RenamedFile } from './file-system-tools';
@@ -17,7 +17,7 @@ export type OrchestratorOptions = {
 
 export type ReportDetails = {
   imageName: string;
-  imageHash: string;
+  imageHash: Hash | undefined;
   partitionTable: PartitionTable | undefined;
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
@@ -45,9 +45,8 @@ export const orchestrator = async (
   const { imagePath, output } = args;
 
   statusCallback('Hashing Drive...');
-  const hash = await getMD5HashAsync(imagePath).catch((reason) => {
+  const hash = await getHashAsync(imagePath).catch((reason) => {
     statusCallback(reason as string);
-    return '';
   });
 
   // console.log(imagePath);
@@ -70,7 +69,7 @@ export const orchestrator = async (
 
   return {
     imageName: imagePath,
-    imageHash: hash,
+    imageHash: hash || undefined,
     partitionTable: output.partitions ? partitionTable : undefined,
     renamedFiles: output.renamedFiles ? renamedFiles : undefined,
     deletedFiles: output.deletedFiles ? deletedFiles : undefined,

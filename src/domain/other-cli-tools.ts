@@ -1,7 +1,17 @@
 import { runCliTool } from './runner';
 
-export const getMD5HashAsync = async (imagePath: string): Promise<string> => {
-  return runCliTool(`md5sum ${imagePath}`);
+export type Hash = {
+  md5sum: string;
+  sha1sum: string;
+};
+
+export const getHashAsync = async (imagePath: string): Promise<Hash> => {
+  const [md5sum, sha1sum] = await Promise.all([
+    runCliTool(`md5sum ${imagePath}`),
+    runCliTool(`sha1sum ${imagePath}`),
+  ]);
+
+  return { md5sum, sha1sum };
 };
 
 export const getImageInString = async (imagePath: string): Promise<string> => {
