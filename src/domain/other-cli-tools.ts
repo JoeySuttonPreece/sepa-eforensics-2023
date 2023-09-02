@@ -36,7 +36,7 @@ export const getSearchStringAsync = async (
 
   for (let i: number = 0; i < startSectorList.length; i++) {
     loopValue =
-      startSectorList[i] * (sectorSizeByte - (byteOffsetOfString as number));
+      startSectorList[i] * (sectorSizeByte - Number(byteOffsetOfString));
 
     if (loopValue >= 0) {
       leastOffsetDifference = loopValue;
