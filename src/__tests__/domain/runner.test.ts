@@ -5,7 +5,7 @@ import { processForRenamedFile } from '../../domain/file-system-tools';
 
 function fileProcessor(content: string): string {
   console.log(content);
-  //can do searching and whatever in here
+  // can do searching and whatever in here
   return content;
 }
 
@@ -42,7 +42,7 @@ function listProcessor(line: string): File {
 test('DEBUG: RUN FUNCTION', async () => {
   const files = await runBufferedCliTool(
     'fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l -p -r',
-    //'fls /home/admin/res/dfr-01-fat.dd -o 128 -l',
+    // 'fls /home/admin/res/dfr-01-fat.dd -o 128 -l',
     listProcessor
   );
 
@@ -50,14 +50,14 @@ test('DEBUG: RUN FUNCTION', async () => {
 
   for (let index = 0; index < files.length; index++) {
     const element = files[index];
-    //processForRenamedFile('/home/rob/Downloads/dfr-01-ntfs.dd')
-    //const contents = await runBufferedCliTool(
-    //  `icat /home/rob/Downloads/dfr-01-ntfs.dd -o 61 ${element}`,
-    //  fileProcessor
-    //).catch(reason => console.log(reason));
+    // processForRenamedFile('/home/rob/Downloads/dfr-01-ntfs.dd')
+    // const contents = await runBufferedCliTool(
+    //   `icat /home/rob/Downloads/dfr-01-ntfs.dd -o 61 ${element}`,
+    //   fileProcessor
+    // ).catch(reason => console.log(reason));
   }
 
   // This is now, an array of `File`s based on the output of the above command - WARNING: If used in production in its current state, reallocated files may not work as intended
-  //console.log(output);
-  //expect(output).toBe(''); // Put expected output here
+  // console.log(output);
+  // expect(output).toBe(''); // Put expected output here
 }, 60000);

@@ -60,7 +60,7 @@ export default function ReportComponent() {
       ) : (
         <div className="load-view">
           <div>{message}</div>
-          <div className="loader"></div>
+          <div className="loader" />
         </div>
       )}
     </div>
