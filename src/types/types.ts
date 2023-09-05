@@ -8,9 +8,9 @@ export interface File {
   // THIS IS THE ACTUAL FILE NAME
   fileName: string;
   // maybe parse these to dates? help with timeline or something
-  mtime: string;
-  atime: string;
-  ctime: string;
+  mtime: Date;
+  atime: Date;
+  ctime: Date;
   crtime: string;
   size: number;
   uid: string;
@@ -34,11 +34,11 @@ export class File implements File {
   fileName: string;
 
   // maybe parse these to dates? help with timeline or something
-  mtime: string;
+  mtime: Date;
 
-  atime: string;
+  atime: Date;
 
-  ctime: string;
+  ctime: Date;
 
   crtime: string;
 
@@ -57,9 +57,9 @@ export class File implements File {
     this.inode = '';
     this.reallocated = false;
     this.fileName = '';
-    this.mtime = '';
-    this.atime = '';
-    this.ctime = '';
+    this.mtime = new Date();
+    this.atime = new Date();
+    this.ctime = new Date();
     this.crtime = '';
     this.size = 0;
     this.uid = '';

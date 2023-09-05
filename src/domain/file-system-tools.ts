@@ -18,9 +18,9 @@ export type File = {
   // THIS IS THE ACTUAL FILE NAME
   fileName: string;
   // maybe parse these to dates? help with timeline or something
-  mtime: string;
-  atime: string;
-  ctime: string;
+  mtime: Date;
+  atime: Date;
+  ctime: Date;
   crtime: string;
   size: number;
   uid: string;

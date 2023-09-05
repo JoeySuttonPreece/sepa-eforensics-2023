@@ -7,6 +7,7 @@ import {
   KeywordFile,
   processForRenamedFile,
 } from './file-system-tools';
+import { buildTimeline } from './timeline-tools';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -51,6 +52,16 @@ export const orchestrator = async (
     args,
     partitionTable
   );
+
+  statusCallback('Building Timline');
+  //consider some refactoring sprint 4
+  const suspiciousFiles = renamedFiles.map((renamedFile) => {
+    return renamedFile.file;
+  });
+  suspiciousFiles.push(...deletedFiles);
+  console.log('SuspicousFiles');
+  console.log(suspiciousFiles);
+  const timeline = await buildTimeline(suspiciousFiles);
 
   return {
     imageName: imagePath,
@@ -128,9 +139,15 @@ export const fileListProcessor = (line: string): File => {
   file.reallocated = false;
 
   file.fileName = split[2 + deletedOffset];
-  file.mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
-  file.atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
-  file.ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
+  file.mtime = new Date(
+    split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ')
+  );
+  file.atime = new Date(
+    split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ')
+  );
+  file.ctime = new Date(
+    split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ')
+  );
   file.crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
   file.size = +split[15 + deletedOffset];
   file.uid = split[16 + deletedOffset];

@@ -45,15 +45,15 @@ test('Renamed File Processing', async () => {
     hash: '',
   };
 
-  const noMatchResult = await processForRenamedFile('path', partition, file);
+  const noMatchResult = await processForRenamedFile(file, 'path', partition);
   expect(noMatchResult).toBe(false);
   const correctExtensionResult = await processForRenamedFile(
+    file,
     'path',
-    partition,
-    file
+    partition
   );
   expect(correctExtensionResult).toBe(false);
-  const renamedResult = await processForRenamedFile('path', partition, file);
+  const renamedResult = await processForRenamedFile(file, 'path', partition);
   if (renamedResult !== false) {
     expect(renamedResult.trueExtensions[0]).toBe('jpg');
     expect(renamedResult.matchedSignature).toBe('ffd8ffe0');
