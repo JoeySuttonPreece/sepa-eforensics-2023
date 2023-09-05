@@ -27,6 +27,8 @@ function RenamedFilesComponent({
                   return <span>{value} </span>;
                 })}
               </td>
+              {/* Check to see whether it knows file size or not */}
+              <td>{renamed.file.size}</td>
               <td>
                 {renamed.file.mtime}
                 <br />
