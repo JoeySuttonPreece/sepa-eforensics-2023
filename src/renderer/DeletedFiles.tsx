@@ -18,6 +18,12 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
             <tr key={index}>
               <td>{deleted.inode}</td>
               <td>{deleted.fileName}</td>
+              <td>{deleted.fileNameFileType}</td>
+
+              {/* comment--size was missing, but not sure to call it as this or as
+              part of file like in renamed */}
+
+              <td>{deleted.size}</td>
               <td>
                 {deleted.mtime}
                 <br />

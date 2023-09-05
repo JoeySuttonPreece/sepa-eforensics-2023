@@ -27,6 +27,7 @@ function KeywordFilesComponent({
                   return <span>{value} </span>;
                 })}
               </td>
+              <td>{keyword.file.size}</td>
               <td>
                 {keyword.file.mtime}
                 <br />
