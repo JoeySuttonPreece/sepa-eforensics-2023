@@ -20,7 +20,7 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
               <td>{deleted.fileName}</td>
               <td>{deleted.fileNameFileType}</td>
 
-              {/* comment--size was missing, but not sure to call it as this or as
+              {/* size was missing, but not sure to call it as this or as
               part of file like in renamed */}
 
               <td>{deleted.size}</td>
