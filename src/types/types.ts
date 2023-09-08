@@ -1,3 +1,5 @@
+import { Hash } from 'domain/other-cli-tools';
+
 export interface File {
   // x/y in output, these can be different for deleted files, cant come up with a better name
   fileNameFileType: string;
@@ -16,7 +18,7 @@ export interface File {
   uid: string;
   gid: string;
 
-  hash: string;
+  hash: Hash;
 }
 
 export class File implements File {
@@ -48,7 +50,7 @@ export class File implements File {
 
   gid: string;
 
-  hash: string;
+  hash: Hash;
 
   public constructor() {
     this.fileNameFileType = '';

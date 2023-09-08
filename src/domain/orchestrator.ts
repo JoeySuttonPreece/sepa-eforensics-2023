@@ -1,5 +1,6 @@
+import fs from 'fs';
 import { File } from '../types/types';
-import { Hash, getHashAsync } from './other-cli-tools';
+import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool } from './runner';
 import {
@@ -7,7 +8,6 @@ import {
   KeywordFile,
   processForRenamedFile,
 } from './file-system-tools';
-import fs from 'fs';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -63,6 +63,38 @@ export const orchestrator = async (
     deletedFiles: output.deletedFiles ? deletedFiles : undefined,
     keywordFiles: output.keywordFiles ? keywordFiles : undefined,
   };
+};
+
+export const fileListProcessor = (line: string): File => {
+  const split = line.split(/\s+/);
+
+  const file: File = new File();
+
+  const fileType = split[0].split('/');
+  [file.fileNameFileType, file.metadataFileType] = fileType;
+
+  file.deleted = split[1] === '*';
+
+  let deletedOffset = 0;
+  if (file.deleted) deletedOffset = 1;
+
+  file.inode = split[1 + deletedOffset].replace(':', '');
+  // TODO: IMPLEMENT
+  // Would be similar to deleted with a check for (REALLOCATED), no offset?
+  file.reallocated = false;
+
+  file.fileName = split[2 + deletedOffset];
+  file.mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
+  file.atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
+  file.ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
+  file.crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
+  file.size = +split[15 + deletedOffset];
+  file.uid = split[16 + deletedOffset];
+  file.gid = split[17 + deletedOffset];
+
+  file.hash = await getFileHashAsync(); // can't be async :(
+
+  return file;
 };
 
 export const getSuspiciousFiles = async (
@@ -144,10 +176,10 @@ export const fileListProcessor = (line: string): File => {
 
 export const validateImage = (imagePath: string) => {
   const IMAGETYPES = ['dd', 'e01', 'l01', 'lef', 'dmg', 'zip'];
-  let splitName = imagePath.split('.');
-  let ext = splitName[splitName.length - 1].toLowerCase();
+  const splitName = imagePath.split('.');
+  const ext = splitName[splitName.length - 1].toLowerCase();
   console.log(ext);
-  let validType = IMAGETYPES.includes(ext);
+  const validType = IMAGETYPES.includes(ext);
 
   return validType && fs.existsSync(imagePath);
 };

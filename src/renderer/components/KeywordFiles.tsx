@@ -1,4 +1,4 @@
-import { KeywordFile } from '../domain/file-system-tools';
+import { KeywordFile } from '../../domain/file-system-tools';
 
 function KeywordFilesComponent({
   keywordFiles,

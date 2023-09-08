@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ReportDetails } from 'domain/orchestrator';
-import PartitionTableComponent from './PartitionTable';
-import RenamedFilesComponent from './RenamedFiles';
-import KeywordFilesComponent from './KeywordFiles';
-import DeletedFilesComponent from './DeletedFiles';
-import './Report.css';
 import { useNavigate } from 'react-router-dom';
+import { ReportDetails } from 'domain/orchestrator';
+import PartitionTableComponent from './components/PartitionTable';
+import RenamedFilesComponent from './RenamedFiles';
+import KeywordFilesComponent from './components/KeywordFiles';
+import DeletedFilesComponent from './components/DeletedFiles';
+import './Report.css';
+import ImageHashComponent from './components/ImageHash';
 
 export default function ReportComponent() {
   const [reportReady, setReportReady] = useState(false);
@@ -39,11 +40,14 @@ export default function ReportComponent() {
       </header>
       {reportReady ? (
         <article className="report">
-          <p>
-            <strong>Image:</strong> {details?.imageName}
-          </p>
-          <h3>Image Hashes</h3>
-          <p>{JSON.stringify(details?.imageHash)}</p>
+          <h3>Image: </h3>
+          <p>{details?.imageName}</p>
+
+          {details?.imageHash ? (
+            <ImageHashComponent hash={details.imageHash} />
+          ) : null}
+
+          <h3>File Info</h3>
           {details?.partitionTable ? (
             <PartitionTableComponent partitionTable={details.partitionTable} />
           ) : null}

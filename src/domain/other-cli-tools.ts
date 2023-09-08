@@ -1,17 +1,50 @@
 import { runCliTool } from './runner';
+import { Partition } from './volume-system-tools';
 
 export type Hash = {
+  fileName: string;
   md5sum: string;
   sha1sum: string;
 };
 
 export const getHashAsync = async (imagePath: string): Promise<Hash> => {
-  const [md5sum, sha1sum] = await Promise.all([
+  const [md5sumFull, sha1sumFull] = await Promise.all([
     runCliTool(`md5sum ${imagePath}`),
     runCliTool(`sha1sum ${imagePath}`),
   ]);
 
-  return { md5sum, sha1sum };
+  // For some reason, this picks up an empty string as the 2nd element.
+  const md5sumArray = md5sumFull.split(' ');
+  const sha1sumArray = sha1sumFull.split(' ');
+
+  const fileName: string = md5sumArray[md5sumArray.length - 1];
+  const md5sum: string = md5sumArray[0];
+  const sha1sum: string = sha1sumArray[0];
+
+  return {
+    fileName,
+    md5sum,
+    sha1sum,
+  };
+};
+
+export const getFileHashAsync = async (
+  imagePath: string,
+  filePartition: Partition,
+  inode: string,
+  keepFile: boolean = true
+): Promise<Hash> => {
+  await runCliTool(
+    `icat -o ${filePartition.start} ${imagePath} ${inode} > .${inode}`
+  );
+
+  const hash = getHashAsync(`.${inode}`);
+
+  if (!keepFile) {
+    await runCliTool(`rm .${inode}`);
+  }
+
+  return hash;
 };
 
 export const getImageInString = async (imagePath: string): Promise<string> => {
