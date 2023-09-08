@@ -232,3 +232,29 @@ export const processForRenamedFile = async (
     trueExtensions: match.extensions,
   };
 };
+
+// need full path starting with /
+export async function getInodeAtFilePath(
+  filepath: string,
+  partition: Partition,
+  imagePath: string
+) {
+  let fileparts = filepath.split('/');
+  let currentInode: number | string = '';
+  for (let i = 0; i < fileparts.length - 1; i++) {
+    let part = fileparts[i + 1];
+    let output: string = await runCliTool(
+      `fls -o ${partition.start} ${imagePath} ${currentInode} `
+    );
+    const lines: string[] = output.split('\n');
+    const matrix: string[][] = lines.map((line) => line.split(/\s+/));
+    for (let entry of matrix) {
+      if (entry[2] == part) {
+        currentInode = Number(entry[1].slice(0, -1));
+        break;
+      }
+    }
+  }
+
+  return currentInode;
+}
