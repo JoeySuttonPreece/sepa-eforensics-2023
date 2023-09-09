@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReportDetails } from 'domain/orchestrator';
 import PartitionTableComponent from './components/PartitionTable';
-import RenamedFilesComponent from './RenamedFiles';
+import RenamedFilesComponent from './components/RenamedFiles';
 import KeywordFilesComponent from './components/KeywordFiles';
 import DeletedFilesComponent from './components/DeletedFiles';
 import './Report.css';

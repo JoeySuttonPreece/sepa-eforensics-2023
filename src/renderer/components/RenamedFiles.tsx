@@ -1,4 +1,4 @@
-import { RenamedFile } from '../domain/file-system-tools';
+import { RenamedFile } from '../../domain/file-system-tools';
 
 function RenamedFilesComponent({
   renamedFiles,
@@ -36,7 +36,7 @@ function RenamedFilesComponent({
                 <br />
                 {renamed.file.ctime}
               </td>
-              <td>{renamed.file.hash}</td>
+              <td>{renamed.file.hash.sha1sum}</td>
             </tr>
           );
         })}

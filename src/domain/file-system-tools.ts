@@ -1,32 +1,10 @@
 import { runCliTool } from './runner';
 import { Partition } from './volume-system-tools';
+import { File } from '../types/types';
 
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
   return runCliTool(`fls ${volume} -o ${offset}`);
-};
-
-// https://wiki.sleuthkit.org/index.php?title=Fls
-// LONG FORMAT!!!
-export type File = {
-  // x/y in output, these can be different for deleted files, cant come up with a better name
-  fileNameFileType: string;
-  metadataFileType: string;
-  deleted: boolean;
-  inode: string;
-  reallocated: boolean;
-  // THIS IS THE ACTUAL FILE NAME
-  fileName: string;
-  // maybe parse these to dates? help with timeline or something
-  mtime: string;
-  atime: string;
-  ctime: string;
-  crtime: string;
-  size: number;
-  uid: string;
-  gid: string;
-
-  hash: string;
 };
 
 export type RenamedFile = {
@@ -39,19 +17,6 @@ export type KeywordFile = {
   file: File;
   matches: string[];
 };
-
-// listfiles(){
-//   foreach -> Line
-// file : processFILe(line),
-// content = getContent()
-// renamedObject
-//  getRenamedFile(File, content, renamedObject)
-//   ifgetDeltedFile(line)
-
-// runCliTool(callbakcs)
-
-// reutrn renamed
-//  }
 
 /// / ---------------------------- Renamed Processing ---------------------------------------------
 

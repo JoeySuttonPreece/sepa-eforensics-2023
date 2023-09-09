@@ -1,4 +1,4 @@
-import { File } from '../../domain/file-system-tools';
+import { File } from '../../types/types';
 
 function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
   return (
@@ -31,7 +31,7 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
                 <br />
                 {deleted.ctime}
               </td>
-              <td>{deleted.hash}</td>
+              <td>{deleted.hash.sha1sum}</td>
             </tr>
           );
         })}

@@ -81,6 +81,7 @@ export const fileListProcessor = (line: string): File => {
   file.inode = split[1 + deletedOffset].replace(':', '');
   // TODO: IMPLEMENT
   // Would be similar to deleted with a check for (REALLOCATED), no offset?
+  // mafaz: What is reallocated?
   file.reallocated = false;
 
   file.fileName = split[2 + deletedOffset];
@@ -91,8 +92,6 @@ export const fileListProcessor = (line: string): File => {
   file.size = +split[15 + deletedOffset];
   file.uid = split[16 + deletedOffset];
   file.gid = split[17 + deletedOffset];
-
-  file.hash = await getFileHashAsync(); // can't be async :(
 
   return file;
 };
@@ -122,6 +121,14 @@ export const getSuspiciousFiles = async (
     if (!files) continue;
 
     for await (const file of files) {
+      file.hash = await getFileHashAsync(
+        args.imagePath,
+        partition,
+        file.inode,
+        false
+      );
+      console.log(file.hash);
+
       // renamed
       const renamedFile = await processForRenamedFile(
         file,
