@@ -1,7 +1,11 @@
 import { exec, spawn } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
-import { promisify } from 'node:util';
 
+/**
+ * This function does runs a single command in the terminal, and returns the
+ * result as a Promise.
+ * The command is run asynchronously.
+ */
 export const runCliTool = async (bin: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     exec(bin, (error, stdout, stderr) => {
@@ -45,7 +49,7 @@ export const runBufferedCliTool = async <Type>(
     // the final outputArray
     // TODO: support / prioritise async callbacks?
     lineReader.on('line', async (line: string) => {
-      const processedLine = lineProcessor(line);
+      const processedLine = await lineProcessor(line);
       outputArray.push(processedLine);
     });
 

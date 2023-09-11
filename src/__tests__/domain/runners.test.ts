@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { runBufferedCliTool, runCliTool } from '../../domain/runner';
+import { runBufferedCliTool, runCliTool } from '../../domain/runners';
 import { File } from '../../types/types';
 import { processForRenamedFile } from '../../domain/file-system-tools';
 
@@ -33,7 +33,7 @@ function listProcessor(line: string): File {
   return file;
 }
 
-test('DEBUG: RUN FUNCTION', async () => {
+test('runBufferedCliTool', async () => {
   const files = await runBufferedCliTool(
     'fls /home/rob/Downloads/dfr-01-ntfs.dd -o 61 -l -p -r',
     // 'fls /home/admin/res/backup/MyTestImage.dd -o 42008576 -l -p -r',
@@ -54,8 +54,16 @@ test('DEBUG: RUN FUNCTION', async () => {
   // This is now, an array of `File`s based on the output of the above command
   // - WARNING: If used in production in its current state, reallocated files
   // may not work as intended
-  // console.log(output);
-  // expect(output).toBe(''); // Put expected output here
 
   expect(1).toBe(1);
 }, 60000);
+
+test('runBufferedCliTool with async await callback', async () => {
+  const files = await runBufferedCliTool(
+    'fls /home/admin/res/backup/MyTestImage.dd -o 42008576 -l -p -r',
+    listProcessor
+  );
+
+  console.log(files);
+  expect(1).toBe(1);
+});

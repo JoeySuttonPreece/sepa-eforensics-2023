@@ -1,4 +1,4 @@
-import { runCliTool } from './runner';
+import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 import { File } from '../types/types';
 

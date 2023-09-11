@@ -66,6 +66,6 @@ export class File implements File {
     this.size = 0;
     this.uid = '';
     this.gid = '';
-    this.hash = '';
+    this.hash = {} as Hash;
   }
 }

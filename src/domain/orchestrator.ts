@@ -2,7 +2,7 @@ import fs from 'fs';
 import { File } from '../types/types';
 import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
-import { runBufferedCliTool } from './runner';
+import { runBufferedCliTool, runCliTool } from './runners';
 import {
   RenamedFile,
   KeywordFile,
@@ -31,35 +31,72 @@ export type ReportDetails = {
   keywordFiles: KeywordFile[] | undefined;
 };
 
+export type SuspiciousFiles = {
+  renamedFiles: RenamedFile[];
+  deletedFiles: File[];
+  keywordFiles: KeywordFile[];
+};
+
 export const orchestrator = async (
   args: OrchestratorOptions,
   statusCallback: (msg: string) => void
-): Promise<ReportDetails> => {
+): Promise<ReportDetails | null> => {
   const { imagePath, output } = args;
 
+  const fileExists = await runCliTool(
+    `[ -f ${imagePath} ] && echo "$FILE exists."`
+  );
+
+  if (fileExists === '') {
+    return null;
+  }
+
+  let hash: Hash = {} as Hash;
   statusCallback('Hashing Drive...');
-  const hash = await getHashAsync(imagePath).catch((reason) => {
-    statusCallback(reason as string);
-  });
+  try {
+    hash = await getHashAsync(imagePath);
+  } catch (error) {
+    if (error instanceof Error) {
+      statusCallback(error.message);
+      throw new Error(error.message);
+    }
+  }
 
   // console.log(imagePath);
   statusCallback('Reading Partition Table...');
-  const partitionTable = await getPartitionTable(imagePath);
+
+  let partitionTable = {} as PartitionTable;
+  try {
+    partitionTable = await getPartitionTable(imagePath);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+  }
 
   // TODO:
-  // need to figure out how to exclude some of these depending on orchestrator options
+  // need to figure out how to exclude some of these depending on
+  // orchestrator options
+  let suspiciousFiles: SuspiciousFiles;
+  let renamedFiles: RenamedFile[];
+  let deletedFiles: File[];
+  let keywordFiles: KeywordFile[];
   statusCallback('Processing Files...');
-
-  const { renamedFiles, deletedFiles, keywordFiles } = await getSuspiciousFiles(
-    args,
-    partitionTable
-  );
+  try {
+    suspiciousFiles = await getSuspiciousFiles(args, partitionTable);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+  }
 
   return {
     imageName: imagePath,
     imageHash: hash || undefined,
     partitionTable: output.partitions ? partitionTable : undefined,
-    renamedFiles: output.renamedFiles ? renamedFiles : undefined,
+    renamedFiles: output.renamedFiles
+      ? suspiciousFiles.renamedFiles
+      : undefined,
     deletedFiles: output.deletedFiles ? deletedFiles : undefined,
     keywordFiles: output.keywordFiles ? keywordFiles : undefined,
   };
@@ -68,32 +105,47 @@ export const orchestrator = async (
 export const fileListProcessor = (line: string): File => {
   const split = line.split(/\s+/);
 
-  const file: File = new File();
-
   const fileType = split[0].split('/');
-  [file.fileNameFileType, file.metadataFileType] = fileType;
+  const [fileNameFileType, metadataFileType] = fileType;
 
-  file.deleted = split[1] === '*';
+  const deleted = split[1] === '*';
 
   let deletedOffset = 0;
-  if (file.deleted) deletedOffset = 1;
+  if (deleted) deletedOffset = 1;
 
-  file.inode = split[1 + deletedOffset].replace(':', '');
+  const inode = split[1 + deletedOffset].replace(':', '');
   // TODO: IMPLEMENT
   // Would be similar to deleted with a check for (REALLOCATED), no offset?
   // mafaz: What is reallocated?
-  file.reallocated = false;
+  const reallocated = false;
 
-  file.fileName = split[2 + deletedOffset];
-  file.mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
-  file.atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
-  file.ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
-  file.crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
-  file.size = +split[15 + deletedOffset];
-  file.uid = split[16 + deletedOffset];
-  file.gid = split[17 + deletedOffset];
+  const fileName = split[2 + deletedOffset];
+  const mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
+  const atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
+  const ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
+  const crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
+  const size = +split[15 + deletedOffset];
+  const uid = split[16 + deletedOffset];
+  const gid = split[17 + deletedOffset];
 
-  return file;
+  const hash = {} as Hash;
+
+  return {
+    fileNameFileType,
+    metadataFileType,
+    deleted,
+    inode,
+    reallocated,
+    fileName,
+    mtime,
+    atime,
+    ctime,
+    crtime,
+    size,
+    uid,
+    gid,
+    hash,
+  };
 };
 
 export const getSuspiciousFiles = async (
