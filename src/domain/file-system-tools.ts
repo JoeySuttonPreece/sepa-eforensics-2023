@@ -250,11 +250,11 @@ export async function getInodeAtFilePath(
     const matrix: string[][] = lines.map((line) => line.split(/\s+/));
     for (let entry of matrix) {
       if (entry[2] == part) {
-        currentInode = Number(entry[1].slice(0, -1));
+        currentInode = entry[1].slice(0, -1);
         break;
       }
     }
   }
 
-  return currentInode;
+  return Number(currentInode);
 }
