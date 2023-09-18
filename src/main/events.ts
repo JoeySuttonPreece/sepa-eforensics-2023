@@ -4,7 +4,7 @@ import { listFiles } from '../domain/file-system-tools';
 import { orchestrator } from '../domain/orchestrator';
 import { getHashAsync, getSearchStringAsync } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
-import { OutputParser } from './output-parser';
+import { PrintText, PrintPDF } from './output-parser';
 
 ipcMain.on('do-everything', async (event, [options]) => {
   // insert loading while orchestrator is going, this means we can't await, perhaps a callback is put into orchestrator to define what it should do??
@@ -20,8 +20,12 @@ ipcMain.on('do-everything', async (event, [options]) => {
     event.sender.send('select-dir', path);
   });
 
-  ipcMain.on('print', (event, [format, destination]) => {
-    OutputParser(output, format, destination);
+  ipcMain.on('print', (event, [format, destination, arrayBuffer]) => {
+    if (format == 'pdf') {
+      PrintPDF(arrayBuffer, destination);
+    } else {
+      PrintText(output, format, destination);
+    }
   });
 
   // first send event that route should be changed to report then:

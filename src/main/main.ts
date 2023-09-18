@@ -20,7 +20,7 @@ import { orchestrator } from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { OutputParser } from './output-parser';
+import { PrintText } from './output-parser';
 
 class AppUpdater {
   constructor() {
@@ -149,7 +149,7 @@ app
         { imagePath, output: { partitions: true } },
         (msg) => {} // don't want to log it to prevent cluttering cli output
       );
-      OutputParser(output, 'json', 'stdout');
+      PrintText(output, 'json', 'stdout');
     } else {
       createWindow();
       app.on('activate', () => {

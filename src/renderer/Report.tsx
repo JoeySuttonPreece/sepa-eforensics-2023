@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ReportDetails } from 'domain/orchestrator';
 import PartitionTableComponent from './PartitionTable';
 import RenamedFilesComponent from './RenamedFiles';
@@ -6,12 +6,15 @@ import KeywordFilesComponent from './KeywordFiles';
 import DeletedFilesComponent from './DeletedFiles';
 import './Report.css';
 import { useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import { text } from 'stream/consumers';
 
 export default function ReportComponent() {
   const [reportReady, setReportReady] = useState(false);
   const [message, setMessage] = useState('Finding Image...');
   const [details, setDetails] = useState<ReportDetails>();
   const navigate = useNavigate();
+  const reportRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     window.electron.ipcRenderer.on(
@@ -33,7 +36,27 @@ export default function ReportComponent() {
   function handlePrint(format: string) {
     window.electron.ipcRenderer.on('select-dir', ([dir]) => {
       if (dir === undefined) return;
-      window.electron.ipcRenderer.sendMessage('print', [format, dir]);
+
+      if (format === 'pdf' && reportRef.current !== null) {
+        const doc = new jsPDF('l', 'pt', 'a4');
+        doc.html(reportRef.current, {
+          callback: function (doc) {
+            window.electron.ipcRenderer.sendMessage('print', [
+              format,
+              dir,
+              doc.output('arraybuffer'),
+            ]);
+          },
+          autoPaging: 'text',
+          width: 100,
+        });
+      }
+
+      window.electron.ipcRenderer.sendMessage('print', [
+        format,
+        dir,
+        reportRef.current,
+      ]);
     });
     window.electron.ipcRenderer.sendMessage('select-dir', []);
   }
@@ -46,7 +69,7 @@ export default function ReportComponent() {
         {reportReady ? <PrintButton onPrint={handlePrint} /> : null}
       </header>
       {reportReady ? (
-        <article className="report">
+        <article ref={reportRef} className="report">
           <p>
             <strong>Image:</strong> {details?.imageName}
           </p>

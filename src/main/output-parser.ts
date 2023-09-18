@@ -3,11 +3,17 @@ import path from 'path';
 import { RenamedFile, File, KeywordFile } from 'domain/file-system-tools';
 import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
+import jsPDF from 'jspdf';
 
 type Writer = (data: string, section: string) => void;
 
+export const PrintPDF = (arrayBuffer: ArrayBuffer, destination: string) => {
+  let filename = path.join(destination, `aeas-report.pdf`);
+  fs.writeFileSync(filename, Buffer.from(arrayBuffer));
+};
+
 // format can be stdout, csv, json
-export const OutputParser = (
+export const PrintText = (
   output: ReportDetails,
   format: string,
   destination: string
