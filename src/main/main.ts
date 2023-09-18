@@ -149,7 +149,7 @@ app
         { imagePath, output: { partitions: true } },
         (msg) => {} // don't want to log it to prevent cluttering cli output
       );
-      OutputParser(output, 'stdout');
+      OutputParser(output, 'json', 'stdout');
     } else {
       createWindow();
       app.on('activate', () => {

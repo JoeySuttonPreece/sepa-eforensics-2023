@@ -6,22 +6,31 @@ import { PartitionTable } from 'domain/volume-system-tools';
 
 type Writer = (data: string, section: string) => void;
 
-export const OutputParser = (output: ReportDetails, destination: string) => {
+// format can be stdout, csv, json
+export const OutputParser = (
+  output: ReportDetails,
+  format: string,
+  destination: string
+) => {
   const writer = (data: string, section: string) => {
     if (destination === 'stdout') {
       process.stdout.write(data);
     } else {
-      const filename = path.join(destination, `aeas-${section}.csv`);
+      const filename = path.join(destination, `aeas-${section}.${format}`);
       fs.appendFileSync(filename, data);
     }
   };
 
-  formatImageDetails(output, writer);
-  if (output.partitionTable)
-    formatPartitionDetails(output.partitionTable, writer);
-  if (output.keywordFiles) formatKeywordFile(output.keywordFiles, writer);
-  if (output.renamedFiles) formatRenamedFile(output.renamedFiles, writer);
-  if (output.deletedFiles) formatDeletedFile(output.deletedFiles, writer);
+  if (format === 'csv') {
+    formatImageDetails(output, writer);
+    if (output.partitionTable)
+      formatPartitionDetails(output.partitionTable, writer);
+    if (output.keywordFiles) formatKeywordFile(output.keywordFiles, writer);
+    if (output.renamedFiles) formatRenamedFile(output.renamedFiles, writer);
+    if (output.deletedFiles) formatDeletedFile(output.deletedFiles, writer);
+  } else if (format === 'json') {
+    writer(JSON.stringify(output), 'report');
+  }
 };
 
 function formatImageDetails(
