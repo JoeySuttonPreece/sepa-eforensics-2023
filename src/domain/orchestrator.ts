@@ -16,6 +16,8 @@ export type OrchestratorOptions = {
     renamedFiles: boolean;
     deletedFiles: boolean;
     keywordFiles: boolean;
+    timeline: boolean;
+    carvedFiles: boolean;
   };
   searchString: string;
 };
