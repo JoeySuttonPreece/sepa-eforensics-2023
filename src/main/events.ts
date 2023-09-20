@@ -1,9 +1,10 @@
 import { ipcMain } from 'electron';
 
 import { listFiles } from '../domain/file-system-tools';
-import { orchestrator } from '../domain/orchestrator';
+import { orchestrator, validateImage } from '../domain/orchestrator';
 import { getHashAsync, getSearchStringAsync } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
+import { eventNames } from 'process';
 
 ipcMain.on('do-everything', async (event, [options]) => {
   // insert loading while orchestrator is going, this means we can't await, perhaps a callback is put into orchestrator to define what it should do??
@@ -13,6 +14,10 @@ ipcMain.on('do-everything', async (event, [options]) => {
 
   // first send event that route should be changed to report then:
   event.sender.send('report:details', output);
+});
+
+ipcMain.on('validate:imagePath', (event, [imagePath]) => {
+  event.sender.send('validate:imagePath', validateImage(imagePath));
 });
 
 //

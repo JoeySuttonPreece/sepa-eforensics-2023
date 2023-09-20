@@ -7,6 +7,7 @@ import {
   KeywordFile,
   processForRenamedFile,
 } from './file-system-tools';
+import fs from 'fs';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -137,4 +138,14 @@ export const fileListProcessor = (line: string): File => {
   file.gid = split[17 + deletedOffset];
 
   return file;
+};
+
+export const validateImage = (imagePath: string) => {
+  const IMAGETYPES = ['dd', 'e01', 'l01', 'lef', 'dmg', 'zip'];
+  let splitName = imagePath.split('.');
+  let ext = splitName[splitName.length - 1].toLowerCase();
+  console.log(ext);
+  let validType = IMAGETYPES.includes(ext);
+
+  return validType && fs.existsSync(imagePath);
 };
