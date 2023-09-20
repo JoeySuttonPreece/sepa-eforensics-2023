@@ -38,7 +38,7 @@ export const getFileHashAsync = async (
     `icat -o ${filePartition.start} ${imagePath} ${inode} > .${inode}`
   );
 
-  const hash = getHashAsync(`.${inode}`);
+  const hash = await getHashAsync(`.${inode}`);
 
   if (!keepFile) {
     await runCliTool(`rm .${inode}`);

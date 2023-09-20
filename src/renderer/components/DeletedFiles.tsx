@@ -1,4 +1,4 @@
-import { File } from '../../types/types';
+import { File } from '../../domain/file-system-tools';
 
 function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
   return (
@@ -25,11 +25,11 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
 
               <td>{deleted.size}</td>
               <td>
-                {deleted.mtime}
+                {deleted.mtime.toLocaleString()}
                 <br />
-                {deleted.atime}
+                {deleted.atime.toLocaleString()}
                 <br />
-                {deleted.ctime}
+                {deleted.ctime.toLocaleString()}
               </td>
               <td>{deleted.hash.sha1sum}</td>
             </tr>

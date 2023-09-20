@@ -22,13 +22,11 @@ export default function StartPage() {
 
     return {
       imagePath,
-      output: {
-        // the below will need to actually be processed
-        partitions: true,
-        renamedFiles: true,
-        deletedFiles: true,
-        keywordFiles: true,
-      },
+      renamedFiles: true,
+      deletedFiles: true,
+      keywordFiles: true,
+      keepFiles: false,
+      searchString: '',
     };
   }
 

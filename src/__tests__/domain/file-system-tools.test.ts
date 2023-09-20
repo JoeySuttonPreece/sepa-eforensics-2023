@@ -7,11 +7,11 @@ jest.mock('../../domain/runner', () => {
     runCliTool: jest
       .fn()
       .mockImplementationOnce(
-        // header no signautre match
+        // header no signature match
         async () => 'aaaaaaaaaaaaaaaa'
       )
       .mockImplementationOnce(
-        // header signatuer match correct extension
+        // header signature match correct extension
         async () => '89504e470d0a1a0a0000000d49484452' // png
       )
       .mockImplementationOnce(

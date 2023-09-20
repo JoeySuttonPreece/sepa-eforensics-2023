@@ -4,6 +4,7 @@ import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
 import {
+  File,
   RenamedFile,
   KeywordFile,
   processForRenamedFile,
@@ -41,14 +42,19 @@ export const orchestrator = async (
   args: OrchestratorOptions,
   statusCallback: (msg: string) => void
 ): Promise<ReportDetails | null> => {
-  const { imagePath, output } = args;
+  const {
+    imagePath,
+    renamedFiles,
+    deletedFiles,
+    keywordFiles,
+    keepFiles,
+    searchString,
+  } = args;
 
-  const fileExists = await runCliTool(
-    `[ -f ${imagePath} ] && echo "$FILE exists."`
-  );
-
-  if (fileExists === '') {
-    return null;
+  try {
+    await runCliTool(`[ -f ${imagePath} ] && echo "$FILE exists."`);
+  } catch (error) {
+    throw new Error(`Couldn't find file: ${imagePath}!`);
   }
 
   let hash: Hash = {} as Hash;
@@ -77,10 +83,8 @@ export const orchestrator = async (
   // TODO:
   // need to figure out how to exclude some of these depending on
   // orchestrator options
-  let suspiciousFiles: SuspiciousFiles;
-  let renamedFiles: RenamedFile[];
-  let deletedFiles: File[];
-  let keywordFiles: KeywordFile[];
+  let suspiciousFiles: SuspiciousFiles = {} as SuspiciousFiles;
+
   statusCallback('Processing Files...');
   try {
     suspiciousFiles = await getSuspiciousFiles(args, partitionTable);
@@ -93,42 +97,56 @@ export const orchestrator = async (
   return {
     imageName: imagePath,
     imageHash: hash || undefined,
-    partitionTable: output.partitions ? partitionTable : undefined,
-    renamedFiles: output.renamedFiles
+    partitionTable: partitionTable || undefined,
+    renamedFiles: suspiciousFiles.renamedFiles
       ? suspiciousFiles.renamedFiles
       : undefined,
-    deletedFiles: output.deletedFiles ? deletedFiles : undefined,
-    keywordFiles: output.keywordFiles ? keywordFiles : undefined,
+    deletedFiles: suspiciousFiles.deletedFiles
+      ? suspiciousFiles.deletedFiles
+      : undefined,
+    keywordFiles: suspiciousFiles.keywordFiles
+      ? suspiciousFiles.keywordFiles
+      : undefined,
   };
 };
 
 export const fileListProcessor = (line: string): File => {
-  const split = line.split(/\s+/);
+  const split = line.split('\t');
 
-  const fileType = split[0].split('/');
+  const metadata = split[0].split(' ');
+
+  const fileType = metadata[0].split('/');
   const [fileNameFileType, metadataFileType] = fileType;
 
-  const deleted = split[1] === '*';
+  const deleted = metadata[1] === '*';
+  let inode = deleted ? metadata[2] : metadata[1];
+  inode = inode.replace(':', '');
+  const reallocated = inode.includes('(realloc)');
 
-  let deletedOffset = 0;
-  if (deleted) deletedOffset = 1;
+  if (reallocated) {
+    inode.replace('(realloc)', '');
+  }
 
-  const inode = split[1 + deletedOffset].replace(':', '');
-  // TODO: IMPLEMENT
-  // Would be similar to deleted with a check for (REALLOCATED), no offset?
-  // mafaz: What is reallocated?
-  const reallocated = false;
+  const fileName = split[1];
 
-  const fileName = split[2 + deletedOffset];
-  const mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
-  const atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
-  const ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
-  const crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
-  const size = +split[15 + deletedOffset];
-  const uid = split[16 + deletedOffset];
-  const gid = split[17 + deletedOffset];
+  // These conversions are pretty awful
+  // Basically takes the date output from fls, removes the timezone info (AEDT) // THIS IS THE CURRENT TIMEZONE OF THE SYSTEM
+  // Converts it to a date object, which is also in the current system timezone anyway, so we dont need the timezone info
+  // from fls
+  const mtime = new Date(split[2].split('(')[0]);
+  const atime = new Date(split[3].split('(')[0]);
+  const ctime = new Date(split[4].split('(')[0]);
+  const crtime = new Date(split[5].split('(')[0]);
 
-  const hash = {} as Hash;
+  const size = Number(split[6]);
+  const uid = split[7];
+  const gid = split[8];
+
+  const hash = {
+    fileName: '',
+    md5sum: '',
+    sha1sum: '',
+  };
 
   return {
     fileNameFileType,
@@ -156,6 +174,7 @@ export const getSuspiciousFiles = async (
   deletedFiles: File[];
   keywordFiles: KeywordFile[];
 }> => {
+  // DONT FORGET ORCHESTRATOROPTIONS, CHECK IF WE WANTTO SEARCH FOR THINGS
   console.log('Suspicious files called');
   const renamedFiles: RenamedFile[] = [];
   const deletedFiles: File[] = [];
@@ -166,8 +185,8 @@ export const getSuspiciousFiles = async (
     const files = await runBufferedCliTool<File>(
       `fls -o ${partition.start} -l -p -r ${args.imagePath}`,
       fileListProcessor
-    ).catch((reason) =>
-      console.log(`runBufferedCliTool failed with: ${reason}`)
+    ).catch(() =>
+      console.log(`Couldn't read partition: ${partition.description}`)
     );
 
     if (!files) continue;
@@ -200,6 +219,9 @@ export const getSuspiciousFiles = async (
     }
   }
 
+  console.log(renamedFiles);
+  console.log(deletedFiles);
+  console.log(keywordFiles);
   return { renamedFiles, deletedFiles, keywordFiles };
 };
 

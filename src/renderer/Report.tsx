@@ -12,6 +12,7 @@ export default function ReportComponent() {
   const [reportReady, setReportReady] = useState(false);
   const [message, setMessage] = useState('Finding Image...');
   const [details, setDetails] = useState<ReportDetails>();
+  const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,10 +21,15 @@ export default function ReportComponent() {
       (reportDetails: ReportDetails) => {
         setDetails(reportDetails);
         setReportReady(true);
+        console.log(reportDetails);
       }
     );
     window.electron.ipcRenderer.on('status:update', (msg) => {
       setMessage(msg);
+    });
+    window.electron.ipcRenderer.on('report:error', (eMsg: string) => {
+      setErrorMsg(eMsg);
+      setReportReady(false);
     });
   }, []);
 
@@ -38,6 +44,7 @@ export default function ReportComponent() {
         <h1>AEAS Generated Report</h1>
         {reportReady ? <button>Print</button> : null}
       </header>
+      {errorMsg === '' ? null : errorMsg}
       {reportReady ? (
         <article className="report">
           <h3>Image: </h3>

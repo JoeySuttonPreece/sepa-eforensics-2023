@@ -1,10 +1,31 @@
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
-import { File } from '../types/types';
+import { Hash } from './other-cli-tools';
 
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
   return runCliTool(`fls ${volume} -o ${offset}`);
+};
+
+export type File = {
+  // x/y in output, these can be different for deleted files, cant come up with a better name
+  fileNameFileType: string;
+  metadataFileType: string;
+  deleted: boolean;
+  inode: string;
+  reallocated: boolean;
+  // THIS IS THE ACTUAL FILE NAME
+  fileName: string;
+  // maybe parse these to dates? help with timeline or something
+  mtime: Date;
+  atime: Date;
+  ctime: Date;
+  crtime: Date;
+  size: number;
+  uid: string;
+  gid: string;
+
+  hash: Hash;
 };
 
 export type RenamedFile = {
@@ -17,7 +38,6 @@ export type KeywordFile = {
   file: File;
   matches: string[];
 };
-
 /// / ---------------------------- Renamed Processing ---------------------------------------------
 
 const SIGNATURES = [
@@ -169,10 +189,12 @@ const matchSignature = (
   return { result: false, extensions: [''], match: '' };
 };
 
-// imagePath: path to the image being investigated
-// partition: the partition that the file is located in
-// file: file to be investigated
-///
+/**
+ * Processes a file for renamed files.
+ * @param imagePath Path to the image being investigated.
+ * @param partition The partition that the file is located in.
+ * @param file The file to be investigated.
+ */
 export const processForRenamedFile = async (
   file: File,
   imagePath: string,

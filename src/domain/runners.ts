@@ -48,8 +48,8 @@ export const runBufferedCliTool = async <Type>(
     // For every line, run the callback function and append its return value to
     // the final outputArray
     // TODO: support / prioritise async callbacks?
-    lineReader.on('line', async (line: string) => {
-      const processedLine = await lineProcessor(line);
+    lineReader.on('line', (line: string) => {
+      const processedLine = lineProcessor(line);
       outputArray.push(processedLine);
     });
 
