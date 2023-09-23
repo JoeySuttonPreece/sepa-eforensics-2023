@@ -31,6 +31,17 @@
       become: yes
       ansible.builtin.apt:
         name: xxd
+        
+    - name: Download yq binary and make it executable
+      ansible.builtin.get_url:
+        url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+        dest: /usr/bin/yq
+        mode: '0755'  # Set the file mode to make it executable
+
+    - name: Install testdisk
+      become: yes
+      ansible.builtin.apt:
+        name: testdisk
 
     # These are technically optional but make development a whole lot easier
 
@@ -58,16 +69,5 @@
       ansible.builtin.apt:
         name: gh
         update_cache: yes
-
-    - name: Download yq binary and make it executable
-      ansible.builtin.get_url:
-        url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-        dest: /usr/bin/yq
-        mode: '0755'  # Set the file mode to make it executable
-
-    - name: Install testdisk
-      become: yes
-      ansible.builtin.apt:
-        name: testdisk
 
 
