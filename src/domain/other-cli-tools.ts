@@ -154,4 +154,65 @@ export const getSearchStringAsync = async (
   return fileDetails;
 };
 
+<<<<<<< HEAD
 export const processForKeywordSearchFiles = () => {};
+=======
+export type CarvedFile = {
+  filedata: string;
+
+  // will need to formatted properly later with split string and stuff
+};
+
+export const getCarvedFileAsync = async (
+  imagePath: string
+  //startSectorList: number[]
+): Promise<CarvedFile> => {
+
+  const partionNumber = +(await Promise.all([
+  runCliTool(
+    'testdisk -l MyTestImage.dd | tee testdisk.log | egrep "[[:digit:]][[:space:]][P,E,L,D,*][[:space:]].+([[:space:]]+[[:digit:]]+){3}" | cut -f 2 -d\ |tail -n 1'
+  ),
+]));
+
+for (let i = 1; i < partionNumber; i++) {
+  await Promise.all([
+    runCliTool(
+      `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+    ),
+
+    //loop exiftool every file except "report.xml"
+    //filename, file size, original date, file type
+    runCliTool(
+      `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '>>carvedfile.xml'`
+    ),
+
+    //incase save recovered files for report/client
+    runCliTool(`rm -d -f testFolder.1`),
+  ]);
+};
+
+var fs = require('fs'),
+    xml2js = require('xml2js');
+
+var parser = new xml2js.Parser();
+fs.readFile(__dirname + '/carvedfile.xml', function(err: any, data: any) {
+    parser.parseString(data, function (err: any, result: any) {
+      fs.writeFile('carvedfile.json',result,(err:any) =>{
+        if (err) throw err;
+        console.log('The file has been saved!');
+      });
+    });
+});
+
+  const [filedata] = await Promise.all([
+    // check the name of the file where the data was outputted
+    (filedata = runCliTool(`cat testFolder/audit.txt `);),
+
+    // remove the complied xml file after it was extracted
+    runCliTool(`rm -f carvedfile.xml`),
+  ]);
+  return { filedata };
+
+};
+
+>>>>>>> f69373a (Test)

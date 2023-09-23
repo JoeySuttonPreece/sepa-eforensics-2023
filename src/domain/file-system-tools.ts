@@ -220,3 +220,15 @@ export const processForRenamedFile = async (
     trueExtensions: match.extensions,
   };
 };
+
+export type CarvedFile= {
+
+  file: File;
+
+///change the matched string and true extension to other properties that are not curently included in the file type but do exist in our photorec outputted file data
+
+  matchedSignature: string;
+
+  trueExtensions: string[];
+
+};

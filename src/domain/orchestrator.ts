@@ -28,6 +28,7 @@ export type ReportDetails = {
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
   keywordFiles: KeywordFile[] | undefined;
+  carvedFile: CarvedFile[] | undefined;
 };
 
 export type SuspiciousFiles = {
@@ -136,7 +137,25 @@ export const getSuspiciousFiles = async (
         deletedFiles.push(file);
       }
 
+      // carved
+      // if (carvedfile) {
+      //   CarvedFiles.push(carvedfile);
+      // }
+
       // keyword //////////// SUS
+
+      /*
+      const keyword = await getSearchStringAsync(
+      args.imagePath,
+      searchString,
+      // Fix this -- call all start value of all partition in the partition table
+      Partition.partiton.start,
+    );
+    */
+      /*
+      if (keywordFile) {
+        keywordFiles.push(keywordFile);
+      } */
     }
   }
 
