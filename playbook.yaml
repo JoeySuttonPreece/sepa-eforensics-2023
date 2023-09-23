@@ -33,6 +33,7 @@
         name: xxd
         
     - name: Download yq binary and make it executable
+      become: yes
       ansible.builtin.get_url:
         url: https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
         dest: /usr/bin/yq
