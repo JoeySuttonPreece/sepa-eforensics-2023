@@ -1,6 +1,9 @@
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 
+// -------------------------------------------------------------------------------------------------
+// Hash Processing
+
 export type Hash = {
   fileName: string;
   md5sum: string;
@@ -47,8 +50,31 @@ export const getFileHashAsync = async (
   return hash;
 };
 
-export const getImageInString = async (imagePath: string): Promise<string> => {
+// -------------------------------------------------------------------------------------------------
+// Keyword File Processing
+
+type KeywordMatch = {
+  offset: string;
+  matchedString: string;
+};
+
+export const getImageInString = (imagePath: string): Promise<string> => {
   return runCliTool(`strings -t d ${imagePath}`);
+};
+
+const parseStringsOutputToMatches = (stringsOutput: string): KeywordMatch[] => {
+  const keywordMatches: KeywordMatch[] = [];
+  const lines = stringsOutput.split('\n');
+
+  for (const line of lines) {
+    const splittedLine = line.split(' ');
+    keywordMatches.push({
+      offset: splittedLine[0],
+      matchedString: splittedLine[1],
+    });
+  }
+
+  return keywordMatches;
 };
 
 export const getSearchStringAsync = async (
@@ -56,9 +82,14 @@ export const getSearchStringAsync = async (
   searchString: string,
   startSectorList: number[]
 ): Promise<string> => {
-  const byteOffsetOfString: string = await runCliTool(
+  const stringsOutput: string = await runCliTool(
     `strings -t d ${imagePath} | grep -I ${searchString}`
   );
+
+  const keywordMatches = parseStringsOutputToMatches(stringsOutput);
+
+  for (const match of keywordMatches) {
+  }
 
   let leastOffsetDifference: number = 0;
   let leastOffsetDifferenceFinal: number = 0;
@@ -69,7 +100,7 @@ export const getSearchStringAsync = async (
 
   for (let i: number = 0; i < startSectorList.length; i++) {
     loopValue =
-      startSectorList[i] * (sectorSizeByte - Number(byteOffsetOfString));
+      startSectorList[i] * (sectorSizeByte - parseInt(byteOffsetOfString, 10));
 
     if (loopValue >= 0) {
       leastOffsetDifference = loopValue;
@@ -79,7 +110,8 @@ export const getSearchStringAsync = async (
       startSectorMain = startSectorList[i];
 
       console.log(
-        `Found the partition. Its starting byte offset is: ${startSectorMain} and the difference is: ${leastOffsetDifferenceFinal}`
+        `Found the partition. Its starting byte offset is: ${startSectorMain} ` +
+          `and the difference is: ${leastOffsetDifferenceFinal}.`
       );
 
       break;
@@ -92,22 +124,18 @@ export const getSearchStringAsync = async (
   );
 
   // possible output: File System Type: smth...So, need to split it to get the “smth”
-
-  const splitted: (string | number)[] = fileSystemTypeLine.split(':');
-  const fileSystemType: number = splitted[1] as number;
+  const fileSystemType: number = parseInt(fileSystemTypeLine.split(':')[1], 10);
 
   // limiting it to print only first instance of “Size:” as it can be block size or sector size
-
   const partitionBlockOrSectorSizeUnsplit: string = await runCliTool(
     `${fsstatCommand} | grep  -o 'Size:'`
   );
 
   // possible output: Block Size: number...So, need to split it to get the “number”
-
-  const splitted2: (string | number)[] =
-    partitionBlockOrSectorSizeUnsplit.split(':');
-
-  const partitionBlockOrSectorSize: number = splitted2[1] as number;
+  const partitionBlockOrSectorSize: number = parseInt(
+    partitionBlockOrSectorSizeUnsplit.split(':')[1],
+    10
+  );
 
   const blockNum: number =
     leastOffsetDifferenceFinal / partitionBlockOrSectorSize;
@@ -116,11 +144,14 @@ export const getSearchStringAsync = async (
     `ifind -f ${fileSystemType} -o ${startSectorMain} -d ${blockNum} ${imagePath}`
   );
 
-  // Note: If it doesn’t come as an integer number, it will need to be carved out as the file has been archived and deleted. Most probably if its deleted, it will come as a large number but not sure
-
+  // Note: If it doesn’t come as an integer number, it will need to be carved out as the file
+  // has been archived and deleted. Most probably if it's deleted, it will come
+  // as a large number but not sure
   const fileDetails: string = await runCliTool(
     `icat -f ${fileSystemType} -o ${startSectorMain} ${imagePath} ${inode}`
   );
 
   return fileDetails;
 };
+
+export const processForKeywordSearchFiles = () => {};

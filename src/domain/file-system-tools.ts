@@ -38,7 +38,8 @@ export type KeywordFile = {
   file: File;
   matches: string[];
 };
-/// / ---------------------------- Renamed Processing ---------------------------------------------
+
+// ------------------------------- Renamed Processing ---------------------------------------------
 
 const SIGNATURES = [
   { sig: '50575333', ext: ['psafe3'] },

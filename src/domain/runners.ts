@@ -26,7 +26,7 @@ export const runCliTool = async (bin: string): Promise<string> => {
  * This function will return the an array of all the processed data,
  * as computed by each lineProcessor function.
  */
-export const runBufferedCliTool = async <Type>(
+export const runBufferedCliTool = <Type>(
   bin: string,
   lineProcessor: (line: string) => Type
 ): Promise<Type[]> => {

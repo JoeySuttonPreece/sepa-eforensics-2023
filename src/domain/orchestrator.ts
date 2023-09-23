@@ -1,26 +1,24 @@
 import fs from 'fs';
-import { File } from '../types/types';
 import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
 import {
   File,
   RenamedFile,
-  KeywordFile,
   processForRenamedFile,
+  KeywordFile,
 } from './file-system-tools';
 
 export type OrchestratorOptions = {
   imagePath: string;
-  output: {
-    partitions: boolean;
-    renamedFiles: boolean;
-    deletedFiles: boolean;
-    keywordFiles: boolean;
-    timeline: boolean;
-    carvedFiles: boolean;
-  };
   searchString: string;
+  showPartitions: boolean;
+  showTimeline: boolean;
+  includeRenamedFiles: boolean;
+  includeDeletedFiles: boolean;
+  includeKeywordSearchFiles: boolean;
+  includeCarvedFiles: boolean;
+  keepRecoveredFiles: boolean;
 };
 
 export type ReportDetails = {
@@ -35,79 +33,6 @@ export type ReportDetails = {
 export type SuspiciousFiles = {
   renamedFiles: RenamedFile[];
   deletedFiles: File[];
-  keywordFiles: KeywordFile[];
-};
-
-export const orchestrator = async (
-  args: OrchestratorOptions,
-  statusCallback: (msg: string) => void
-): Promise<ReportDetails | null> => {
-  const {
-    imagePath,
-    renamedFiles,
-    deletedFiles,
-    keywordFiles,
-    keepFiles,
-    searchString,
-  } = args;
-
-  try {
-    await runCliTool(`[ -f ${imagePath} ] && echo "$FILE exists."`);
-  } catch (error) {
-    throw new Error(`Couldn't find file: ${imagePath}!`);
-  }
-
-  let hash: Hash = {} as Hash;
-  statusCallback('Hashing Drive...');
-  try {
-    hash = await getHashAsync(imagePath);
-  } catch (error) {
-    if (error instanceof Error) {
-      statusCallback(error.message);
-      throw new Error(error.message);
-    }
-  }
-
-  // console.log(imagePath);
-  statusCallback('Reading Partition Table...');
-
-  let partitionTable = {} as PartitionTable;
-  try {
-    partitionTable = await getPartitionTable(imagePath);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-  }
-
-  // TODO:
-  // need to figure out how to exclude some of these depending on
-  // orchestrator options
-  let suspiciousFiles: SuspiciousFiles = {} as SuspiciousFiles;
-
-  statusCallback('Processing Files...');
-  try {
-    suspiciousFiles = await getSuspiciousFiles(args, partitionTable);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-  }
-
-  return {
-    imageName: imagePath,
-    imageHash: hash || undefined,
-    partitionTable: partitionTable || undefined,
-    renamedFiles: suspiciousFiles.renamedFiles
-      ? suspiciousFiles.renamedFiles
-      : undefined,
-    deletedFiles: suspiciousFiles.deletedFiles
-      ? suspiciousFiles.deletedFiles
-      : undefined,
-    keywordFiles: suspiciousFiles.keywordFiles
-      ? suspiciousFiles.keywordFiles
-      : undefined,
-  };
 };
 
 export const fileListProcessor = (line: string): File => {
@@ -130,15 +55,16 @@ export const fileListProcessor = (line: string): File => {
   const fileName = split[1];
 
   // These conversions are pretty awful
-  // Basically takes the date output from fls, removes the timezone info (AEDT) // THIS IS THE CURRENT TIMEZONE OF THE SYSTEM
-  // Converts it to a date object, which is also in the current system timezone anyway, so we dont need the timezone info
-  // from fls
+  // Basically takes the date output from fls, removes the timezone info (AEDT).
+  // THIS IS THE CURRENT TIMEZONE OF THE SYSTEM.
+  // Converts it to a date object, which is also in the current system timezone anyway, so we don't
+  // need the timezone info from fls
   const mtime = new Date(split[2].split('(')[0]);
   const atime = new Date(split[3].split('(')[0]);
   const ctime = new Date(split[4].split('(')[0]);
   const crtime = new Date(split[5].split('(')[0]);
 
-  const size = Number(split[6]);
+  const size = parseInt(split[6], 10);
   const uid = split[7];
   const gid = split[8];
 
@@ -169,16 +95,11 @@ export const fileListProcessor = (line: string): File => {
 export const getSuspiciousFiles = async (
   args: OrchestratorOptions,
   partitionTable: PartitionTable
-): Promise<{
-  renamedFiles: RenamedFile[];
-  deletedFiles: File[];
-  keywordFiles: KeywordFile[];
-}> => {
-  // DONT FORGET ORCHESTRATOROPTIONS, CHECK IF WE WANTTO SEARCH FOR THINGS
-  console.log('Suspicious files called');
+): Promise<SuspiciousFiles> => {
+  // DON'T FORGET ORCHESTRATOR OPTIONS, CHECK IF WE WANT TO SEARCH FOR THINGS
+  console.log('Suspicious files called.');
   const renamedFiles: RenamedFile[] = [];
   const deletedFiles: File[] = [];
-  const keywordFiles: KeywordFile[] = [];
 
   for await (const partition of partitionTable.partitions) {
     console.log(partition);
@@ -221,38 +142,76 @@ export const getSuspiciousFiles = async (
 
   console.log(renamedFiles);
   console.log(deletedFiles);
-  console.log(keywordFiles);
-  return { renamedFiles, deletedFiles, keywordFiles };
+  return { renamedFiles, deletedFiles };
 };
 
-export const fileListProcessor = (line: string): File => {
-  const split = line.split(/\s+/);
+export const orchestrator = async (
+  orchestratorOptions: OrchestratorOptions,
+  statusCallback: (msg: string) => void
+): Promise<ReportDetails | null> => {
+  try {
+    await runCliTool(
+      `[ -f ${orchestratorOptions.imagePath} ] && echo "$FILE exists."`
+    );
+  } catch (error) {
+    throw new Error(`Couldn't find file: ${orchestratorOptions.imagePath}!`);
+  }
 
-  const file: File = new File();
+  let hash: Hash = {} as Hash;
+  statusCallback('Hashing Drive...');
+  try {
+    hash = await getHashAsync(orchestratorOptions.imagePath);
+  } catch (error) {
+    if (error instanceof Error) {
+      statusCallback(error.message);
+      throw new Error(error.message);
+    }
+  }
 
-  const fileType = split[0].split('/');
-  [file.fileNameFileType, file.metadataFileType] = fileType;
+  // console.log(imagePath);
+  statusCallback('Reading Partition Table...');
 
-  file.deleted = split[1] === '*';
+  let partitionTable = {} as PartitionTable;
+  try {
+    partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+  }
 
-  let deletedOffset = 0;
-  if (file.deleted) deletedOffset = 1;
+  // TODO:
+  // need to figure out how to exclude some of these depending on
+  // orchestrator options
+  let suspiciousFiles: SuspiciousFiles = {} as SuspiciousFiles;
+  const keywordFiles: KeywordFile[] = [];
 
-  file.inode = split[1 + deletedOffset].replace(':', '');
-  // TODO: IMPLEMENT
-  // Would be similar to deleted with a check for (REALLOCATED), no offset?
-  file.reallocated = false;
+  statusCallback('Processing Files...');
+  try {
+    suspiciousFiles = await getSuspiciousFiles(
+      orchestratorOptions,
+      partitionTable
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+  }
 
-  file.fileName = split[2 + deletedOffset];
-  file.mtime = split.slice(3 + deletedOffset, 6 + deletedOffset).join(' ');
-  file.atime = split.slice(6 + deletedOffset, 9 + deletedOffset).join(' ');
-  file.ctime = split.slice(9 + deletedOffset, 12 + deletedOffset).join(' ');
-  file.crtime = split.slice(12 + deletedOffset, 15 + deletedOffset).join(' ');
-  file.size = +split[15 + deletedOffset];
-  file.uid = split[16 + deletedOffset];
-  file.gid = split[17 + deletedOffset];
+  statusCallback('Searching for keyword files...');
 
-  return file;
+  return {
+    imageName: orchestratorOptions.imagePath,
+    imageHash: hash || undefined,
+    partitionTable: partitionTable || undefined,
+    renamedFiles: suspiciousFiles.renamedFiles
+      ? suspiciousFiles.renamedFiles
+      : undefined,
+    deletedFiles: suspiciousFiles.deletedFiles
+      ? suspiciousFiles.deletedFiles
+      : undefined,
+    keywordFiles: keywordFiles || undefined,
+  };
 };
 
 export const validateImage = (imagePath: string) => {
