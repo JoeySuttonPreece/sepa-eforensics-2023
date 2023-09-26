@@ -1,3 +1,4 @@
+import { number } from 'yargs';
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 
@@ -154,9 +155,6 @@ export const getSearchStringAsync = async (
   return fileDetails;
 };
 
-<<<<<<< HEAD
-export const processForKeywordSearchFiles = () => {};
-=======
 export type CarvedFile = {
   filedata: string;
 
@@ -165,20 +163,68 @@ export type CarvedFile = {
 
 export const getCarvedFileAsync = async (
   imagePath: string
-  //startSectorList: number[]
+  startSectorList: number[]
 ): Promise<CarvedFile> => {
 
-  const partionNumber = +(await Promise.all([
-  runCliTool(
-    'testdisk -l MyTestImage.dd | tee testdisk.log | egrep "[[:digit:]][[:space:]][P,E,L,D,*][[:space:]].+([[:space:]]+[[:digit:]]+){3}" | cut -f 2 -d\ |tail -n 1'
-  ),
-]));
+  const partionNumber = startSectorList.length;
 
 for (let i = 1; i < partionNumber; i++) {
   await Promise.all([
     runCliTool(
       `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+    )],
+
+  const filenames: string = await runCliTool(`ls`);
+  const const; fileNameArrayProper: string[]=filenames.split('\n')
+
+
+  const index =fileNameArrayProper.indexOf("report.xml",0)
+  if (index > -1){
+    console.log(index)
+    console.log(fileNameArrayProper.at(index))
+    fileNameArrayProper.splice(index,1)
+  }
+//assuming no new line issue are in the array, we will need to loop through it
+
+
+
+      console.log(filenames.split())
+
+      runCliTool('yq -p=xml -o=json  report.xml>./carved.json'),
+
+
+
+  for (let j = 0; j<fileNameArrayProper.length;j++)
+  {
+    ///const generateFileMetaData :string =
+    runCliTool(
+      `exiftool  ${fileNameArrayProper[j]} > tmpfile`,
     ),
+
+    convertTextToJSON : json  =   runCliTool(
+      'yq -o=json tmpfile`,
+    ),
+
+    const value: Key = Date/Time Original
+
+    const arr = object.phaseExecutions.convertTextToJSON.map(item => item.value)
+
+  }
+
+
+///
+///  json file =
+
+
+
+
+
+    }
+
+
+  )
+
+
 
     //loop exiftool every file except "report.xml"
     //filename, file size, original date, file type
@@ -215,4 +261,3 @@ fs.readFile(__dirname + '/carvedfile.xml', function(err: any, data: any) {
 
 };
 
->>>>>>> f69373a (Test)
