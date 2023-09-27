@@ -161,103 +161,158 @@ export type CarvedFile = {
   // will need to formatted properly later with split string and stuff
 };
 
+
+export const getImageInString = (imagePath: string): Promise<string> => {
+  return runCliTool(`strings -t d ${imagePath}`);
+};
+
 export const getCarvedFileAsync = async (
-  imagePath: string
+  imagePath: string,
+  sectorSize: number,
   startSectorList: number[]
-): Promise<CarvedFile> => {
+): Promise<string> => {
 
   const partionNumber = startSectorList.length;
 
 for (let i = 1; i < partionNumber; i++) {
-  await Promise.all([
+ await Promise.all([
     runCliTool(
-      `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-    )],
+    `photorec /d testFolder.1 /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+   )],)
 
-  const filenames: string = await runCliTool(`ls`);
-  const const; fileNameArrayProper: string[]=filenames.split('\n')
-
-
-  const index =fileNameArrayProper.indexOf("report.xml",0)
-  if (index > -1){
-    console.log(index)
-    console.log(fileNameArrayProper.at(index))
-    fileNameArrayProper.splice(index,1)
-  }
-//assuming no new line issue are in the array, we will need to loop through it
+    const filename2: string = await runCliTool(`ls`);
+    const fileNameArrayProper: string[] = filename2.split('\n')
 
 
-
-      console.log(filenames.split())
-
-      runCliTool('yq -p=xml -o=json  report.xml>./carved.json'),
+    const index =fileNameArrayProper.indexOf("report.xml",0)
+    if (index > -1){
+      console.log(index)
+      console.log(fileNameArrayProper.at(index))
+      fileNameArrayProper.splice(index,1)
+    }
+    //assuming no new line issue are in the array, we will need to loop through it
 
 
 
-  for (let j = 0; j<fileNameArrayProper.length;j++)
-  {
-    ///const generateFileMetaData :string =
-    runCliTool(
-      `exiftool  ${fileNameArrayProper[j]} > tmpfile`,
-    ),
+    console.log(filename2.split('\n'));
 
-    convertTextToJSON : json  =   runCliTool(
-      'yq -o=json tmpfile`,
-    ),
+    /////////////////////
 
-    const value: Key = Date/Time Original
+    const reportS:string = await runCliTool(`cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '`);
 
-    const arr = object.phaseExecutions.convertTextToJSON.map(item => item.value)
+    const fileobjectStringLines: string[] = reportS.split("<fileobject>");
 
-  }
+    fileobjectStringLines.shift(); ///to reomve the empty line created due to first slight of fileobj
 
 
-///
-///  json file =
+    const filenameFinal: string[] = [];
+const filesizeFinal: string[] = [];
+const filesectorFinal: number[] = [];
+const fileLengthFinal: number[] = [];
 
 
+    ///this has to be looped fo nth case in fileobeject string lines
+    for (let k=0; k<fileobjectStringLines.length; k++)
+    {
+    const filename: string[] = fileobjectStringLines[k].split("<filename>");
+    filename.shift(); ///to reomve the empty line created due to first slight of filename
 
 
+    const filenamePrep:string[] = filename[0].split("</filesize>");
+
+    filenameFinal[k] = filenamePrep[0];
+    ///now our data is in first element of the array
 
     }
 
 
-  )
+
+
+    ////////////////////////////////
+
+
+    for (let k=0; k<fileobjectStringLines.length; k++)
+    {
+
+ ///this has to be looped fo nth case in fileobeject string lines
+    const filesize: string[] = fileobjectStringLines[k].split("<filesize>");
+    filesize.shift() ///to remove the empty line created due to first slight of filename
+
+
+    const filesizePrep:string[] = filesize[0].split("</filesize>");
+    ///now our data is in first element of the array
+
+    filesizeFinal[k] = filesizePrep[0];
+
+    }
+    ///////////////////
+
+    for (let k=0; k<fileobjectStringLines.length; k++)
+    {
+
+    const fileStartSectorPrep: string[] = fileobjectStringLines[0].split("<byte_runs>");
+    fileStartSectorPrep.shift(); ///to reomve the empty line created due to first slight of filename
+
+
+    const fileStartSector:string[] = fileStartSectorPrep[0].split("image_offset=");
+    ///now our data is in 2nd element of the array
+
+    const splitteragainfileStartSector:string[] = fileStartSector[1].split("'");
+
+    filesectorFinal[k] = parseInt(splitteragainfileStartSector[1]) / sectorSize;
+
+    fileLengthFinal[k] = parseInt(splitteragainfileStartSector[3]) / sectorSize;
+
+    }
+    myList.forEach(item => {
+      console.log(item)
+  })
+
+      const tempfile:string
+
+      const ArrayofdateTimeOriginal: string[]
+    ///loop through the file names and run exifs on all of them
+    filenameFinal.forEach (item => {
+      tempfile = await runCliTool(`exiftool ./testfolder.1/${filenameFinal[item]}`);
+      ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
+
+
+///would need to create switch case for this to consider all the other cases
+
+      if(tempfile.match("Date/Time Original")){
+const tempArray: string[] = tempFile.split("Date/Time Original:");
+const tempArrayPrep
 
 
 
-    //loop exiftool every file except "report.xml"
-    //filename, file size, original date, file type
-    runCliTool(
-      `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '>>carvedfile.xml'`
-    ),
 
-    //incase save recovered files for report/client
-    runCliTool(`rm -d -f testFolder.1`),
-  ]);
-};
+}
+else{
+  tempstring = "N/A";
+  ArrayofdateTimeOriginal[k]= tempstring;
+}
 
-var fs = require('fs'),
-    xml2js = require('xml2js');
+  })
 
-var parser = new xml2js.Parser();
-fs.readFile(__dirname + '/carvedfile.xml', function(err: any, data: any) {
-    parser.parseString(data, function (err: any, result: any) {
-      fs.writeFile('carvedfile.json',result,(err:any) =>{
-        if (err) throw err;
-        console.log('The file has been saved!');
-      });
-    });
-});
 
-  const [filedata] = await Promise.all([
-    // check the name of the file where the data was outputted
-    (filedata = runCliTool(`cat testFolder/audit.txt `);),
+    }
 
-    // remove the complied xml file after it was extracted
-    runCliTool(`rm -f carvedfile.xml`),
-  ]);
-  return { filedata };
+  }
 
-};
 
+
+
+  //loop exiftool every file except "report.xml"
+  //filename, file size, original date, file type
+  runCliTool(
+    >>carvedfile.xml'`
+  ),
+
+  //incase save recovered files for report/client
+  runCliTool(`rm -d -f testFolder.*`),
+
+  return { filedata }
+
+  ///this will be thown back to orchestrator---not done yet....will focuso on it on thursday
+
+}
