@@ -301,7 +301,7 @@ else{
 
 
 
-
+//test value
   //loop exiftool every file except "report.xml"
   //filename, file size, original date, file type
   runCliTool(
