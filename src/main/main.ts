@@ -16,7 +16,7 @@ import log from 'electron-log';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { orchestrator } from '../domain/orchestrator';
+import { orchestrator, validateImage } from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -31,15 +31,6 @@ class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
-/*
-// Example API:
-
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
-});
-*/
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -137,19 +128,73 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(async () => {
-    const { commandLine, imagePath } = yargs(hideBin(process.argv))
+    let { commandLine, imagePath, include, out, report, keywords } = yargs(
+      hideBin(process.argv)
+    )
       .boolean('commandLine')
       .option('imagePath', {
+        demandOption: false,
+        type: 'string',
+      })
+      .option('include', {
+        demandOption: false,
+        type: 'string',
+      })
+      .option('out', {
+        demandOption: false,
+        type: 'string',
+      })
+      .options('report', {
+        demandOption: false,
+        type: 'string',
+      })
+      .options('keywords', {
         demandOption: false,
         type: 'string',
       }).argv;
 
     if (commandLine) {
+      if (!validateImage(imagePath) || imagePath == null) {
+        console.log(
+          `Image could not be found or is incorrect type: imagePath was ${imagePath}}`
+        );
+        return;
+      }
+
+      if (include == null) {
+        include = ['p', 'd', 'r', 'c', 'k', 't'];
+      } else {
+        include = include.split(',');
+      }
+
+      out = out ?? 'stdout';
+      report = report ?? 'json';
+      keywords = keywords ?? '';
+
+      const partitions = include.includes('p');
+      const deletedFiles = include.includes('d');
+      const renamedFiles = include.includes('r');
+      const carvedFiles = include.includes('c');
+      const keywordFiles = include.includes('k');
+      const timeline = include.includes('t');
+      const searchString = keywords;
+
       const output = await orchestrator(
-        { imagePath, output: { partitions: true } },
+        {
+          imagePath,
+          output: {
+            partitions,
+            deletedFiles,
+            renamedFiles,
+            carvedFiles,
+            keywordFiles,
+            timeline,
+          },
+          searchString,
+        },
         (msg) => {} // don't want to log it to prevent cluttering cli output
       );
-      OutputParser(output, 'stdout');
+      OutputParser(output, out, report);
     } else {
       createWindow();
       app.on('activate', () => {

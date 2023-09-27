@@ -6,7 +6,11 @@ import { PartitionTable } from 'domain/volume-system-tools';
 
 type Writer = (data: string, section: string) => void;
 
-export const OutputParser = (output: ReportDetails, destination: string) => {
+export const OutputParser = (
+  output: ReportDetails,
+  destination: string,
+  format: string
+) => {
   const writer = (data: string, section: string) => {
     if (destination === 'stdout') {
       process.stdout.write(data);

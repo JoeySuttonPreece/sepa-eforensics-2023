@@ -1,4 +1,4 @@
-import { runCliTool } from './runner';
+import { runCliTool } from './runners';
 
 export type Partition = {
   start: number;
