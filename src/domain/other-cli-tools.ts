@@ -161,158 +161,138 @@ export type CarvedFile = {
   // will need to formatted properly later with split string and stuff
 };
 
+// export const getImageInString = (imagePath: string): Promise<string> => {
+//   return runCliTool(`strings -t d ${imagePath}`);
+// };
 
-export const getImageInString = (imagePath: string): Promise<string> => {
-  return runCliTool(`strings -t d ${imagePath}`);
-};
+// export const getCarvedFileAsync = async (
+//   imagePath: string,
+//   sectorSize: number,
+//   startSectorList: number[]
+// ): Promise<string> => {
 
-export const getCarvedFileAsync = async (
-  imagePath: string,
-  sectorSize: number,
-  startSectorList: number[]
-): Promise<string> => {
+//   const partionNumber = startSectorList.length;
 
-  const partionNumber = startSectorList.length;
+// for (let i = 1; i < partionNumber; i++) {
+//  await Promise.all([
+//     runCliTool(
+//     `photorec /d testFolder.1 /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+//    )],)
 
-for (let i = 1; i < partionNumber; i++) {
- await Promise.all([
-    runCliTool(
-    `photorec /d testFolder.1 /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-   )],)
+//     const filename2: string = await runCliTool(`ls`);
+//     const fileNameArrayProper: string[] = filename2.split('\n')
 
-    const filename2: string = await runCliTool(`ls`);
-    const fileNameArrayProper: string[] = filename2.split('\n')
+//     const index =fileNameArrayProper.indexOf("report.xml",0)
+//     if (index > -1){
+//       console.log(index)
+//       console.log(fileNameArrayProper.at(index))
+//       fileNameArrayProper.splice(index,1)
+//     }
+//     //assuming no new line issue are in the array, we will need to loop through it
 
+//     console.log(filename2.split('\n'));
 
-    const index =fileNameArrayProper.indexOf("report.xml",0)
-    if (index > -1){
-      console.log(index)
-      console.log(fileNameArrayProper.at(index))
-      fileNameArrayProper.splice(index,1)
-    }
-    //assuming no new line issue are in the array, we will need to loop through it
+//     /////////////////////
 
+//     const reportS:string = await runCliTool(`cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '`);
 
+//     const fileobjectStringLines: string[] = reportS.split("<fileobject>");
 
-    console.log(filename2.split('\n'));
+//     fileobjectStringLines.shift(); ///to reomve the empty line created due to first slight of fileobj
 
-    /////////////////////
+//     const filenameFinal: string[] = [];
+// const filesizeFinal: string[] = [];
+// const filesectorFinal: number[] = [];
+// const fileLengthFinal: number[] = [];
 
-    const reportS:string = await runCliTool(`cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '`);
+//     ///this has to be looped fo nth case in fileobeject string lines
+//     for (let k=0; k<fileobjectStringLines.length; k++)
+//     {
+//     const filename: string[] = fileobjectStringLines[k].split("<filename>");
+//     filename.shift(); ///to reomve the empty line created due to first slight of filename
 
-    const fileobjectStringLines: string[] = reportS.split("<fileobject>");
+//     const filenamePrep:string[] = filename[0].split("</filesize>");
 
-    fileobjectStringLines.shift(); ///to reomve the empty line created due to first slight of fileobj
+//     filenameFinal[k] = filenamePrep[0];
+//     ///now our data is in first element of the array
 
+//     }
 
-    const filenameFinal: string[] = [];
-const filesizeFinal: string[] = [];
-const filesectorFinal: number[] = [];
-const fileLengthFinal: number[] = [];
+//     ////////////////////////////////
 
+//     for (let k=0; k<fileobjectStringLines.length; k++)
+//     {
 
-    ///this has to be looped fo nth case in fileobeject string lines
-    for (let k=0; k<fileobjectStringLines.length; k++)
-    {
-    const filename: string[] = fileobjectStringLines[k].split("<filename>");
-    filename.shift(); ///to reomve the empty line created due to first slight of filename
+//  ///this has to be looped fo nth case in fileobeject string lines
+//     const filesize: string[] = fileobjectStringLines[k].split("<filesize>");
+//     filesize.shift() ///to remove the empty line created due to first slight of filename
 
+//     const filesizePrep:string[] = filesize[0].split("</filesize>");
+//     ///now our data is in first element of the array
 
-    const filenamePrep:string[] = filename[0].split("</filesize>");
+//     filesizeFinal[k] = filesizePrep[0];
 
-    filenameFinal[k] = filenamePrep[0];
-    ///now our data is in first element of the array
+//     }
+//     ///////////////////
 
-    }
+//     for (let k=0; k<fileobjectStringLines.length; k++)
+//     {
 
+//     const fileStartSectorPrep: string[] = fileobjectStringLines[0].split("<byte_runs>");
+//     fileStartSectorPrep.shift(); ///to reomve the empty line created due to first slight of filename
 
+//     const fileStartSector:string[] = fileStartSectorPrep[0].split("image_offset=");
+//     ///now our data is in 2nd element of the array
 
+//     const splitteragainfileStartSector:string[] = fileStartSector[1].split("'");
 
-    ////////////////////////////////
+//     filesectorFinal[k] = parseInt(splitteragainfileStartSector[1]) / sectorSize;
 
+//     fileLengthFinal[k] = parseInt(splitteragainfileStartSector[3]) / sectorSize;
 
-    for (let k=0; k<fileobjectStringLines.length; k++)
-    {
+//     }
+//     myList.forEach(item => {
+//       console.log(item)
+//   })
 
- ///this has to be looped fo nth case in fileobeject string lines
-    const filesize: string[] = fileobjectStringLines[k].split("<filesize>");
-    filesize.shift() ///to remove the empty line created due to first slight of filename
+//       const tempfile:string
 
+//       const ArrayofdateTimeOriginal: string[]
+//     ///loop through the file names and run exifs on all of them
+//     filenameFinal.forEach (item => {
+//       tempfile = await runCliTool(`exiftool ./testfolder.1/${filenameFinal[item]}`);
+//       ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
 
-    const filesizePrep:string[] = filesize[0].split("</filesize>");
-    ///now our data is in first element of the array
+// ///would need to create switch case for this to consider all the other cases
 
-    filesizeFinal[k] = filesizePrep[0];
+//       if(tempfile.match("Date/Time Original")){
+// const tempArray: string[] = tempFile.split("Date/Time Original:");
+// const tempArrayPrep
 
-    }
-    ///////////////////
+// }
+// else{
+//   tempstring = "N/A";
+//   ArrayofdateTimeOriginal[k]= tempstring;
+// }
 
-    for (let k=0; k<fileobjectStringLines.length; k++)
-    {
+//   })
 
-    const fileStartSectorPrep: string[] = fileobjectStringLines[0].split("<byte_runs>");
-    fileStartSectorPrep.shift(); ///to reomve the empty line created due to first slight of filename
+//     }
 
+//   }
 
-    const fileStartSector:string[] = fileStartSectorPrep[0].split("image_offset=");
-    ///now our data is in 2nd element of the array
+// //test value
+//   //loop exiftool every file except "report.xml"
+//   //filename, file size, original date, file type
+//   runCliTool(
+//     >>carvedfile.xml'`
+//   ),
 
-    const splitteragainfileStartSector:string[] = fileStartSector[1].split("'");
+//   //incase save recovered files for report/client
+//   runCliTool(`rm -d -f testFolder.*`),
 
-    filesectorFinal[k] = parseInt(splitteragainfileStartSector[1]) / sectorSize;
+//   return { filedata }
 
-    fileLengthFinal[k] = parseInt(splitteragainfileStartSector[3]) / sectorSize;
+//   ///this will be thown back to orchestrator---not done yet....will focuso on it on thursday
 
-    }
-    myList.forEach(item => {
-      console.log(item)
-  })
-
-      const tempfile:string
-
-      const ArrayofdateTimeOriginal: string[]
-    ///loop through the file names and run exifs on all of them
-    filenameFinal.forEach (item => {
-      tempfile = await runCliTool(`exiftool ./testfolder.1/${filenameFinal[item]}`);
-      ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
-
-
-///would need to create switch case for this to consider all the other cases
-
-      if(tempfile.match("Date/Time Original")){
-const tempArray: string[] = tempFile.split("Date/Time Original:");
-const tempArrayPrep
-
-
-
-
-}
-else{
-  tempstring = "N/A";
-  ArrayofdateTimeOriginal[k]= tempstring;
-}
-
-  })
-
-
-    }
-
-  }
-
-
-
-//test value
-  //loop exiftool every file except "report.xml"
-  //filename, file size, original date, file type
-  runCliTool(
-    >>carvedfile.xml'`
-  ),
-
-  //incase save recovered files for report/client
-  runCliTool(`rm -d -f testFolder.*`),
-
-  return { filedata }
-
-  ///this will be thown back to orchestrator---not done yet....will focuso on it on thursday
-
-}
+// }
