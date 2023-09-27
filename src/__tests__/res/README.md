@@ -5,7 +5,13 @@ The zip file contains two files:
 
 [2] contains the MD5 hash of [1].
 
-The image MyTestImage.dd contains the directory MyDirectory. The files in this directory correspond to the files in the directory test-files (in this repo).
+The image MyTestImage.dd contains the directory MyDirectory. The files in this 
+directory correspond to the files in the directory test-files (in this repo). 
+**NOTE:** Not all the files in test-files were copied into the test image. Many
+of them were created as resources to use in the future.
+
+## Command: sudo mount -o ro,loop,offset=42008576 MyTestImage.dd /mnt/img 
+Mounts the image in read-only mode.
 
 ## Command: mmls MyTestImage.dd
 DOS Partition Table

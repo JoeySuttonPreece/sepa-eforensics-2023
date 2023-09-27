@@ -1,4 +1,4 @@
-import { KeywordFile } from '../domain/file-system-tools';
+import { KeywordFile } from '../../domain/file-system-tools';
 
 function KeywordFilesComponent({
   keywordFiles,
@@ -29,13 +29,13 @@ function KeywordFilesComponent({
               </td>
               <td>{keyword.file.size}</td>
               <td>
-                {keyword.file.mtime}
+                {keyword.file.mtime.toLocaleString()}
                 <br />
-                {keyword.file.atime}
+                {keyword.file.atime.toLocaleString()}
                 <br />
-                {keyword.file.ctime}
+                {keyword.file.ctime.toLocaleString()}
               </td>
-              <td>{keyword.file.hash}</td>
+              <td>{keyword.file.hash.sha1sum}</td>
             </tr>
           );
         })}

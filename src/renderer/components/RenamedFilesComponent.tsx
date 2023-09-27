@@ -1,4 +1,4 @@
-import { RenamedFile } from '../domain/file-system-tools';
+import { RenamedFile } from '../../domain/file-system-tools';
 
 function RenamedFilesComponent({
   renamedFiles,
@@ -30,13 +30,13 @@ function RenamedFilesComponent({
               {/* Check to see whether it knows file size or not */}
               <td>{renamed.file.size}</td>
               <td>
-                {renamed.file.mtime}
+                {renamed.file.mtime.toLocaleString()}
                 <br />
-                {renamed.file.atime}
+                {renamed.file.atime.toLocaleString()}
                 <br />
-                {renamed.file.ctime}
+                {renamed.file.ctime.toLocaleString()}
               </td>
-              <td>{renamed.file.hash}</td>
+              <td>{renamed.file.hash.sha1sum}</td>
             </tr>
           );
         })}

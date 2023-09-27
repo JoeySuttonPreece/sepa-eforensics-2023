@@ -1,4 +1,4 @@
-import { PartitionTable } from '../domain/volume-system-tools';
+import { PartitionTable } from '../../domain/volume-system-tools';
 
 function PartitionTableComponent({
   partitionTable,

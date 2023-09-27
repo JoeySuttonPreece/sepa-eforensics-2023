@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { Partition, getPartitionTable } from '../../domain/volume-system-tools';
 
-jest.mock('../../domain/runner', () => {
+jest.mock('../../domain/runners', () => {
   return {
     runCliTool: jest.fn().mockImplementationOnce(
       // header no signautre match

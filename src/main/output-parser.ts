@@ -135,10 +135,10 @@ function pdfDeletedFile(deletedFiles: File[], doc: jsPDF, y: number): number {
       deleted.inode,
       deleted.fileName,
       `${deleted.size}`,
-      deleted.mtime,
-      deleted.atime,
-      deleted.ctime,
-      deleted.hash,
+      deleted.mtime.toLocaleDateString(),
+      deleted.atime.toLocaleDateString(),
+      deleted.ctime.toLocaleDateString(),
+      deleted.hash.sha1sum,
     ]);
   }
   if (deletedBody.length > 0) {
@@ -172,10 +172,10 @@ function pdfRenamedFile(
       renamed.file.fileName,
       renamed.trueExtensions.join(','),
       `${renamed.file.size}`,
-      renamed.file.mtime,
-      renamed.file.atime,
-      renamed.file.ctime,
-      renamed.file.hash,
+      renamed.file.mtime.toLocaleDateString(),
+      renamed.file.atime.toLocaleDateString(),
+      renamed.file.ctime.toLocaleDateString(),
+      renamed.file.hash.sha1sum,
     ]);
   }
 
@@ -219,10 +219,10 @@ function pdfKeywordFile(
       keyword.file.fileName,
       keyword.matches.join(','),
       `${keyword.file.size}`,
-      keyword.file.mtime,
-      keyword.file.atime,
-      keyword.file.ctime,
-      keyword.file.hash,
+      keyword.file.mtime.toLocaleDateString(),
+      keyword.file.atime.toLocaleDateString(),
+      keyword.file.ctime.toLocaleDateString(),
+      keyword.file.hash.sha1sum,
     ]);
   }
   if (keywordBody.length > 0) {
@@ -256,7 +256,7 @@ function csvImage({ imageHash, imageName }: ReportDetails, writer: Writer) {
     section
   );
   writer(
-    `'${imageName}', ${imageHash.md5sum}, ${imageHash?.sha1sum},''\n`,
+    `'${imageName}', ${imageHash?.md5sum}, ${imageHash?.sha1sum},''\n`,
     section
   );
 }
