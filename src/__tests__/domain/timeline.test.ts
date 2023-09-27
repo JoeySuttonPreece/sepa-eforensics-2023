@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom';
 import { buildTimeline, getUserOnTime } from 'domain/timeline-tools';
 import { File } from 'domain/file-system-tools';
+import { Print } from 'main/output-parser';
 
-jest.mock('../../domain/runner', () => {
+jest.mock('../../domain/runners', () => {
   return {
     runCliTool: jest
       .fn()
@@ -46,14 +47,14 @@ const files: File[] = [
     metadataFileType: '',
     deleted: false,
     reallocated: false,
-    crtime: '',
+    crtime: new Date(),
     atime: new Date(),
     ctime: new Date(),
     mtime: new Date('2023-09-05 10:19:06 '),
     size: 64,
     uid: '',
     gid: '',
-    hash: '',
+    hash: { sha1sum: '', md5sum: '', fileName: '' },
   },
   {
     inode: '143',
@@ -62,14 +63,14 @@ const files: File[] = [
     metadataFileType: '',
     deleted: false,
     reallocated: false,
-    crtime: '',
+    crtime: new Date(),
     atime: new Date(),
     ctime: new Date(),
     mtime: new Date('2023-09-05 10:20:52'),
     size: 64,
     uid: '',
     gid: '',
-    hash: '',
+    hash: { sha1sum: '', md5sum: '', fileName: '' },
   },
   {
     inode: '143',
@@ -78,14 +79,14 @@ const files: File[] = [
     metadataFileType: '',
     deleted: false,
     reallocated: false,
-    crtime: '',
+    crtime: new Date(),
     atime: new Date(),
     ctime: new Date(),
     mtime: new Date('2023-09-05 10:20:52'),
     size: 64,
     uid: '',
     gid: '',
-    hash: '',
+    hash: { sha1sum: '', md5sum: '', fileName: '' },
   },
   {
     inode: '143',
@@ -94,21 +95,25 @@ const files: File[] = [
     metadataFileType: '',
     deleted: false,
     reallocated: false,
-    crtime: '',
+    crtime: new Date(),
     atime: new Date(),
     ctime: new Date(),
     mtime: new Date('2021-09-05 10:20:52'),
     size: 64,
     uid: '',
     gid: '',
-    hash: '',
+    hash: { sha1sum: '', md5sum: '', fileName: '' },
   },
 ];
 
 test('Build Timeline', async () => {
   let output = await buildTimeline(
     files,
-    { start: 63, end: 100, length: 37, description: '' },
+    {
+      sectorSize: 512,
+      tableType: 'DOS',
+      partitions: [{ start: 63, end: 100, length: 37, description: '' }],
+    },
     ''
   );
 
@@ -118,4 +123,19 @@ test('Build Timeline', async () => {
     'mv PangeaUltimaMap.png defintleynotrenamed.txt'
   );
   expect(output[3].operations.length).toBe(2);
+
+  Print(
+    {
+      timeline: output,
+      imageHash: undefined,
+      imageName: '',
+      partitionTable: undefined,
+      renamedFiles: undefined,
+      deletedFiles: undefined,
+      keywordFiles: undefined,
+      carvedFile: undefined,
+    },
+    'pdf',
+    '/home/harry/'
+  );
 });

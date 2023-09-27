@@ -239,19 +239,22 @@ export async function getInodeAtFilePath(
       );
       const lines: string[] = output.split('\n');
       const matrix: string[][] = lines.map((line) => line.split(/\s+/));
+      let found = false;
       for (let entry of matrix) {
         //check if the next part of the file path is in the fls ouptut
         if (entry[2] == part) {
+          found = true;
           currentInode = entry[1].slice(0, -1);
           //this is the file we are looking for we can return the inode
-          if (part == fileparts[fileparts.length - 1])
+          if (part == fileparts[fileparts.length - 1]) {
             return { inode: Number(currentInode), partition: partition }; // this is the final one we were looking for
+          }
           //we found the next part of the file path in the list we can break to do the next part
           break;
         }
       }
       // we wnet thorugh the entire output and couldn't find the part we need so its not in this parition
-      break;
+      if (!found) break;
     }
   }
 

@@ -30,7 +30,7 @@ export type ReportDetails = {
   deletedFiles: File[] | undefined;
   keywordFiles: KeywordFile[] | undefined;
   carvedFile: CarvedFile[] | undefined;
-  timeline: TimelineEntry[];
+  timeline: TimelineEntry[] | undefined;
 };
 
 export type SuspiciousFiles = {
@@ -256,6 +256,8 @@ export const orchestrator = async (
       orchestratorOptions.includeKeywordSearchFiles && keywordFiles
         ? keywordFiles
         : undefined,
+    timeline:
+      orchestratorOptions.showTimeline && timeline ? timeline : undefined,
   };
 };
 

@@ -1,6 +1,6 @@
 import { takeHeapSnapshot } from 'node:process';
 import { File, getInodeAtFilePath } from './file-system-tools';
-import { runCliTool } from './runner';
+import { runCliTool } from './runners';
 import { Partition, PartitionTable } from './volume-system-tools';
 
 export type TimelineEntry = {
@@ -168,28 +168,24 @@ function attributeUser(userLogs: User[], date: Date) {
 
 async function getUserHistory(
   user: string,
-  partition: PartitionTable,
+  partitionTable: PartitionTable,
   imagePath: string
 ) {
   let history: string[] = [];
 
   // get home direcotry
   let homePath = `/home/${user}`;
-  let homeDirInode: number = 0;
-  await getInodeAtFilePath(homePath, partition, imagePath).then((value) => {
-    homeDirInode = value;
-  });
+  const source = await getInodeAtFilePath(homePath, partitionTable, imagePath);
+  if (source == undefined) return history;
 
-  if (homeDirInode === 0) {
-    return history;
-  }
+  const { inode: homeDirInode, partition: homePartition } = source;
 
   //find hisotry files
   let historyFiles = [];
   let historyFileReg = /\.?[a-zA-Z0-9]+_history/; // why doesnt thus work!!!
 
   let output: string = await runCliTool(
-    `fls -o ${partition.start} ${imagePath} ${homeDirInode} `
+    `fls -o ${homePartition.start} ${imagePath} ${homeDirInode} `
   );
   const lines: string[] = output.split('\n');
   //there may be more than one history file
@@ -204,7 +200,7 @@ async function getUserHistory(
   //read hisotry = there may have been more than one hisotry file
   for (let inode of historyFiles) {
     let output = await runCliTool(
-      `icat -o ${partition.start} ${imagePath} ${inode}`
+      `icat -o ${homePartition.start} ${imagePath} ${inode}`
     );
     let lines: string[] = output.split('\n');
     history.push(...lines);

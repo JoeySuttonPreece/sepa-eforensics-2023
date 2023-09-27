@@ -5,6 +5,13 @@ import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { TimelineEntry } from 'domain/timeline-tools';
+import { UserOptions } from 'jspdf-autotable';
+
+type PDF = jsPDF & {
+  autoTable: (options: UserOptions) => void;
+  lastAutoTable: { finalY: number };
+};
 
 type Writer = (data: string | Buffer, section: string) => void;
 
@@ -30,6 +37,7 @@ export const Print = (
     if (output.keywordFiles) csvKeywordFile(output.keywordFiles, writer);
     if (output.renamedFiles) csvRenamedFile(output.renamedFiles, writer);
     if (output.deletedFiles) csvDeletedFile(output.deletedFiles, writer);
+    if (output.timeline) csvTimeline(output.timeline, writer);
   } else if (format === 'json') {
     writer(JSON.stringify(output), 'report');
   } else if (format === 'pdf') {
@@ -38,7 +46,7 @@ export const Print = (
 };
 
 function pdfReport(output: ReportDetails, writer: Writer) {
-  const doc = new jsPDF('p', 'mm', 'a4'); //a4 is 210mm
+  const doc = new jsPDF('p', 'mm', 'a4') as PDF; //a4 is 210mm
   doc.setFontSize(14);
   let y = 5;
   doc.setFontSize(20);
@@ -51,13 +59,14 @@ function pdfReport(output: ReportDetails, writer: Writer) {
   if (output.deletedFiles) y = pdfDeletedFile(output.deletedFiles, doc, y);
   if (output.renamedFiles) y = pdfRenamedFile(output.renamedFiles, doc, y);
   if (output.keywordFiles) y = pdfKeywordFile(output.keywordFiles, doc, y);
+  if (output.timeline) y = pdfTimeline(output.timeline, doc, y);
   const arrayBuffer = doc.output('arraybuffer');
   writer(Buffer.from(arrayBuffer), 'report');
 }
 
 function pdfImage(
   { imageHash, imageName }: ReportDetails,
-  doc: jsPDF,
+  doc: PDF,
   y: number
 ): number {
   let height = y;
@@ -88,7 +97,7 @@ function pdfImage(
 
 function pdfPartition(
   partitionTable: PartitionTable,
-  doc: jsPDF,
+  doc: PDF,
   y: number
 ): number {
   let height = y;
@@ -124,7 +133,7 @@ function pdfPartition(
   return doc.lastAutoTable.finalY + doc.getLineHeight();
 }
 
-function pdfDeletedFile(deletedFiles: File[], doc: jsPDF, y: number): number {
+function pdfDeletedFile(deletedFiles: File[], doc: PDF, y: number): number {
   let height = y;
   const section = 'Deleted Files';
   const deletedBody: string[][] = [];
@@ -135,9 +144,9 @@ function pdfDeletedFile(deletedFiles: File[], doc: jsPDF, y: number): number {
       deleted.inode,
       deleted.fileName,
       `${deleted.size}`,
-      deleted.mtime.toLocaleDateString(),
-      deleted.atime.toLocaleDateString(),
-      deleted.ctime.toLocaleDateString(),
+      deleted.mtime.toLocaleString(),
+      deleted.atime.toLocaleString(),
+      deleted.ctime.toLocaleString(),
       deleted.hash.sha1sum,
     ]);
   }
@@ -158,7 +167,7 @@ function pdfDeletedFile(deletedFiles: File[], doc: jsPDF, y: number): number {
 
 function pdfRenamedFile(
   renamedFiles: RenamedFile[],
-  doc: jsPDF,
+  doc: PDF,
   y: number
 ): number {
   let height = y;
@@ -172,9 +181,9 @@ function pdfRenamedFile(
       renamed.file.fileName,
       renamed.trueExtensions.join(','),
       `${renamed.file.size}`,
-      renamed.file.mtime.toLocaleDateString(),
-      renamed.file.atime.toLocaleDateString(),
-      renamed.file.ctime.toLocaleDateString(),
+      renamed.file.mtime.toLocaleString(),
+      renamed.file.atime.toLocaleString(),
+      renamed.file.ctime.toLocaleString(),
       renamed.file.hash.sha1sum,
     ]);
   }
@@ -205,7 +214,7 @@ function pdfRenamedFile(
 
 function pdfKeywordFile(
   keywordFiles: KeywordFile[],
-  doc: jsPDF,
+  doc: PDF,
   y: number
 ): number {
   let height = y;
@@ -219,9 +228,9 @@ function pdfKeywordFile(
       keyword.file.fileName,
       keyword.matches.join(','),
       `${keyword.file.size}`,
-      keyword.file.mtime.toLocaleDateString(),
-      keyword.file.atime.toLocaleDateString(),
-      keyword.file.ctime.toLocaleDateString(),
+      keyword.file.mtime.toLocaleString(),
+      keyword.file.atime.toLocaleString(),
+      keyword.file.ctime.toLocaleString(),
       keyword.file.hash.sha1sum,
     ]);
   }
@@ -247,6 +256,46 @@ function pdfKeywordFile(
     doc.text('No Keyword Files Found', 50, height);
     return height + doc.getLineHeight();
   }
+}
+
+function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
+  const section = 'Timeline';
+  doc.text(section, 105 - doc.getTextWidth(section) / 2, y);
+  y += doc.getLineHeight();
+  doc.setFontSize(9);
+  const details = 'date - inode - filename - user - operations';
+  doc.text(details, 105 - doc.getTextWidth(details) / 2, y);
+  y += doc.getLineHeight();
+  const start = y;
+  for (let entry of timeline) {
+    doc.circle(27, y, 1);
+    doc.text(doc.splitTextToSize(entry.date.toLocaleString(), 20), 5, y);
+    doc.text(doc.splitTextToSize(`${entry.file.inode}`, 15), 35, y);
+    doc.text(doc.splitTextToSize(entry.file.fileName, 50), 50, y);
+
+    if (entry.suspectedUsers.length == 0) {
+      y += doc.getLineHeight();
+    }
+
+    for (const user of entry.suspectedUsers) {
+      if (entry.operations.length == 0) {
+        doc.text(doc.splitTextToSize(user.name, 20), 105, y);
+        y += doc.getLineHeight();
+      }
+
+      for (const op of entry.operations) {
+        if ((op.user.name = user.name)) {
+          doc.text(doc.splitTextToSize(user.name, 25), 105, y);
+          doc.text(doc.splitTextToSize(op.command, 70), 130, y);
+          y += doc.getLineHeight();
+        }
+      }
+    }
+    doc.line(30, y - doc.getLineHeight() / 2, 200, y - doc.getLineHeight() / 2);
+  }
+  doc.line(27, start, 27, y);
+  doc.setFontSize(14);
+  return y;
 }
 
 function csvImage({ imageHash, imageName }: ReportDetails, writer: Writer) {
@@ -310,5 +359,38 @@ function csvKeywordFile(keywordFiles: KeywordFile[], writer: Writer) {
       `${keyword.file.inode}, '${keyword.file.fileName}', ${matches},${keyword.file.size},${keyword.file.mtime},${keyword.file.atime},${keyword.file.ctime},${keyword.file.hash}\n`,
       section
     );
+  }
+}
+
+function csvTimeline(timeline: TimelineEntry[], writer: Writer) {
+  const section = 'timeline';
+  writer(
+    `Modified Date, Inode, Filename, Suspected User, Operation\n`,
+    section
+  );
+  for (const entry of timeline) {
+    if (entry.suspectedUsers.length == 0) {
+      writer(
+        `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, none, none`,
+        section
+      );
+    }
+    for (const user of entry.suspectedUsers) {
+      if (entry.operations.length == 0) {
+        writer(
+          `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, ${user.name}, none`,
+          section
+        );
+      }
+
+      for (const op of entry.operations) {
+        if ((op.user.name = user.name)) {
+          writer(
+            `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, ${user.name}, ${op.command}`,
+            section
+          );
+        }
+      }
+    }
   }
 }
