@@ -8,7 +8,7 @@ import {
   processForRenamedFile,
   KeywordFile,
 } from './file-system-tools';
-import { buildTimeline } from './timeline-tools';
+import { TimelineEntry, buildTimeline } from './timeline-tools';
 
 export type OrchestratorOptions = {
   imagePath: string;
@@ -30,6 +30,7 @@ export type ReportDetails = {
   deletedFiles: File[] | undefined;
   keywordFiles: KeywordFile[] | undefined;
   carvedFile: CarvedFile[] | undefined;
+  timeline: TimelineEntry[];
 };
 
 export type SuspiciousFiles = {
@@ -220,7 +221,7 @@ export const orchestrator = async (
 
   statusCallback('Searching for keyword files...');
 
-  statusCallback('Building Timline');
+  statusCallback('Building Timeline...');
   //consider some refactoring sprint 4
   const timelineFiles = suspiciousFiles.renamedFiles.map((renamedFile) => {
     return renamedFile.file;
@@ -248,6 +249,7 @@ export const orchestrator = async (
       ? suspiciousFiles.deletedFiles
       : undefined,
     keywordFiles: keywordFiles || undefined,
+    timeline: timeline || undefined,
   };
 };
 
