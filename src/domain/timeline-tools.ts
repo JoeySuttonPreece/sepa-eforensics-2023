@@ -5,6 +5,7 @@ import { Partition } from './volume-system-tools';
 
 export type TimelineEntry = {
   date: Date;
+  file: File;
   suspectedUsers: User[];
   operations: Operation[];
 };
@@ -71,6 +72,7 @@ export async function buildTimeline(
   for (let file of suspicousFiles) {
     let timelineEntry: TimelineEntry = {
       date: file.mtime,
+      file,
       suspectedUsers: [],
       operations: [],
     };
@@ -175,23 +177,21 @@ async function getUserHistory(
 
   //find hisotry files
   let historyFiles = [];
-  let historyFileReg = /^\.?[a-zA-Z0-9]+_history$/; // why doesnt thus work!!!
+  let historyFileReg = /\.?[a-zA-Z0-9]+_history/; // why doesnt thus work!!!
 
   let output: string = await runCliTool(
     `fls -o ${partition.start} ${imagePath} ${homeDirInode} `
   );
-  console.log(output);
   const lines: string[] = output.split('\n');
   //there may be more than one history file
   for (let entry of lines) {
     entry = entry.trim();
     if (historyFileReg.test(entry)) {
-      console.log('Match');
       let parts = entry.split(/\s+/);
       historyFiles.push(parts[1].slice(0, -1));
     }
   }
-  console.log(historyFiles);
+
   //read hisotry = there may have been more than one hisotry file
   for (let inode of historyFiles) {
     let output = await runCliTool(
@@ -200,16 +200,22 @@ async function getUserHistory(
     let lines: string[] = output.split('\n');
     history.push(...lines);
   }
-
   return history;
 }
 
 function identifyOperations(file: File, users: User[]): Operation[] {
   let operations: Operation[] = [];
+  let filepathParts = file.fileName.split('/').map((name) => {
+    return name.trim();
+  });
+
   for (let user of users) {
-    for (let command of user.history) {
-      if (command.includes(file.fileName)) {
-        operations.push({ user, command });
+    for (let name of filepathParts) {
+      if (name == '') continue;
+      for (let command of user.history) {
+        if (command.includes(name)) {
+          operations.push({ user, command });
+        }
       }
     }
   }

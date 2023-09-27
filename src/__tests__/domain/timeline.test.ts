@@ -41,7 +41,7 @@ jest.mock('../../domain/runner', () => {
 const files: File[] = [
   {
     inode: '143',
-    fileName: '/home/harry/definitleynotrenamed.txt',
+    fileName: '/home/harry/defintleynotrenamed.txt',
     fileNameFileType: '',
     metadataFileType: '',
     deleted: false,
@@ -71,6 +71,38 @@ const files: File[] = [
     gid: '',
     hash: '',
   },
+  {
+    inode: '143',
+    fileName: '/home/harry/deletedfile.txt',
+    fileNameFileType: '',
+    metadataFileType: '',
+    deleted: false,
+    reallocated: false,
+    crtime: '',
+    atime: new Date(),
+    ctime: new Date(),
+    mtime: new Date('2023-09-05 10:20:52'),
+    size: 64,
+    uid: '',
+    gid: '',
+    hash: '',
+  },
+  {
+    inode: '143',
+    fileName: '/home/harry/secretfile.txt',
+    fileNameFileType: '',
+    metadataFileType: '',
+    deleted: false,
+    reallocated: false,
+    crtime: '',
+    atime: new Date(),
+    ctime: new Date(),
+    mtime: new Date('2021-09-05 10:20:52'),
+    size: 64,
+    uid: '',
+    gid: '',
+    hash: '',
+  },
 ];
 
 test('Build Timeline', async () => {
@@ -79,4 +111,11 @@ test('Build Timeline', async () => {
     { start: 63, end: 100, length: 37, description: '' },
     ''
   );
+
+  expect(output[0].operations.length).toBe(0);
+  expect(output[1].suspectedUsers[0].name).toBe('harry');
+  expect(output[1].operations[0].command).toBe(
+    'mv PangeaUltimaMap.png defintleynotrenamed.txt'
+  );
+  expect(output[3].operations.length).toBe(2);
 });
