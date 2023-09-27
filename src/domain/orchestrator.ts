@@ -241,15 +241,21 @@ export const orchestrator = async (
   return {
     imageName: orchestratorOptions.imagePath,
     imageHash: hash || undefined,
-    partitionTable: partitionTable || undefined,
-    renamedFiles: suspiciousFiles.renamedFiles
-      ? suspiciousFiles.renamedFiles
+    partitionTable: orchestratorOptions.showPartitions
+      ? partitionTable
       : undefined,
-    deletedFiles: suspiciousFiles.deletedFiles
-      ? suspiciousFiles.deletedFiles
-      : undefined,
-    keywordFiles: keywordFiles || undefined,
-    timeline: timeline || undefined,
+    renamedFiles:
+      orchestratorOptions.includeRenamedFiles && suspiciousFiles.renamedFiles
+        ? suspiciousFiles.renamedFiles
+        : undefined,
+    deletedFiles:
+      orchestratorOptions.includeDeletedFiles && suspiciousFiles.deletedFiles
+        ? suspiciousFiles.deletedFiles
+        : undefined,
+    keywordFiles:
+      orchestratorOptions.includeKeywordSearchFiles && keywordFiles
+        ? keywordFiles
+        : undefined,
   };
 };
 
@@ -257,7 +263,6 @@ export const validateImage = (imagePath: string) => {
   const IMAGETYPES = ['dd', 'e01', 'l01', 'lef', 'dmg', 'zip'];
   const splitName = imagePath.split('.');
   const ext = splitName[splitName.length - 1].toLowerCase();
-  console.log(ext);
   const validType = IMAGETYPES.includes(ext);
 
   return validType && fs.existsSync(imagePath);

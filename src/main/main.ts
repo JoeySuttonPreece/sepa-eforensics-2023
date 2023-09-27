@@ -20,7 +20,7 @@ import { orchestrator, validateImage } from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { OutputParser } from './output-parser';
+import { Print } from './output-parser';
 
 class AppUpdater {
   constructor() {
@@ -162,7 +162,7 @@ app
       }
 
       if (include == null) {
-        include = ['p', 'd', 'r', 'c', 'k', 't'];
+        include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
       } else {
         include = include.split(',');
       }
@@ -171,30 +171,30 @@ app
       report = report ?? 'json';
       keywords = keywords ?? '';
 
-      const partitions = include.includes('p');
-      const deletedFiles = include.includes('d');
-      const renamedFiles = include.includes('r');
-      const carvedFiles = include.includes('c');
-      const keywordFiles = include.includes('k');
-      const timeline = include.includes('t');
+      const showPartitions = include.includes('p');
+      const includeDeletedFiles = include.includes('d');
+      const includeRenamedFiles = include.includes('r');
+      const includeCarvedFiles = include.includes('c');
+      const includeKeywordSearchFiles = include.includes('k');
+      const showTimeline = include.includes('t');
       const searchString = keywords;
+      const keepRecoveredFiles = include.includes('s');
 
       const output = await orchestrator(
         {
           imagePath,
-          output: {
-            partitions,
-            deletedFiles,
-            renamedFiles,
-            carvedFiles,
-            keywordFiles,
-            timeline,
-          },
           searchString,
+          showPartitions,
+          showTimeline,
+          includeRenamedFiles,
+          includeDeletedFiles,
+          includeKeywordSearchFiles,
+          includeCarvedFiles,
+          keepRecoveredFiles,
         },
         (msg) => {} // don't want to log it to prevent cluttering cli output
       );
-      OutputParser(output, out, report);
+      if (output != null) Print(output, out, report);
     } else {
       createWindow();
       app.on('activate', () => {

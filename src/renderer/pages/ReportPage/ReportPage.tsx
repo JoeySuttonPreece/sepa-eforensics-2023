@@ -40,6 +40,15 @@ export default function ReportPage() {
     navigate('/');
   }
 
+  function handlePrint(format: string) {
+    window.electron.ipcRenderer.on('select-dir', ([dir]) => {
+      if (dir === undefined) return;
+
+      window.electron.ipcRenderer.sendMessage('print', [format, dir]);
+    });
+    window.electron.ipcRenderer.sendMessage('select-dir', []);
+  }
+
   return (
     <div>
       <header className="report-header">
@@ -49,7 +58,7 @@ export default function ReportPage() {
           </button>
         ) : null}
         <h1>AEAS Generated Report</h1>
-        {reportReady ? <button type="button">Print</button> : null}
+        {reportReady ? <PrintButton onPrint={handlePrint} /> : null}
       </header>
 
       {errorMsg !== '' ? (
@@ -104,3 +113,34 @@ export default function ReportPage() {
     </div>
   );
 }
+
+const PrintButton = ({ onPrint }: { onPrint: Function }) => {
+  return (
+    <div className="dropdown">
+      <button>Print</button>
+      <div className="dropdown-content">
+        <button
+          onClick={() => {
+            onPrint('pdf');
+          }}
+        >
+          PDF
+        </button>
+        <button
+          onClick={() => {
+            onPrint('csv');
+          }}
+        >
+          CSV
+        </button>
+        <button
+          onClick={() => {
+            onPrint('json');
+          }}
+        >
+          JSON
+        </button>
+      </div>
+    </div>
+  );
+};
