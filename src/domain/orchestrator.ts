@@ -222,14 +222,21 @@ export const orchestrator = async (
   return {
     imageName: orchestratorOptions.imagePath,
     imageHash: hash || undefined,
-    partitionTable: partitionTable || undefined,
-    renamedFiles: suspiciousFiles.renamedFiles
-      ? suspiciousFiles.renamedFiles
+    partitionTable: orchestratorOptions.showPartitions
+      ? partitionTable
       : undefined,
-    deletedFiles: suspiciousFiles.deletedFiles
-      ? suspiciousFiles.deletedFiles
-      : undefined,
-    keywordFiles: keywordFiles || undefined,
+    renamedFiles:
+      orchestratorOptions.includeRenamedFiles && suspiciousFiles.renamedFiles
+        ? suspiciousFiles.renamedFiles
+        : undefined,
+    deletedFiles:
+      orchestratorOptions.includeDeletedFiles && suspiciousFiles.deletedFiles
+        ? suspiciousFiles.deletedFiles
+        : undefined,
+    keywordFiles:
+      orchestratorOptions.includeKeywordSearchFiles && keywordFiles
+        ? keywordFiles
+        : undefined,
   };
 };
 
