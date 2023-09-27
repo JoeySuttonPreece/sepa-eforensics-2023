@@ -1,7 +1,7 @@
 import { takeHeapSnapshot } from 'node:process';
 import { File, getInodeAtFilePath } from './file-system-tools';
 import { runCliTool } from './runner';
-import { Partition } from './volume-system-tools';
+import { Partition, PartitionTable } from './volume-system-tools';
 
 export type TimelineEntry = {
   date: Date;
@@ -41,7 +41,7 @@ const monthMap: { [key: string]: number } = {
 
 export async function buildTimeline(
   suspicousFiles: File[],
-  systemPartition: Partition,
+  partitionTable: PartitionTable,
   imagePath: string
 ): Promise<TimelineEntry[]> {
   let timeline: TimelineEntry[] = [];
@@ -53,7 +53,7 @@ export async function buildTimeline(
 
   //get User Logon and Logoff time
   let userLogs: User[] = [];
-  await getUserOnTime(systemPartition, imagePath)
+  await getUserOnTime(partitionTable, imagePath)
     .then((value) => {
       userLogs = value;
     })
@@ -61,7 +61,7 @@ export async function buildTimeline(
 
   // get user history
   for (let user of userLogs) {
-    await getUserHistory(user.name, systemPartition, imagePath)
+    await getUserHistory(user.name, partitionTable, imagePath)
       .then((value) => {
         user.history = value;
       })
@@ -94,9 +94,18 @@ export async function buildTimeline(
   return timeline;
 }
 
-export async function getUserOnTime(partition: Partition, imagePath: string) {
+export async function getUserOnTime(
+  partitionTable: PartitionTable,
+  imagePath: string
+) {
   const userTimeLogs = '/var/log/wtmp';
-  const inode = await getInodeAtFilePath(userTimeLogs, partition, imagePath);
+  const source = await getInodeAtFilePath(
+    userTimeLogs,
+    partitionTable,
+    imagePath
+  );
+  if (source == undefined) return [];
+  const { inode, partition } = source;
   const logs = await runCliTool(
     //Note the -F switch does not work in ReHL or CentOS 5
     `icat -o ${partition.start} ${imagePath} ${inode} | last -F`
@@ -159,7 +168,7 @@ function attributeUser(userLogs: User[], date: Date) {
 
 async function getUserHistory(
   user: string,
-  partition: Partition,
+  partition: PartitionTable,
   imagePath: string
 ) {
   let history: string[] = [];

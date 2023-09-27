@@ -1,5 +1,5 @@
 import { runCliTool } from './runner';
-import { Partition } from './volume-system-tools';
+import { Partition, PartitionTable } from './volume-system-tools';
 
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
@@ -236,25 +236,36 @@ export const processForRenamedFile = async (
 // need full path starting with /
 export async function getInodeAtFilePath(
   filepath: string,
-  partition: Partition,
+  partitionTable: PartitionTable,
   imagePath: string
-) {
+): Promise<{ inode: number; partition: Partition } | undefined> {
   let fileparts = filepath.split('/');
-  let currentInode: number | string = '';
-  for (let i = 0; i < fileparts.length - 1; i++) {
-    let part = fileparts[i + 1];
-    let output: string = await runCliTool(
-      `fls -o ${partition.start} ${imagePath} ${currentInode} `
-    );
-    const lines: string[] = output.split('\n');
-    const matrix: string[][] = lines.map((line) => line.split(/\s+/));
-    for (let entry of matrix) {
-      if (entry[2] == part) {
-        currentInode = entry[1].slice(0, -1);
-        break;
+
+  for (const partition of partitionTable.partitions) {
+    let currentInode: number | string = '';
+    // start chasing the filepath
+    for (let i = 0; i < fileparts.length - 1; i++) {
+      let part = fileparts[i + 1];
+      let output: string = await runCliTool(
+        `fls -o ${partition.start} ${imagePath} ${currentInode} `
+      );
+      const lines: string[] = output.split('\n');
+      const matrix: string[][] = lines.map((line) => line.split(/\s+/));
+      for (let entry of matrix) {
+        //check if the next part of the file path is in the fls ouptut
+        if (entry[2] == part) {
+          currentInode = entry[1].slice(0, -1);
+          //this is the file we are looking for we can return the inode
+          if (part == fileparts[fileparts.length - 1])
+            return { inode: Number(currentInode), partition: partition }; // this is the final one we were looking for
+          //we found the next part of the file path in the list we can break to do the next part
+          break;
+        }
       }
+      // we wnet thorugh the entire output and couldn't find the part we need so its not in this parition
+      break;
     }
   }
 
-  return Number(currentInode);
+  return undefined;
 }
