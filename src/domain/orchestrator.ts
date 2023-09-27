@@ -237,7 +237,6 @@ export const validateImage = (imagePath: string) => {
   const IMAGETYPES = ['dd', 'e01', 'l01', 'lef', 'dmg', 'zip'];
   const splitName = imagePath.split('.');
   const ext = splitName[splitName.length - 1].toLowerCase();
-  console.log(ext);
   const validType = IMAGETYPES.includes(ext);
 
   return validType && fs.existsSync(imagePath);

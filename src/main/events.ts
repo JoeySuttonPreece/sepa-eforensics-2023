@@ -1,7 +1,11 @@
 import { ipcMain, dialog } from 'electron';
 
 import { listFiles } from '../domain/file-system-tools';
-import { ReportDetails, orchestrator } from '../domain/orchestrator';
+import {
+  ReportDetails,
+  orchestrator,
+  validateImage,
+} from '../domain/orchestrator';
 import { getHashAsync, getSearchStringAsync } from '../domain/other-cli-tools';
 import { getPartitionTable } from '../domain/volume-system-tools';
 import { Print } from './output-parser';
@@ -33,4 +37,8 @@ ipcMain.on('do-everything', async (event, [options]) => {
   } catch (error: any) {
     event.sender.send('report:error', error.message);
   }
+});
+
+ipcMain.on('validate:imagePath', (event, [imagePath]) => {
+  event.sender.send('validate:imagePath', validateImage(imagePath));
 });
