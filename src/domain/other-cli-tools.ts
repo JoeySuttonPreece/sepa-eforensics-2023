@@ -157,9 +157,19 @@ export const getSearchStringAsync = async (
 
 export type CarvedFile = {
   filedata: string;
-
+  file: File;
+  matchedSignature: string;
+  trueExtensions: string[];
   // will need to formatted properly later with split string and stuff
 };
+
+/*
+export type RenamedFile = {
+  file: File;
+  matchedSignature: string;
+  trueExtensions: string[];
+};
+*/
 
 // export const getImageInString = (imagePath: string): Promise<string> => {
 //   return runCliTool(`strings -t d ${imagePath}`);
@@ -171,13 +181,15 @@ export type CarvedFile = {
 //   startSectorList: number[]
 // ): Promise<string> => {
 
-//   const partionNumber = startSectorList.length;
+  const partionNumber = startSectorList.length;
 
-// for (let i = 1; i < partionNumber; i++) {
-//  await Promise.all([
-//     runCliTool(
-//     `photorec /d testFolder.1 /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-//    )],)
+  const timenow = date.now();
+
+for (let i = 1; i < partionNumber; i++) {
+ await Promise.all([
+    runCliTool( //automatic create testFolder with index. (testFolder.1)
+    `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+   )],)
 
 //     const filename2: string = await runCliTool(`ls`);
 //     const fileNameArrayProper: string[] = filename2.split('\n')
@@ -200,80 +212,128 @@ export type CarvedFile = {
 
 //     fileobjectStringLines.shift(); ///to reomve the empty line created due to first slight of fileobj
 
-//     const filenameFinal: string[] = [];
-// const filesizeFinal: string[] = [];
-// const filesectorFinal: number[] = [];
-// const fileLengthFinal: number[] = [];
 
-//     ///this has to be looped fo nth case in fileobeject string lines
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
-//     const filename: string[] = fileobjectStringLines[k].split("<filename>");
-//     filename.shift(); ///to reomve the empty line created due to first slight of filename
+    const filenameFinal: string[] = [];
+const filesizeFinal: string[] = [];
+const filesectorFinal: string[] = [];
+const fileLengthFinal: string[] = [];
+const filedateFinal : string[] = [];
+const filetypeFinal : string[] = [];
 
-//     const filenamePrep:string[] = filename[0].split("</filesize>");
 
-//     filenameFinal[k] = filenamePrep[0];
-//     ///now our data is in first element of the array
+    filenameFinal[] = parser1(fileobjectStringLines,"<filename>","</filename>", 0 );
 
-//     }
+  filesizeFinal[] = parser1(fileobjectStringLines,"<filesize>","</filesize>", 0 );
 
-//     ////////////////////////////////
+    filesectorFinal[] = parser1(fileobjectStringLines,"<img_offset='>","'", 0 );
 
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
+  fileLengthFinal[] = parser1(fileobjectStringLines,"len='","'", 0 );
 
-//  ///this has to be looped fo nth case in fileobeject string lines
-//     const filesize: string[] = fileobjectStringLines[k].split("<filesize>");
-//     filesize.shift() ///to remove the empty line created due to first slight of filename
+  ///far future thoughts: functionality later on to convert length frombyte to sector by deviding 512 for general case .......sectorSize: number,
+  ///far future thoughts: would need ot make all of them into ints or numbers before trying any cal stuff
 
-//     const filesizePrep:string[] = filesize[0].split("</filesize>");
-//     ///now our data is in first element of the array
 
-//     filesizeFinal[k] = filesizePrep[0];
 
-//     }
-//     ///////////////////
+ function parser1(mainStringlist: string[],splitterStringStart: string,splitterStringEnd: string, position: number): string[] {
 
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
+ const fileFinalSanitisedArray: string[]
 
-//     const fileStartSectorPrep: string[] = fileobjectStringLines[0].split("<byte_runs>");
-//     fileStartSectorPrep.shift(); ///to reomve the empty line created due to first slight of filename
+ for (let k=0; k<mainStringList.length; k++)
+    {
+    const file: string[] = mainStringList[k].split(splitterStringStart);
+    filename.shift(); ///to reomve the empty line created due to first slight of filename
 
-//     const fileStartSector:string[] = fileStartSectorPrep[0].split("image_offset=");
-//     ///now our data is in 2nd element of the array
+    const filePrep:string[] = file[0].split(splitterStringEnd);
+    fileFinalSanitisedArray.Push(filePrep[position]);
+    }
 
-//     const splitteragainfileStartSector:string[] = fileStartSector[1].split("'");
+  return fileFinalSanitisedArray;
+}
 
-//     filesectorFinal[k] = parseInt(splitteragainfileStartSector[1]) / sectorSize;
+function parser2(mainStringlist: string,splitterStringStart: string,splitterStringEnd: string, position: number): string {
 
-//     fileLengthFinal[k] = parseInt(splitteragainfileStartSector[3]) / sectorSize;
+ const fileFinalSanitised: string
 
-//     }
-//     myList.forEach(item => {
-//       console.log(item)
-//   })
+    const file: string[] = mainStringList.split(splitterStringStart);
+    filename.shift(); ///to reomve the empty line created due to first slight of filename
+
+    const filePrep:string[] = file[0].split(splitterStringEnd);
+    fileFinalSanitised.Push(filePrep[position]);
+
+
+  return fileFinalSanitised;
+}
+
+
 
 //       const tempfile:string
 
-//       const ArrayofdateTimeOriginal: string[]
-//     ///loop through the file names and run exifs on all of them
-//     filenameFinal.forEach (item => {
-//       tempfile = await runCliTool(`exiftool ./testfolder.1/${filenameFinal[item]}`);
-//       ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
+      const ArrayofdateTimeOriginal: string[]
 
-// ///would need to create switch case for this to consider all the other cases
 
-//       if(tempfile.match("Date/Time Original")){
-// const tempArray: string[] = tempFile.split("Date/Time Original:");
-// const tempArrayPrep
+    ///loop through the file names and run exifs on all of them
+    filenameFinal.forEach (item => {
+      tempfile = await runCliTool(`exiftool ./testfolder.1/$[item]}`);
 
-// }
-// else{
-//   tempstring = "N/A";
-//   ArrayofdateTimeOriginal[k]= tempstring;
-// }
+	  const tempdate= parser2(tempfile,"Date/Time Original              : ","/n", 0 ));
+
+	  const convertDate = date.parse(tempdate)
+	  const result = compare(convertDate,time_now)
+	  if (result ==false)
+	  {
+		cosole.log(Error)
+		tempdate="NaN"
+		   filedateFinal.push( tempdate);
+
+	  }else
+	  {
+		   filedateFinal.push( tempdate);
+	   //push to or
+	  }
+
+	   filetypeFinal.push( parser2(tempfile,"File Type              : ","/n", 0 ));
+
+
+	   }
+
+	  const CarvedFileArray: Array<CarvedFile> ///type will be carved file
+
+	  for (i= 0 , i<fileArray.length, i++)
+	  {
+	  const filenameFinal: string[] = [];
+const filesizeFinal: string[] = [];
+const filesectorFinal: string[] = [];
+const fileLengthFinal: string[] = [];
+const filedateFinal : string[] = [];
+const filetypeFinal : string[] = [];
+
+	  const tmpfilename= filenameFinal[i];
+	  const tmpfilesize= filesizeFinal[i];
+	  const tmpfilesector= filesectotFinal[i];
+	  const tmpdate= filedateFinal[i];
+	  const tmpfiletype= filetypeFinal[i];
+
+
+
+	  const CarvedFileInstance: CarvedFile={tmpfilename,tmpstuf..,....,...,...,...,} ;
+
+
+	  CarvedFile.Push()
+
+
+
+	  }
+
+
+      ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
+
+		//extract modify date -> convert date(string)
+		//compared time now with convert date ( time_now<convert_date) NaN   else output convert_date
+
+		///now create the carved file objects using the 4 arrays and convert_datearray creating carved file objects that contains nthelement values from each values from the array
+		//store them into carved file array
+		//throw it back to orchestrator
+///would need to create switch case for this to consider all the other cases
 
 //   })
 
