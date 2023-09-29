@@ -156,124 +156,169 @@ export const getSearchStringAsync = async (
 };
 
 export type CarvedFile = {
-  filedata: string;
-
-  // will need to formatted properly later with split string and stuff
+  tmpfilename: string;
+  tmpfilesize: string;
+  tmpfilesector: string;
+  tmpfilelength: string;
+  tmpdate: string;
+  tmpfiletype: string;
 };
 
-// export const getImageInString = (imagePath: string): Promise<string> => {
-//   return runCliTool(`strings -t d ${imagePath}`);
-// };
+export type ArrayCarvedFile = {
+  CarvedFileInstance: CarvedFile[];
+};
 
-// export const getCarvedFileAsync = async (
-//   imagePath: string,
-//   sectorSize: number,
-//   startSectorList: number[]
-// ): Promise<string> => {
+function parser1(
+  mainStringlist: string[],
+  splitterStringStart: string,
+  splitterStringEnd: string,
+  position: number
+): string[] {
+  const fileFinalSanitisedArray: string[] = [];
 
-//   const partionNumber = startSectorList.length;
+  for (let k = 0; k < mainStringlist.length; k++) {
+    const file: string[] = mainStringlist[k].split(splitterStringStart);
+    file.shift(); /// to reomve the empty line created due to first slight of filename
 
-// for (let i = 1; i < partionNumber; i++) {
-//  await Promise.all([
-//     runCliTool(
-//     `photorec /d testFolder.1 /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-//    )],)
+    const filePrep: string[] = file[0].split(splitterStringEnd);
+    fileFinalSanitisedArray.push(filePrep[position]);
+  }
 
-//     const filename2: string = await runCliTool(`ls`);
-//     const fileNameArrayProper: string[] = filename2.split('\n')
+  return fileFinalSanitisedArray;
+}
 
-//     const index =fileNameArrayProper.indexOf("report.xml",0)
-//     if (index > -1){
-//       console.log(index)
-//       console.log(fileNameArrayProper.at(index))
-//       fileNameArrayProper.splice(index,1)
-//     }
-//     //assuming no new line issue are in the array, we will need to loop through it
+function parser2(
+  mainStringlist: string,
+  splitterStringStart: string,
+  splitterStringEnd: string,
+  position: number
+): string {
+  let fileFinalSanitised: string = '';
 
-//     console.log(filename2.split('\n'));
+  const file: string[] = mainStringlist.split(splitterStringStart);
+  file.shift(); /// to reomve the empty line created due to first slight of filename
 
-//     /////////////////////
+  const filePrep: string[] = file[0].split(splitterStringEnd);
+  fileFinalSanitised = filePrep[position];
 
-//     const reportS:string = await runCliTool(`cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\000' ' '`);
+  return fileFinalSanitised;
+}
 
-//     const fileobjectStringLines: string[] = reportS.split("<fileobject>");
+export const getCarvedFileAsync = async (
+  imagePath: string,
+  sectorSize: number,
+  startSectorList: number[]
+): Promise<ArrayCarvedFile> => {
+  const partionNumber = startSectorList.length;
+  const timenow = Date.now();
+  let CarvedFileInstance: CarvedFile;
+  const CarvedFileArray: Array<CarvedFile> = []; /// type will be carved file
 
-//     fileobjectStringLines.shift(); ///to reomve the empty line created due to first slight of fileobj
+  for (let i = 1; i < partionNumber; i++)
+    runCliTool(
+      // automatic create testFolder with index. (testFolder.1)
+      `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+    );
 
-//     const filenameFinal: string[] = [];
-// const filesizeFinal: string[] = [];
-// const filesectorFinal: number[] = [];
-// const fileLengthFinal: number[] = [];
+  const filename2: string = await runCliTool(`ls`);
+  const fileNameArrayProper: string[] = filename2.split('\n');
 
-//     ///this has to be looped fo nth case in fileobeject string lines
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
-//     const filename: string[] = fileobjectStringLines[k].split("<filename>");
-//     filename.shift(); ///to reomve the empty line created due to first slight of filename
+  const index = fileNameArrayProper.indexOf('report.xml', 0);
+  if (index > -1) {
+    fileNameArrayProper.splice(index, 1);
+  }
+  // assuming no new line issue are in the array, we will need to loop through it
+  const reportS: string = await runCliTool(
+    `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\x00' ' '` // \000 ->\x00
+  );
 
-//     const filenamePrep:string[] = filename[0].split("</filesize>");
+  const fileobjectStringLines: string[] = reportS.split('<fileobject>');
 
-//     filenameFinal[k] = filenamePrep[0];
-//     ///now our data is in first element of the array
+  fileobjectStringLines.shift(); /// to reomve the empty line created due to first slight of fileobj
 
-//     }
+  const filenameFinal: string[] = parser1(
+    fileobjectStringLines,
+    '<filename>',
+    '</filename>',
+    0
+  );
+  const filesizeFinal: string[] = parser1(
+    fileobjectStringLines,
+    '<filesize>',
+    '</filesize>',
+    0
+  );
+  const filesectorFinal: string[] = parser1(
+    fileobjectStringLines,
+    "<img_offset='>",
+    "'",
+    0
+  );
+  const fileLengthFinal: string[] = parser1(
+    fileobjectStringLines,
+    "len='",
+    "'",
+    0
+  );
 
-//     ////////////////////////////////
+  const filedateFinal: string[] = [];
+  const filetypeFinal: string[] = [];
 
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
+  /// far future thoughts: functionality later on to convert length frombyte to sector by deviding 512 for general case .......sectorSize: number,
+  /// far future thoughts: would need ot make all of them into ints or numbers before trying any cal stuff
 
-//  ///this has to be looped fo nth case in fileobeject string lines
-//     const filesize: string[] = fileobjectStringLines[k].split("<filesize>");
-//     filesize.shift() ///to remove the empty line created due to first slight of filename
+  let tempfile: string;
 
-//     const filesizePrep:string[] = filesize[0].split("</filesize>");
-//     ///now our data is in first element of the array
+  /// loop through the file names and run exifs on all of them
+  filenameFinal.forEach(async (item) => {
+    tempfile = await runCliTool(`exiftool ./testfolder.1/${item}`);
 
-//     filesizeFinal[k] = filesizePrep[0];
+    let tempdate = parser2(
+      tempfile,
+      'Date/Time Original              : ',
+      '/n',
+      0
+    );
 
-//     }
-//     ///////////////////
+    const convertDate = Date.parse(tempdate);
+    if (convertDate > timenow) {
+      tempdate = 'NaN';
+      filedateFinal.push(tempdate);
+    } else {
+      filedateFinal.push(tempdate);
+    }
+    filetypeFinal.push(parser2(tempfile, 'File Type              : ', '/n', 0));
+  });
 
-//     for (let k=0; k<fileobjectStringLines.length; k++)
-//     {
+  for (let i = 0; i < filenameFinal.length; i++) {
+    const tmpfilename = filenameFinal[i];
+    const tmpfilesize = filesizeFinal[i];
+    const tmpfilesector = filesectorFinal[i];
+    const tmpfilelength = fileLengthFinal[i];
+    const tmpdate = filedateFinal[i];
+    const tmpfiletype = filetypeFinal[i];
 
-//     const fileStartSectorPrep: string[] = fileobjectStringLines[0].split("<byte_runs>");
-//     fileStartSectorPrep.shift(); ///to reomve the empty line created due to first slight of filename
+    CarvedFileInstance = {
+      tmpfilename,
+      tmpfilesize,
+      tmpfilesector,
+      tmpfilelength,
+      tmpdate,
+      tmpfiletype,
+    };
 
-//     const fileStartSector:string[] = fileStartSectorPrep[0].split("image_offset=");
-//     ///now our data is in 2nd element of the array
+    CarvedFileArray.push(CarvedFileInstance);
+  }
 
-//     const splitteragainfileStartSector:string[] = fileStartSector[1].split("'");
+  return CarvedFileArray;
+};
 
-//     filesectorFinal[k] = parseInt(splitteragainfileStartSector[1]) / sectorSize;
+/// just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
 
-//     fileLengthFinal[k] = parseInt(splitteragainfileStartSector[3]) / sectorSize;
-
-//     }
-//     myList.forEach(item => {
-//       console.log(item)
-//   })
-
-//       const tempfile:string
-
-//       const ArrayofdateTimeOriginal: string[]
-//     ///loop through the file names and run exifs on all of them
-//     filenameFinal.forEach (item => {
-//       tempfile = await runCliTool(`exiftool ./testfolder.1/${filenameFinal[item]}`);
-//       ///just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
-
-// ///would need to create switch case for this to consider all the other cases
-
-//       if(tempfile.match("Date/Time Original")){
-// const tempArray: string[] = tempFile.split("Date/Time Original:");
-// const tempArrayPrep
-
-// }
-// else{
-//   tempstring = "N/A";
-//   ArrayofdateTimeOriginal[k]= tempstring;
-// }
+/// now create the carved file objects using the 4 arrays and convert_datearray creating carved file objects that contains nthelement values from each values from the array
+// store them into carved file array
+// throw it back to orchestrator
+/// would need to create switch case for this to consider all the other cases
 
 //   })
 
