@@ -185,21 +185,14 @@ export const orchestrator = async (
   } catch (error) {
     if (error instanceof Error) {
       statusCallback(error.message);
-      throw new Error(error.message);
+      throw error;
     }
   }
 
   // console.log(imagePath);
   statusCallback('Reading Partition Table...');
 
-  let partitionTable = {} as PartitionTable;
-  try {
-    partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-  }
+  const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
   // TODO:
   // need to figure out how to exclude some of these depending on
@@ -208,16 +201,10 @@ export const orchestrator = async (
   const keywordFiles: KeywordFile[] = [];
 
   statusCallback('Processing Files...');
-  try {
-    suspiciousFiles = await getSuspiciousFiles(
-      orchestratorOptions,
-      partitionTable
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-  }
+  const suspiciousFiles = await getSuspiciousFiles(
+    orchestratorOptions,
+    partitionTable
+  );
 
   statusCallback('Searching for keyword files...');
 
