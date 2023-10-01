@@ -227,29 +227,29 @@ export async function getInodeAtFilePath(
   partitionTable: PartitionTable,
   imagePath: string
 ): Promise<{ inode: number; partition: Partition } | undefined> {
-  let fileparts = filepath.split('/');
+  const fileparts = filepath.split('/');
 
   for (const partition of partitionTable.partitions) {
     let currentInode: number | string = '';
     // start chasing the filepath
     for (let i = 0; i < fileparts.length - 1; i++) {
-      let part = fileparts[i + 1];
-      let output: string = await runCliTool(
+      const part = fileparts[i + 1];
+      const output: string = await runCliTool(
         `fls -o ${partition.start} ${imagePath} ${currentInode} `
       );
       const lines: string[] = output.split('\n');
       const matrix: string[][] = lines.map((line) => line.split(/\s+/));
       let found = false;
-      for (let entry of matrix) {
-        //check if the next part of the file path is in the fls ouptut
+      for (const entry of matrix) {
+        // check if the next part of the file path is in the fls ouptut
         if (entry[2] == part) {
           found = true;
           currentInode = entry[1].slice(0, -1);
-          //this is the file we are looking for we can return the inode
+          // this is the file we are looking for we can return the inode
           if (part == fileparts[fileparts.length - 1]) {
-            return { inode: Number(currentInode), partition: partition }; // this is the final one we were looking for
+            return { inode: Number(currentInode), partition }; // this is the final one we were looking for
           }
-          //we found the next part of the file path in the list we can break to do the next part
+          // we found the next part of the file path in the list we can break to do the next part
           break;
         }
       }
@@ -260,13 +260,3 @@ export async function getInodeAtFilePath(
 
   return undefined;
 }
-
-export type CarvedFile = {
-  file: File;
-
-  ///change the matched string and true extension to other properties that are not curently included in the file type but do exist in our photorec outputted file data
-
-  matchedSignature: string;
-
-  trueExtensions: string[];
-};
