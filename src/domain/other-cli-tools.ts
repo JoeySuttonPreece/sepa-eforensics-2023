@@ -211,108 +211,120 @@ export const getCarvedFileAsync = async (
 ): Promise<ArrayCarvedFile> => {
   const partionNumber = startSectorList.length;
   const timenow = Date.now();
+
   let CarvedFileInstance: CarvedFile;
   const CarvedFileArray: Array<CarvedFile> = []; /// type will be carved file
-
-  for (let i = 1; i < partionNumber; i++)
-    runCliTool(
-      // automatic create testFolder with index. (testFolder.1)
-      `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-    );
-
-  const filename2: string = await runCliTool(`ls`);
-  const fileNameArrayProper: string[] = filename2.split('\n');
-
-  const index = fileNameArrayProper.indexOf('report.xml', 0);
-  if (index > -1) {
-    fileNameArrayProper.splice(index, 1);
-  }
-  // assuming no new line issue are in the array, we will need to loop through it
-  const reportS: string = await runCliTool(
-    `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\x00' ' '` // \000 ->\x00
-  );
-
-  const fileobjectStringLines: string[] = reportS.split('<fileobject>');
-
-  fileobjectStringLines.shift(); /// to reomve the empty line created due to first slight of fileobj
-
-  const filenameFinal: string[] = parser1(
-    fileobjectStringLines,
-    '<filename>',
-    '</filename>',
-    0
-  );
-  const filesizeFinal: string[] = parser1(
-    fileobjectStringLines,
-    '<filesize>',
-    '</filesize>',
-    0
-  );
-  const filesectorFinal: string[] = parser1(
-    fileobjectStringLines,
-    "<img_offset='>",
-    "'",
-    0
-  );
-  const fileLengthFinal: string[] = parser1(
-    fileobjectStringLines,
-    "len='",
-    "'",
-    0
-  );
 
   const filedateFinal: string[] = [];
   const filetypeFinal: string[] = [];
 
-  /// far future thoughts: functionality later on to convert length frombyte to sector by deviding 512 for general case .......sectorSize: number,
-  /// far future thoughts: would need ot make all of them into ints or numbers before trying any cal stuff
+  // async issues
+  // await can't be used within loop
+  // return CarvedFileArray doesn't match type
+  const go = async () => {
+    for (let i = 1; i < partionNumber; i++) {
+      runCliTool(
+        // automatic create testFolder with index. (testFolder.1)
+        `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+      );
 
-  let tempfile: string;
+      const filename2: string = await runCliTool(`ls`);
+      const fileNameArrayProper: string[] = filename2.split('\n');
 
-  /// loop through the file names and run exifs on all of them
-  filenameFinal.forEach(async (item) => {
-    tempfile = await runCliTool(`exiftool ./testfolder.1/${item}`);
+      const index = fileNameArrayProper.indexOf('report.xml', 0);
+      if (index > -1) {
+        fileNameArrayProper.splice(index, 1);
+      }
+      // assuming no new line issue are in the array, we will need to loop through it
+      const reportS: string = await runCliTool(
+        `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\x00' ' '` // \000 ->\x00
+      );
 
-    let tempdate = parser2(
-      tempfile,
-      'Date/Time Original              : ',
-      '/n',
-      0
-    );
+      const fileobjectStringLines: string[] = reportS.split('<fileobject>');
 
-    const convertDate = Date.parse(tempdate);
-    if (convertDate > timenow) {
-      tempdate = 'NaN';
-      filedateFinal.push(tempdate);
-    } else {
-      filedateFinal.push(tempdate);
+      fileobjectStringLines.shift(); /// to reomve the empty line created due to first slight of fileobj
+
+      const filenameFinal: string[] = parser1(
+        fileobjectStringLines,
+        '<filename>',
+        '</filename>',
+        0
+      );
+      const filesizeFinal: string[] = parser1(
+        fileobjectStringLines,
+        '<filesize>',
+        '</filesize>',
+        0
+      );
+      const filesectorFinal: string[] = parser1(
+        fileobjectStringLines,
+        "<img_offset='>",
+        "'",
+        0
+      );
+      const fileLengthFinal: string[] = parser1(
+        fileobjectStringLines,
+        "len='",
+        "'",
+        0
+      );
+
+      /// far future thoughts: functionality later on to convert length frombyte to sector by deviding 512 for general case .......sectorSize: number,
+      /// far future thoughts: would need ot make all of them into ints or numbers before trying any cal stuff
+
+      let tempfile: string;
+
+      /// loop through the file names and run exifs on all of them
+      filenameFinal.forEach(async (item) => {
+        tempfile = await runCliTool(`exiftool ./testfolder.1/${item}`);
+
+        let tempdate = parser2(
+          tempfile,
+          'Date/Time Original              : ',
+          '/n',
+          0
+        );
+
+        const convertDate = Date.parse(tempdate);
+        if (convertDate > timenow) {
+          tempdate = 'NaN';
+          filedateFinal.push(tempdate);
+        } else {
+          filedateFinal.push(tempdate);
+        }
+        filetypeFinal.push(
+          parser2(tempfile, 'File Type              : ', '/n', 0)
+        );
+      });
+
+      for (let j = 0; j < filenameFinal.length; j++) {
+        const tmpfilename = filenameFinal[j];
+        const tmpfilesize = filesizeFinal[j];
+        const tmpfilesector = filesectorFinal[j];
+        const tmpfilelength = fileLengthFinal[j];
+        const tmpdate = filedateFinal[j];
+        const tmpfiletype = filetypeFinal[j];
+
+        CarvedFileInstance = {
+          tmpfilename,
+          tmpfilesize,
+          tmpfilesector,
+          tmpfilelength,
+          tmpdate,
+          tmpfiletype,
+        };
+
+        CarvedFileArray.push(CarvedFileInstance);
+      }
     }
-    filetypeFinal.push(parser2(tempfile, 'File Type              : ', '/n', 0));
-  });
 
-  for (let i = 0; i < filenameFinal.length; i++) {
-    const tmpfilename = filenameFinal[i];
-    const tmpfilesize = filesizeFinal[i];
-    const tmpfilesector = filesectorFinal[i];
-    const tmpfilelength = fileLengthFinal[i];
-    const tmpdate = filedateFinal[i];
-    const tmpfiletype = filetypeFinal[i];
+    // issue, its not being able to understand that carvedfilearray has indeed been assigned the value carvedfileinstance in the loop above
+  };
 
-    CarvedFileInstance = {
-      tmpfilename,
-      tmpfilesize,
-      tmpfilesector,
-      tmpfilelength,
-      tmpdate,
-      tmpfiletype,
-    };
-
-    CarvedFileArray.push(CarvedFileInstance);
-  }
+  go();
 
   return CarvedFileArray;
 };
-
 /// just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
 
 /// now create the carved file objects using the 4 arrays and convert_datearray creating carved file objects that contains nthelement values from each values from the array
