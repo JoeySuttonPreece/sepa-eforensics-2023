@@ -8,6 +8,7 @@ import DeletedFilesComponent from '../../components/DeletedFilesComponent';
 import ImageHashComponent from '../../components/ImageHashComponent';
 import ErrorMessageComponent from '../../components/ErrorMessageComponent/ErrorMessageComponent';
 import './ReportPage.css';
+import TimelineComponent from 'renderer/components/TimelineComponent';
 
 export default function ReportPage() {
   const [reportReady, setReportReady] = useState(false);
@@ -102,6 +103,9 @@ export default function ReportPage() {
             ) : null}
             {details?.deletedFiles ? (
               <DeletedFilesComponent deletedFiles={details.deletedFiles} />
+            ) : null}
+            {details?.timeline ? (
+              <TimelineComponent timeline={details.timeline} />
             ) : null}
           </article>
         ) : (
