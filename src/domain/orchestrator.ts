@@ -96,7 +96,7 @@ export const fileListProcessor = (line: string): File => {
 };
 
 export const getSuspiciousFiles = async (
-  args: OrchestratorOptions,
+  options: OrchestratorOptions,
   partitionTable: PartitionTable
 ): Promise<SuspiciousFiles> => {
   // DON'T FORGET ORCHESTRATOR OPTIONS, CHECK IF WE WANT TO SEARCH FOR THINGS
@@ -107,7 +107,7 @@ export const getSuspiciousFiles = async (
   for await (const partition of partitionTable.partitions) {
     console.log(partition);
     const files = await runBufferedCliTool<File>(
-      `fls -o ${partition.start} -l -p -r ${args.imagePath}`,
+      `fls -o ${partition.start} -l -p -r ${options.imagePath}`,
       fileListProcessor
     ).catch(() =>
       console.log(`Couldn't read partition: ${partition.description}`)
@@ -117,7 +117,7 @@ export const getSuspiciousFiles = async (
 
     for await (const file of files) {
       file.hash = await getFileHashAsync(
-        args.imagePath,
+        options.imagePath,
         partition,
         file.inode,
         false
@@ -127,7 +127,7 @@ export const getSuspiciousFiles = async (
       // renamed
       const renamedFile = await processForRenamedFile(
         file,
-        args.imagePath,
+        options.imagePath,
         partition
       );
       if (renamedFile) {
