@@ -7,6 +7,7 @@ import KeywordFilesComponent from '../../components/KeywordFilesComponent';
 import DeletedFilesComponent from '../../components/DeletedFilesComponent';
 import ImageHashComponent from '../../components/ImageHashComponent';
 import ErrorMessageComponent from '../../components/ErrorMessageComponent/ErrorMessageComponent';
+import PrintButton from './PrintButton';
 import './ReportPage.css';
 import TimelineComponent from 'renderer/components/TimelineComponent';
 
@@ -117,34 +118,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-const PrintButton = ({ onPrint }: { onPrint: Function }) => {
-  return (
-    <div className="dropdown">
-      <button>Print</button>
-      <div className="dropdown-content">
-        <button
-          onClick={() => {
-            onPrint('pdf');
-          }}
-        >
-          PDF
-        </button>
-        <button
-          onClick={() => {
-            onPrint('csv');
-          }}
-        >
-          CSV
-        </button>
-        <button
-          onClick={() => {
-            onPrint('json');
-          }}
-        >
-          JSON
-        </button>
-      </div>
-    </div>
-  );
-};
