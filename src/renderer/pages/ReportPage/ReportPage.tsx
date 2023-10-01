@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReportDetails } from 'domain/orchestrator';
+import TimelineComponent from 'renderer/components/TimelineComponent';
+import CarvedFilesComponent from 'renderer/components/CarvedFilesComponent';
 import PartitionTableComponent from '../../components/PartitionTableComponent';
 import RenamedFilesComponent from '../../components/RenamedFilesComponent';
 import KeywordFilesComponent from '../../components/KeywordFilesComponent';
@@ -9,7 +11,6 @@ import ImageHashComponent from '../../components/ImageHashComponent';
 import ErrorMessageComponent from '../../components/ErrorMessageComponent/ErrorMessageComponent';
 import PrintButton from './PrintButton';
 import './ReportPage.css';
-import TimelineComponent from 'renderer/components/TimelineComponent';
 
 export default function ReportPage() {
   const [reportReady, setReportReady] = useState(false);
@@ -42,14 +43,14 @@ export default function ReportPage() {
     navigate('/');
   }
 
-  function handlePrint(format: string) {
+  const handlePrint = useCallback((format: string) => {
     window.electron.ipcRenderer.on('select-dir', ([dir]) => {
       if (dir === undefined) return;
 
       window.electron.ipcRenderer.sendMessage('print', [format, dir]);
     });
     window.electron.ipcRenderer.sendMessage('select-dir', []);
-  }
+  }, []);
 
   return (
     <div>
@@ -104,6 +105,9 @@ export default function ReportPage() {
             ) : null}
             {details?.deletedFiles ? (
               <DeletedFilesComponent deletedFiles={details.deletedFiles} />
+            ) : null}
+            {details?.carvedFiles ? (
+              <CarvedFilesComponent carvedFiles={details.carvedFiles} />
             ) : null}
             {details?.timeline ? (
               <TimelineComponent timeline={details.timeline} />

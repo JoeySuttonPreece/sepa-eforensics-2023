@@ -1,4 +1,7 @@
-import { number } from 'yargs';
+/* eslint-disable no-await-in-loop */
+import fs from 'fs';
+import { XMLParser } from 'fast-xml-parser';
+import { ExifDateTime, exiftool } from 'exiftool-vendored';
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 
@@ -156,200 +159,81 @@ export const getSearchStringAsync = async (
 };
 
 export type CarvedFile = {
-  tmpfilename: string;
-  tmpfilesize: string;
-  tmpfilesector: string;
-  tmpfilelength: string;
-  tmpdate: string;
-  tmpfiletype: string;
+  filename: string;
+  size: number;
+  sector: number;
+  modifiedDate?: Date;
+  filetype?: string;
 };
 
+// BEHOLD THE ACCURSED RELIC OF A BYGONE AGE
+// NEVER TO BE USED AGAIN
 export type ArrayCarvedFile = {
   CarvedFileInstance: CarvedFile[];
 };
 
-function parser1(
-  mainStringlist: string[],
-  splitterStringStart: string,
-  splitterStringEnd: string,
-  position: number
-): string[] {
-  const fileFinalSanitisedArray: string[] = [];
+const FOLDER_NAME = 'testFolder';
 
-  for (let k = 0; k < mainStringlist.length; k++) {
-    const file: string[] = mainStringlist[k].split(splitterStringStart);
-    file.shift(); /// to reomve the empty line created due to first slight of filename
-
-    const filePrep: string[] = file[0].split(splitterStringEnd);
-    fileFinalSanitisedArray.push(filePrep[position]);
-  }
-
-  return fileFinalSanitisedArray;
-}
-
-function parser2(
-  mainStringlist: string,
-  splitterStringStart: string,
-  splitterStringEnd: string,
-  position: number
-): string {
-  let fileFinalSanitised: string = '';
-
-  const file: string[] = mainStringlist.split(splitterStringStart);
-  file.shift(); /// to reomve the empty line created due to first slight of filename
-
-  const filePrep: string[] = file[0].split(splitterStringEnd);
-  fileFinalSanitised = filePrep[position];
-
-  return fileFinalSanitised;
-}
-
-export const getCarvedFileAsync = async (
+export const getCarvedFiles = async (
   imagePath: string,
   sectorSize: number,
   startSectorList: number[]
-): Promise<ArrayCarvedFile> => {
-  const partionNumber = startSectorList.length;
-  const timenow = Date.now();
+): Promise<CarvedFile[]> => {
+  const results: CarvedFile[] = [];
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    parseAttributeValue: true,
+    attributesGroupName: 'xml_attributes',
+    attributeNamePrefix: '',
+  });
 
-  let CarvedFileInstance: CarvedFile;
-  const CarvedFileArray: Array<CarvedFile> = []; /// type will be carved file
+  for (let i = 1; i < startSectorList.length; i++) {
+    const now = Date.now();
+    await runCliTool(
+      // automatic create FOLDER_NAME with index. (FOLDER_NAME.1)
+      `photorec /d ${FOLDER_NAME} /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+    );
 
-  const filedateFinal: string[] = [];
-  const filetypeFinal: string[] = [];
+    const report = parser.parse(
+      fs.readFileSync(`./${FOLDER_NAME}.1/report.xml`, 'utf8'),
+      {}
+    );
 
-  // async issues
-  // await can't be used within loop
-  // return CarvedFileArray doesn't match type
-  const go = async () => {
-    for (let i = 1; i < partionNumber; i++) {
-      runCliTool(
-        // automatic create testFolder with index. (testFolder.1)
-        `photorec /d testFolder /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
-      );
-
-      const filename2: string = await runCliTool(`ls`);
-      const fileNameArrayProper: string[] = filename2.split('\n');
-
-      const index = fileNameArrayProper.indexOf('report.xml', 0);
-      if (index > -1) {
-        fileNameArrayProper.splice(index, 1);
-      }
-      // assuming no new line issue are in the array, we will need to loop through it
-      const reportS: string = await runCliTool(
-        `cat ./testFolder.1/report.xml|grep -Poz '(<fileobject>)(.*\n)*.*(</fileobject>)'|tr '\x00' ' '` // \000 ->\x00
-      );
-
-      const fileobjectStringLines: string[] = reportS.split('<fileobject>');
-
-      fileobjectStringLines.shift(); /// to reomve the empty line created due to first slight of fileobj
-
-      const filenameFinal: string[] = parser1(
-        fileobjectStringLines,
-        '<filename>',
-        '</filename>',
-        0
-      );
-      const filesizeFinal: string[] = parser1(
-        fileobjectStringLines,
-        '<filesize>',
-        '</filesize>',
-        0
-      );
-      const filesectorFinal: string[] = parser1(
-        fileobjectStringLines,
-        "<img_offset='>",
-        "'",
-        0
-      );
-      const fileLengthFinal: string[] = parser1(
-        fileobjectStringLines,
-        "len='",
-        "'",
-        0
-      );
-
-      /// far future thoughts: functionality later on to convert length frombyte to sector by deviding 512 for general case .......sectorSize: number,
-      /// far future thoughts: would need ot make all of them into ints or numbers before trying any cal stuff
-
-      let tempfile: string;
-
-      /// loop through the file names and run exifs on all of them
-      filenameFinal.forEach(async (item) => {
-        tempfile = await runCliTool(`exiftool ./testfolder.1/${item}`);
-
-        let tempdate = parser2(
-          tempfile,
-          'Date/Time Original              : ',
-          '/n',
-          0
-        );
-
-        const convertDate = Date.parse(tempdate);
-        if (convertDate > timenow) {
-          tempdate = 'NaN';
-          filedateFinal.push(tempdate);
-        } else {
-          filedateFinal.push(tempdate);
-        }
-        filetypeFinal.push(
-          parser2(tempfile, 'File Type              : ', '/n', 0)
-        );
-      });
-
-      for (let j = 0; j < filenameFinal.length; j++) {
-        const tmpfilename = filenameFinal[j];
-        const tmpfilesize = filesizeFinal[j];
-        const tmpfilesector = filesectorFinal[j];
-        const tmpfilelength = fileLengthFinal[j];
-        const tmpdate = filedateFinal[j];
-        const tmpfiletype = filetypeFinal[j];
-
-        CarvedFileInstance = {
-          tmpfilename,
-          tmpfilesize,
-          tmpfilesector,
-          tmpfilelength,
-          tmpdate,
-          tmpfiletype,
+    const files: {
+      filename: string;
+      filesize: number;
+      byte_runs: {
+        byte_run: {
+          xml_attributes: { img_offset: number; len: number; offset: number };
         };
+      };
+    }[] = Array.isArray(report.dfxml.fileobject)
+      ? report.dfxml.fileobject
+      : [report.dfxml.fileobject];
 
-        CarvedFileArray.push(CarvedFileInstance);
-      }
-    }
+    await Promise.all(
+      files.map(async (file) => {
+        const exifData = await exiftool
+          .read(`./${FOLDER_NAME}.1/${file.filename}`)
+          .catch(() => console.log(`exiftool failed: ${file.filename}`));
 
-    // issue, its not being able to understand that carvedfilearray has indeed been assigned the value carvedfileinstance in the loop above
-  };
+        const modifiedDate = (
+          exifData?.FileModifyDate as ExifDateTime
+        )?.toDate();
 
-  go();
+        results.push({
+          filename: file.filename,
+          size: file.filesize,
+          sector: file.byte_runs.byte_run.xml_attributes.img_offset,
+          filetype: exifData?.FileType,
+          modifiedDate:
+            modifiedDate?.getTime() > now ? undefined : modifiedDate,
+        });
+      })
+    );
 
-  return CarvedFileArray;
+    await runCliTool(`rm -rf ./${FOLDER_NAME}.*`);
+  }
+
+  return results;
 };
-/// just doublecheck whether we would need to say it as filenamefinal or if we can directly call it as item
-
-/// now create the carved file objects using the 4 arrays and convert_datearray creating carved file objects that contains nthelement values from each values from the array
-// store them into carved file array
-// throw it back to orchestrator
-/// would need to create switch case for this to consider all the other cases
-
-//   })
-
-//     }
-
-//   }
-
-// //test value
-//   //loop exiftool every file except "report.xml"
-//   //filename, file size, original date, file type
-//   runCliTool(
-//     >>carvedfile.xml'`
-//   ),
-
-//   //incase save recovered files for report/client
-//   runCliTool(`rm -d -f testFolder.*`),
-
-//   return { filedata }
-
-//   ///this will be thown back to orchestrator---not done yet....will focuso on it on thursday
-
-// }

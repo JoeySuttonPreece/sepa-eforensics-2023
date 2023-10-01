@@ -1,5 +1,11 @@
 import fs from 'fs';
-import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
+import {
+  CarvedFile,
+  Hash,
+  getCarvedFiles,
+  getFileHashAsync,
+  getHashAsync,
+} from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
 import {
@@ -29,7 +35,7 @@ export type ReportDetails = {
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
   keywordFiles: KeywordFile[] | undefined;
-  carvedFile: CarvedFile[] | undefined;
+  carvedFiles: CarvedFile[] | undefined;
   timeline: TimelineEntry[] | undefined;
 };
 
@@ -113,6 +119,7 @@ export const getSuspiciousFiles = async (
       console.log(`Couldn't read partition: ${partition.description}`)
     );
 
+    // eslint-disable-next-line no-continue
     if (!files) continue;
 
     for await (const file of files) {
@@ -138,11 +145,6 @@ export const getSuspiciousFiles = async (
       if (file.deleted) {
         deletedFiles.push(file);
       }
-
-      // carved
-      // if (carvedfile) {
-      //   CarvedFiles.push(carvedfile);
-      // }
 
       // keyword //////////// SUS
 
@@ -194,10 +196,7 @@ export const orchestrator = async (
 
   const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
-  // TODO:
-  // need to figure out how to exclude some of these depending on
-  // orchestrator options
-  let suspiciousFiles: SuspiciousFiles = {} as SuspiciousFiles;
+  // TODO: figure out how to exclude some of these depending on options
   const keywordFiles: KeywordFile[] = [];
 
   statusCallback('Processing Files...');
@@ -206,10 +205,21 @@ export const orchestrator = async (
     partitionTable
   );
 
+  let carvedFiles: CarvedFile[] = [];
+  if (orchestratorOptions.includeCarvedFiles) {
+    statusCallback('Carving Files...');
+
+    carvedFiles = await getCarvedFiles(
+      orchestratorOptions.imagePath,
+      partitionTable.sectorSize,
+      partitionTable.partitions.map((partition) => partition.start)
+    );
+  }
+
   statusCallback('Searching for keyword files...');
 
   statusCallback('Building Timeline...');
-  //consider some refactoring sprint 4
+  // consider some refactoring sprint 4
   const timelineFiles = suspiciousFiles.renamedFiles.map((renamedFile) => {
     return renamedFile.file;
   });
@@ -242,6 +252,10 @@ export const orchestrator = async (
     keywordFiles:
       orchestratorOptions.includeKeywordSearchFiles && keywordFiles
         ? keywordFiles
+        : undefined,
+    carvedFiles:
+      orchestratorOptions.includeCarvedFiles && carvedFiles
+        ? carvedFiles
         : undefined,
     timeline:
       orchestratorOptions.showTimeline && timeline ? timeline : undefined,
