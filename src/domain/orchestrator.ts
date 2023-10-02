@@ -1,5 +1,5 @@
 import fs from 'fs';
-<<<<<<< HEAD
+import path from 'path';
 import {
   CarvedFile,
   Hash,
@@ -7,12 +7,6 @@ import {
   getFileHashAsync,
   getHashAsync,
 } from './other-cli-tools';
-=======
-import path from 'path';
-
-import { fileURLToPath } from 'url';
-import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
->>>>>>> cc15133 (Feat : T001 bug fixed)
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
 import {
@@ -267,11 +261,6 @@ export const orchestrator = async (
     timeline:
       orchestratorOptions.showTimeline && timeline ? timeline : undefined,
   };
-};
-export type Hash = {
-  fileName: string;
-  md5sum: string;
-  sha1sum: string;
 };
 
 export const validateImage = async (imagePath: string) => {

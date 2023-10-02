@@ -16,7 +16,11 @@ import log from 'electron-log';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { orchestrator, validateImage } from '../domain/orchestrator';
+import {
+  orchestrator,
+  validateImage,
+  validateZip,
+} from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
