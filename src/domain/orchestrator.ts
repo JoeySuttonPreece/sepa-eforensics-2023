@@ -1,4 +1,5 @@
 import fs from 'fs';
+<<<<<<< HEAD
 import {
   CarvedFile,
   Hash,
@@ -6,6 +7,12 @@ import {
   getFileHashAsync,
   getHashAsync,
 } from './other-cli-tools';
+=======
+import path from 'path';
+
+import { fileURLToPath } from 'url';
+import { Hash, getFileHashAsync, getHashAsync } from './other-cli-tools';
+>>>>>>> cc15133 (Feat : T001 bug fixed)
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
 import {
@@ -261,12 +268,63 @@ export const orchestrator = async (
       orchestratorOptions.showTimeline && timeline ? timeline : undefined,
   };
 };
+export type Hash = {
+  fileName: string;
+  md5sum: string;
+  sha1sum: string;
+};
 
-export const validateImage = (imagePath: string) => {
-  const IMAGETYPES = ['dd', 'e01', 'l01', 'lef', 'dmg', 'zip'];
-  const splitName = imagePath.split('.');
-  const ext = splitName[splitName.length - 1].toLowerCase();
-  const validType = IMAGETYPES.includes(ext);
-
+export const validateImage = async (imagePath: string) => {
+  let validType = false;
+  const tskImageInfo = await runCliTool(
+    `tsk_imageinfo ${imagePath}| grep "TSK Support"`
+  );
+  const zipfile = await runCliTool(`file -b --mime-type ${imagePath}`);
+  if (
+    tskImageInfo.trim() === 'TSK Support: Yes' ||
+    zipfile.trim() === 'application/zip'
+  ) {
+    validType = true;
+    return validType && fs.existsSync(imagePath);
+  }
   return validType && fs.existsSync(imagePath);
+};
+
+export const validateZip = async (imagePath: string) => {
+  let zipfile = '';
+  const zipFileName = imagePath.replace(/^.*[\\/]/, '');
+  let newImagePath = '';
+  let validImageFileZip = '';
+
+  zipfile = await runCliTool(`file -b --mime-type ${imagePath}`);
+  if (zipfile.trim() === 'application/zip') {
+    newImagePath = newImagePath.concat(
+      path.dirname(imagePath),
+      '/',
+      zipFileName,
+      '_extract'
+    );
+    await runCliTool(`unzip -o ${imagePath} -d ${newImagePath}`);
+    const fileNames = fs.readdirSync(newImagePath);
+    const filePaths = fileNames.map((fileName) =>
+      path.join(newImagePath, fileName)
+    );
+    // Loop function
+    for await (const files of filePaths) {
+      const tskImageInfo = await runCliTool(
+        `tsk_imageinfo ${files}| grep "TSK Support"`
+      );
+      if (tskImageInfo.trim() === 'TSK Support: Yes') {
+        validImageFileZip = files;
+      }
+    }
+    return validImageFileZip;
+  }
+  return imagePath;
+};
+
+export const deleteZipFile = async (imagePath: string) => {
+  let deletingDir = '';
+  deletingDir = deletingDir.concat(path.dirname(imagePath), '/');
+  await runCliTool(`rm -r -f ${deletingDir}*.zip_extract"`);
 };

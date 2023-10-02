@@ -16,7 +16,12 @@ import log from 'electron-log';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { orchestrator, validateImage } from '../domain/orchestrator';
+import { runCliTool } from 'domain/runners';
+import {
+  orchestrator,
+  validateImage,
+  validateZip,
+} from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -154,14 +159,13 @@ app
       }).argv;
 
     if (commandLine) {
-      if (!validateImage(imagePath) || imagePath == null) {
+      if ((await validateImage(imagePath)) === false || imagePath == null) {
         console.log(
           `Image could not be found or is incorrect type: imagePath was ${imagePath}}`
         );
         return;
       }
-
-      if (include == null) {
+      imagePath = await validateZip(imagePath);
         include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
       } else {
         include = include.split(',');
