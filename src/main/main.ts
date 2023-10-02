@@ -16,12 +16,7 @@ import log from 'electron-log';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { runCliTool } from 'domain/runners';
-import {
-  orchestrator,
-  validateImage,
-  validateZip,
-} from '../domain/orchestrator';
+import { orchestrator, validateImage } from '../domain/orchestrator';
 import './events';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -166,6 +161,8 @@ app
         return;
       }
       imagePath = await validateZip(imagePath);
+
+      if (include == null) {
         include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
       } else {
         include = include.split(',');
