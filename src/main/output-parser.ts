@@ -7,6 +7,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { TimelineEntry } from 'domain/timeline-tools';
 import { UserOptions } from 'jspdf-autotable';
+import { CarvedFile } from 'domain/other-cli-tools';
 
 type PDF = jsPDF & {
   autoTable: (options: UserOptions) => void;
@@ -37,6 +38,7 @@ export const Print = (
     if (output.keywordFiles) csvKeywordFile(output.keywordFiles, writer);
     if (output.renamedFiles) csvRenamedFile(output.renamedFiles, writer);
     if (output.deletedFiles) csvDeletedFile(output.deletedFiles, writer);
+    if (output.carvedFiles) csvCarvedFile(output.carvedFiles, writer);
     if (output.timeline) csvTimeline(output.timeline, writer);
   } else if (format === 'json') {
     writer(JSON.stringify(output), 'report');
@@ -59,6 +61,7 @@ function pdfReport(output: ReportDetails, writer: Writer) {
   if (output.deletedFiles) y = pdfDeletedFile(output.deletedFiles, doc, y);
   if (output.renamedFiles) y = pdfRenamedFile(output.renamedFiles, doc, y);
   if (output.keywordFiles) y = pdfKeywordFile(output.keywordFiles, doc, y);
+  if (output.carvedFiles) y = pdfCarvedFile(output.carvedFiles, doc, y);
   if (output.timeline) y = pdfTimeline(output.timeline, doc, y);
   const arrayBuffer = doc.output('arraybuffer');
   writer(Buffer.from(arrayBuffer), 'report');
@@ -258,6 +261,34 @@ function pdfKeywordFile(
   }
 }
 
+function pdfCarvedFile(carvedFiles: CarvedFile[], doc: PDF, y: number): number {
+  let height = y;
+  const section = 'Carved Files';
+  const deletedBody: string[][] = [];
+  doc.text(section, 105 - doc.getTextWidth(section) / 2, height);
+  height += doc.getLineHeight();
+  for (const carved of carvedFiles) {
+    deletedBody.push([
+      carved.filename,
+      `${carved.size}`,
+      `${carved.sector}`,
+      carved.modifiedDate?.toLocaleString() ?? '',
+      carved.filetype ?? '',
+    ]);
+  }
+  if (deletedBody.length > 0) {
+    doc.autoTable({
+      head: [['Filename', 'Size', 'Sector', 'Modified', 'Filetype']],
+      body: deletedBody,
+      startY: height,
+    });
+    return doc.lastAutoTable.finalY + doc.getLineHeight();
+  } else {
+    doc.text('No Deleted Files Found', 50, height);
+    return height + doc.getLineHeight();
+  }
+}
+
 function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
   const section = 'Timeline';
   doc.text(section, 105 - doc.getTextWidth(section) / 2, y);
@@ -357,6 +388,19 @@ function csvKeywordFile(keywordFiles: KeywordFile[], writer: Writer) {
     const matches = keyword.matches.join(':');
     writer(
       `${keyword.file.inode}, '${keyword.file.fileName}', ${matches},${keyword.file.size},${keyword.file.mtime},${keyword.file.atime},${keyword.file.ctime},${keyword.file.hash}\n`,
+      section
+    );
+  }
+}
+
+function csvCarvedFile(carvedFiles: CarvedFile[], writer: Writer) {
+  const section = 'carved-files';
+  writer(`Filename,Size,Sector,Modified Date,Filetype\n`, section);
+  for (const carved of carvedFiles) {
+    writer(
+      `${carved.filename}, '${carved.size}',${
+        carved.sector
+      },${carved.modifiedDate?.toLocaleString()},${carved.filetype}\n`,
       section
     );
   }
