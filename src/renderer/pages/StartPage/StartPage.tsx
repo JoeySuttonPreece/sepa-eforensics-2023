@@ -29,9 +29,9 @@ export default function StartPage() {
   }
 
   function getOrchestratorOptions(): OrchestratorOptions | undefined {
-    const imagePath = imagePathRef.current;
-    if (!imageValid || imagePath == null) {
-      setTipMsg(`Unable to analyse the image at ${imagePath}`);
+    const imagePathValue = imagePathRef.current;
+    if (!imagePathValue || imagePathValue == null) {
+      setTipMsg(`Unable to analyse the image at ${imagePathValue}`);
       return;
     }
     let showPartitions = partitionInput.current?.checked ?? false;
@@ -44,7 +44,7 @@ export default function StartPage() {
     let includeKeywordSearchFiles = searchString !== '';
 
     return {
-      imagePath,
+      imagePath: imagePathValue,
       searchString,
       showPartitions,
       showTimeline,
@@ -64,7 +64,6 @@ export default function StartPage() {
         setImageValid(valid);
         imagePathRef.current = finalPath;
         setImageStatus(reason);
-        console.log(valid, finalPath, reason);
       }
     );
 

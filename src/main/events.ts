@@ -39,7 +39,7 @@ ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
   let valid = await validateImage(imagePath);
   let finalPath = imagePath;
   let reason = 'image ready for analysis';
-  console.log(valid);
+
   if (valid) {
     await validateZip(imagePath)
       .then((newPath) => {
@@ -62,6 +62,5 @@ ipcMain.on('select:imagepath', (event) => {
   const path = dialog.showOpenDialogSync({
     properties: ['openFile'],
   });
-  console.log(path);
   event.sender.send('select:imagepath', path);
 });
