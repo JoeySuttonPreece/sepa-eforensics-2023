@@ -57,3 +57,11 @@ ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
 
   event.sender.send('validate:imagePath', [valid, finalPath, reason]);
 });
+
+ipcMain.on('select:imagepath', (event) => {
+  const path = dialog.showOpenDialogSync({
+    properties: ['openFile'],
+  });
+  console.log(path);
+  event.sender.send('select:imagepath', path);
+});

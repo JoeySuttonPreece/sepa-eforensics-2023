@@ -8,6 +8,7 @@ export default function StartPage() {
   const [imageValid, setImageValid] = useState(false);
   const [imageStatus, setImageStatus] = useState('enter image path above');
   const [tipMsg, setTipMsg] = useState('');
+  const [imagePath, setImagePath] = useState(''); // this is used for the display imagepath in the input box
   // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
   const imagePathRef = useRef(''); //ref becuase doesn't require reender on change
 
@@ -70,6 +71,15 @@ export default function StartPage() {
     window.electron.ipcRenderer.sendMessage('validate:imagePath', [imagePath]);
   }
 
+  function handleFileSelect() {
+    window.electron.ipcRenderer.once('select:imagepath', ([imagePath]) => {
+      setImagePath(imagePath);
+      handleValidateImage(imagePath);
+    });
+
+    window.electron.ipcRenderer.sendMessage('select:imagepath', []);
+  }
+
   return (
     <article id="prepare">
       <section>
@@ -79,14 +89,23 @@ export default function StartPage() {
             setTipMsg('Enter Path to the disk image.');
           }}
         >
-          <label htmlFor="imagePath"></label>
           <input
             type="text"
             id="imagePath"
+            value={imagePath}
             onChange={(e) => {
+              setImagePath(e.currentTarget.value);
               handleValidateImage(e.currentTarget.value);
             }}
           />
+          <button
+            type="button"
+            onClick={() => {
+              handleFileSelect();
+            }}
+          >
+            Select Image
+          </button>
           <p>{imageStatus}</p>
         </div>
       </section>
