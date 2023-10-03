@@ -186,9 +186,8 @@ export const getCarvedFiles = async (
     attributesGroupName: 'xml_attributes',
     attributeNamePrefix: '',
   });
-
+  const now = Date.now();
   for (let i = 1; i < startSectorList.length; i++) {
-    const now = Date.now();
     await runCliTool(
       // automatic create FOLDER_NAME with index. (FOLDER_NAME.1)
       `photorec /d ${FOLDER_NAME} /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
