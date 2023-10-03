@@ -1,6 +1,10 @@
 import { ipcMain, dialog } from 'electron';
 
-import { orchestrator, validateImage } from '../domain/orchestrator';
+import {
+  orchestrator,
+  validateImage,
+  validateZip,
+} from '../domain/orchestrator';
 import { Print } from './output-parser';
 
 ipcMain.on('do-everything', async (event, [options]) => {
@@ -31,6 +35,25 @@ ipcMain.on('do-everything', async (event, [options]) => {
   }
 });
 
-ipcMain.on('validate:imagePath', (event, [imagePath]) => {
-  event.sender.send('validate:imagePath', validateImage(imagePath));
+ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
+  let valid = await validateImage(imagePath);
+  let finalPath = imagePath;
+  let reason = 'image ready for analysis';
+  console.log(valid);
+  if (valid) {
+    await validateZip(imagePath)
+      .then((newPath) => {
+        valid = true;
+        finalPath = newPath;
+      })
+      .catch(() => {
+        valid = false;
+        reason =
+          'image could not be extracted to a supported forensic file type';
+      });
+  } else {
+    reason = "image couldn't be found or is not a supported file type";
+  }
+
+  event.sender.send('validate:imagePath', [valid, finalPath, reason]);
 });

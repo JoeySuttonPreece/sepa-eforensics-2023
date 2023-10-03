@@ -6,9 +6,11 @@ import './StartPage.css';
 export default function StartPage() {
   const navigate = useNavigate();
   const [imageValid, setImageValid] = useState(false);
+  const [imageStatus, setImageStatus] = useState('enter image path above');
   const [tipMsg, setTipMsg] = useState('');
+  // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
+  const imagePathRef = useRef(''); //ref becuase doesn't require reender on change
 
-  const imagePathInput = useRef<HTMLInputElement>(null);
   const partitionInput = useRef<HTMLInputElement>(null);
   const deletedInput = useRef<HTMLInputElement>(null);
   const renamedInput = useRef<HTMLInputElement>(null);
@@ -26,7 +28,7 @@ export default function StartPage() {
   }
 
   function getOrchestratorOptions(): OrchestratorOptions | undefined {
-    const imagePath = imagePathInput.current?.value;
+    const imagePath = imagePathRef.current;
     if (!imageValid || imagePath == null) {
       setTipMsg(`Unable to analyse the image at ${imagePath}`);
       return;
@@ -54,9 +56,16 @@ export default function StartPage() {
   }
 
   function handleValidateImage(imagePath: string) {
-    window.electron.ipcRenderer.once('validate:imagePath', (value) => {
-      setImageValid(value);
-    });
+    setImageStatus('awaiting preprocessing');
+    window.electron.ipcRenderer.once(
+      'validate:imagePath',
+      ([valid, finalPath, reason]) => {
+        setImageValid(valid);
+        imagePathRef.current = finalPath;
+        setImageStatus(reason);
+        console.log(valid, finalPath, reason);
+      }
+    );
 
     window.electron.ipcRenderer.sendMessage('validate:imagePath', [imagePath]);
   }
@@ -72,18 +81,13 @@ export default function StartPage() {
         >
           <label htmlFor="imagePath"></label>
           <input
-            ref={imagePathInput}
             type="text"
             id="imagePath"
             onChange={(e) => {
               handleValidateImage(e.currentTarget.value);
             }}
           />
-          <p>
-            {imageValid
-              ? 'Image ready for analysis'
-              : "Image can't be found or is not valid type"}
-          </p>
+          <p>{imageStatus}</p>
         </div>
       </section>
       <section>

@@ -267,7 +267,10 @@ export const validateImage = async (imagePath: string) => {
   let validType = false;
   const tskImageInfo = await runCliTool(
     `tsk_imageinfo ${imagePath}| grep "TSK Support"`
-  );
+  ).catch(() => {
+    return '';
+  });
+  if (tskImageInfo == '') return false;
   const zipfile = await runCliTool(`file -b --mime-type ${imagePath}`);
   if (
     tskImageInfo.trim() === 'TSK Support: Yes' ||
