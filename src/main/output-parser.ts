@@ -1,13 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import { RenamedFile, File, KeywordFile } from 'domain/file-system-tools';
+import jsPDF from 'jspdf';
+import { UserOptions } from 'jspdf-autotable';
+import { RenamedFile, File } from 'domain/file-system-tools';
 import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import { TimelineEntry } from 'domain/timeline-tools';
-import { UserOptions } from 'jspdf-autotable';
-import { CarvedFile } from 'domain/other-cli-tools';
+import { CarvedFile, KeywordFile } from 'domain/other-cli-tools';
 
 type PDF = jsPDF & {
   autoTable: (options: UserOptions) => void;
@@ -48,7 +47,7 @@ export const Print = (
 };
 
 function pdfReport(output: ReportDetails, writer: Writer) {
-  const doc = new jsPDF('p', 'mm', 'a4') as PDF; //a4 is 210mm
+  const doc = new jsPDF('p', 'mm', 'a4') as PDF; // a4 is 210mm
   doc.setFontSize(14);
   let y = 5;
   doc.setFontSize(20);
@@ -162,10 +161,9 @@ function pdfDeletedFile(deletedFiles: File[], doc: PDF, y: number): number {
       startY: height,
     });
     return doc.lastAutoTable.finalY + doc.getLineHeight();
-  } else {
-    doc.text('No Deleted Files Found', 50, height);
-    return height + doc.getLineHeight();
   }
+  doc.text('No Deleted Files Found', 50, height);
+  return height + doc.getLineHeight();
 }
 
 function pdfRenamedFile(
@@ -209,10 +207,9 @@ function pdfRenamedFile(
       startY: height,
     });
     return doc.lastAutoTable.finalY + doc.getLineHeight();
-  } else {
-    doc.text('No Renamed Files Found', 50, height);
-    return height + doc.getLineHeight();
   }
+  doc.text('No Renamed Files Found', 50, height);
+  return height + doc.getLineHeight();
 }
 
 function pdfKeywordFile(
@@ -255,10 +252,9 @@ function pdfKeywordFile(
       startY: height,
     });
     return doc.lastAutoTable.finalY + doc.getLineHeight();
-  } else {
-    doc.text('No Keyword Files Found', 50, height);
-    return height + doc.getLineHeight();
   }
+  doc.text('No Keyword Files Found', 50, height);
+  return height + doc.getLineHeight();
 }
 
 function pdfCarvedFile(carvedFiles: CarvedFile[], doc: PDF, y: number): number {
@@ -283,10 +279,9 @@ function pdfCarvedFile(carvedFiles: CarvedFile[], doc: PDF, y: number): number {
       startY: height,
     });
     return doc.lastAutoTable.finalY + doc.getLineHeight();
-  } else {
-    doc.text('No Deleted Files Found', 50, height);
-    return height + doc.getLineHeight();
   }
+  doc.text('No Deleted Files Found', 50, height);
+  return height + doc.getLineHeight();
 }
 
 function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
@@ -298,7 +293,7 @@ function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
   doc.text(details, 105 - doc.getTextWidth(details) / 2, y);
   y += doc.getLineHeight();
   const start = y;
-  for (let entry of timeline) {
+  for (const entry of timeline) {
     doc.circle(27, y, 1);
     doc.text(doc.splitTextToSize(entry.date.toLocaleString(), 20), 5, y);
     doc.text(doc.splitTextToSize(`${entry.file.inode}`, 15), 35, y);

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { OrchestratorOptions } from 'domain/orchestrator';
 import { useRef, useState } from 'react';
+import { OrchestratorOptions } from 'domain/orchestrator';
 import './StartPage.css';
 
 export default function StartPage() {
@@ -10,7 +10,7 @@ export default function StartPage() {
   const [tipMsg, setTipMsg] = useState('');
   const [imagePath, setImagePath] = useState(''); // this is used for the display imagepath in the input box
   // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
-  const imagePathRef = useRef(''); //ref becuase doesn't require reender on change
+  const imagePathRef = useRef(''); // ref becuase doesn't require reender on change
 
   const partitionInput = useRef<HTMLInputElement>(null);
   const deletedInput = useRef<HTMLInputElement>(null);
@@ -34,14 +34,15 @@ export default function StartPage() {
       setTipMsg(`Unable to analyse the image at ${imagePathValue}`);
       return;
     }
-    let showPartitions = partitionInput.current?.checked ?? false;
-    let includeDeletedFiles = deletedInput.current?.checked ?? false;
-    let includeRenamedFiles = renamedInput.current?.checked ?? false;
-    let includeCarvedFiles = carvedInput.current?.checked ?? false;
-    let keepRecoveredFiles = keepCarvedInput.current?.checked ?? false;
-    let showTimeline = timelineInput.current?.checked ?? false;
-    let searchString = keywordInput.current?.value.trim() ?? '';
-    let includeKeywordSearchFiles = searchString !== '';
+
+    const showPartitions = partitionInput.current?.checked ?? false;
+    const includeDeletedFiles = deletedInput.current?.checked ?? false;
+    const includeRenamedFiles = renamedInput.current?.checked ?? false;
+    const includeCarvedFiles = carvedInput.current?.checked ?? false;
+    const keepRecoveredFiles = keepCarvedInput.current?.checked ?? false;
+    const showTimeline = timelineInput.current?.checked ?? false;
+    const searchString = keywordInput.current?.value.trim() ?? '';
+    const includeKeywordSearchFiles = searchString !== '';
 
     return {
       imagePath: imagePathValue,
@@ -173,7 +174,9 @@ export default function StartPage() {
         <div
           onMouseEnter={() => {
             setTipMsg(
-              'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report'
+              'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report. ' +
+                'Remember to separate each keyword with a single comma, and no spaces before or after the comma, for example: ' +
+                'keyword1,this is a keyword phrase,keyword 3'
             );
           }}
         >

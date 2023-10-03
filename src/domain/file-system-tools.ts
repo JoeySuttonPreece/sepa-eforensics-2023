@@ -1,10 +1,15 @@
 import { runCliTool } from './runners';
 import { Partition, PartitionTable } from './volume-system-tools';
-import { Hash } from './other-cli-tools';
 
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
   return runCliTool(`fls ${volume} -o ${offset}`);
+};
+
+export type Hash = {
+  fileName: string;
+  md5sum: string;
+  sha1sum: string;
 };
 
 export type File = {
@@ -35,11 +40,20 @@ export type RenamedFile = {
 };
 
 export type KeywordFile = {
-  file: File;
-  matches: string[];
+  inode: string;
+  filePath: string;
+  deleted: boolean;
+  fileAttributes: string;
+  matches: string;
+  size: string;
+  mtime: string;
+  atime: string;
+  ctime: string;
+  hash: Hash;
 };
 
-// ------------------------------- Renamed Processing ---------------------------------------------
+// -------------------------------------------------------------------------------------------------
+// Renamed Processing
 
 const SIGNATURES = [
   { sig: '50575333', ext: ['psafe3'] },
@@ -220,6 +234,9 @@ export const processForRenamedFile = async (
     trueExtensions: match.extensions,
   };
 };
+
+// -------------------------------------------------------------------------------------------------
+// Carved Processing
 
 // need full path starting with /
 export async function getInodeAtFilePath(

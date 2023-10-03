@@ -6,15 +6,12 @@ import {
   getCarvedFiles,
   getFileHashAsync,
   getHashAsync,
+  KeywordFile,
+  getFilesForAllKeywords,
 } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
-import {
-  File,
-  RenamedFile,
-  processForRenamedFile,
-  KeywordFile,
-} from './file-system-tools';
+import { File, RenamedFile, processForRenamedFile } from './file-system-tools';
 import { TimelineEntry, buildTimeline } from './timeline-tools';
 
 export type OrchestratorOptions = {
@@ -146,21 +143,6 @@ export const getSuspiciousFiles = async (
       if (file.deleted) {
         deletedFiles.push(file);
       }
-
-      // keyword //////////// SUS
-
-      /*
-      const keyword = await getSearchStringAsync(
-      args.imagePath,
-      searchString,
-      // Fix this -- call all start value of all partition in the partition table
-      Partition.partiton.start,
-    );
-    */
-      /*
-      if (keywordFile) {
-        keywordFiles.push(keywordFile);
-      } */
     }
   }
 
@@ -197,14 +179,29 @@ export const orchestrator = async (
 
   const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
-  // TODO: figure out how to exclude some of these depending on options
-  const keywordFiles: KeywordFile[] = [];
-
   statusCallback('Processing Files...');
   const suspiciousFiles = await getSuspiciousFiles(
     orchestratorOptions,
     partitionTable
   );
+
+  let keywordFiles: KeywordFile[] = [];
+  if (orchestratorOptions.includeKeywordSearchFiles) {
+    statusCallback('Searching for keyword matches...');
+
+    try {
+      keywordFiles = await getFilesForAllKeywords(
+        orchestratorOptions.imagePath,
+        orchestratorOptions.searchString,
+        partitionTable.partitions
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        statusCallback(error.message);
+        throw error;
+      }
+    }
+  }
 
   let carvedFiles: CarvedFile[] = [];
   if (orchestratorOptions.includeCarvedFiles) {
@@ -217,8 +214,6 @@ export const orchestrator = async (
     );
   }
 
-  statusCallback('Searching for keyword files...');
-
   statusCallback('Building Timeline...');
   // consider some refactoring sprint 4
   const timelineFiles = suspiciousFiles.renamedFiles.map((renamedFile) => {
@@ -226,7 +221,22 @@ export const orchestrator = async (
   });
   timelineFiles.push(
     ...keywordFiles.map((keywordFile) => {
-      return keywordFile.file;
+      return {
+        fileNameFileType: keywordFile.fileAttributes,
+        metadataFileType: keywordFile.fileAttributes,
+        deleted: keywordFile.deleted,
+        inode: keywordFile.inode,
+        reallocated: keywordFile.deleted,
+        fileName: keywordFile.filePath,
+        mtime: new Date(keywordFile.mtime),
+        atime: new Date(keywordFile.atime),
+        ctime: new Date(keywordFile.ctime),
+        crtime: new Date(keywordFile.ctime),
+        size: keywordFile.size,
+        uid: 'N/A',
+        gid: 'N/A',
+        hash: keywordFile.hash,
+      };
     })
   );
   timelineFiles.push(...suspiciousFiles.deletedFiles);
@@ -270,7 +280,7 @@ export const validateImage = async (imagePath: string) => {
   ).catch(() => {
     return '';
   });
-  if (tskImageInfo == '') return false;
+  if (tskImageInfo === '') return false;
   const zipfile = await runCliTool(`file -b --mime-type ${imagePath}`);
   if (
     tskImageInfo.trim() === 'TSK Support: Yes' ||

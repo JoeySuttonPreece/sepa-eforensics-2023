@@ -1,4 +1,4 @@
-import { KeywordFile } from '../../domain/file-system-tools';
+import { KeywordFile } from '../../domain/other-cli-tools';
 
 function KeywordFilesComponent({
   keywordFiles,
@@ -20,22 +20,18 @@ function KeywordFilesComponent({
         {keywordFiles?.map((keyword, index) => {
           return (
             <tr key={index}>
-              <td>{keyword.file.inode}</td>
-              <td>{keyword.file.fileName}</td>
+              <td>{keyword.inode}</td>
+              <td>{keyword.filePath}</td>
+              <td>{keyword.matches}</td>
+              <td>{keyword.size}</td>
               <td>
-                {keyword.matches.map((value: string) => {
-                  return <span>{value} </span>;
-                })}
-              </td>
-              <td>{keyword.file.size}</td>
-              <td>
-                {keyword.file.mtime.toLocaleString()}
+                {keyword.mtime}
                 <br />
-                {keyword.file.atime.toLocaleString()}
+                {keyword.atime}
                 <br />
-                {keyword.file.ctime.toLocaleString()}
+                {keyword.ctime}
               </td>
-              <td>{keyword.file.hash.sha1sum}</td>
+              <td>{keyword.hash.sha1sum}</td>
             </tr>
           );
         })}

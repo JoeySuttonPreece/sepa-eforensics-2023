@@ -4,15 +4,10 @@ import { XMLParser } from 'fast-xml-parser';
 import { ExifDateTime, exiftool } from 'exiftool-vendored';
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
+import { Hash, KeywordFile } from './file-system-tools';
 
 // -------------------------------------------------------------------------------------------------
 // Hash Processing
-
-export type Hash = {
-  fileName: string;
-  md5sum: string;
-  sha1sum: string;
-};
 
 export const getHashAsync = async (imagePath: string): Promise<Hash> => {
   const [md5sumFull, sha1sumFull] = await Promise.all([
@@ -62,6 +57,15 @@ type KeywordMatch = {
   matchedString: string;
 };
 
+type iStatData = {
+  deleted: boolean;
+  attributes: string;
+  size: string;
+  mtime: string;
+  atime: string;
+  ctime: string;
+};
+
 export const getImageInString = (imagePath: string): Promise<string> => {
   return runCliTool(`strings -t d ${imagePath}`);
 };
@@ -71,92 +75,183 @@ const parseStringsOutputToMatches = (stringsOutput: string): KeywordMatch[] => {
   const lines = stringsOutput.split('\n');
 
   for (const line of lines) {
+    if (line === '') break;
+
     const splittedLine = line.split(' ');
+
+    const offset: string = splittedLine.shift();
+
+    const matchedString = splittedLine.join(' ');
+
     keywordMatches.push({
-      offset: splittedLine[0],
-      matchedString: splittedLine[1],
+      offset,
+      matchedString,
     });
   }
 
   return keywordMatches;
 };
 
-export const getSearchStringAsync = async (
+const processFileInformationRaw = (fileInformationRaw: string): iStatData => {
+  const fileInformationSplitOnNewLines = fileInformationRaw.split('\n');
+
+  const allocatedLine = fileInformationSplitOnNewLines[1];
+  const fileAttributesLine = fileInformationSplitOnNewLines[2];
+  const sizeLine = fileInformationSplitOnNewLines[3];
+
+  const dateWrittenLine = fileInformationSplitOnNewLines[7];
+  const dateAccessedLine = fileInformationSplitOnNewLines[8];
+  const dateCreatedLine = fileInformationSplitOnNewLines[9];
+
+  const deleted = allocatedLine === 'Not Allocated';
+  const attributes = fileAttributesLine;
+  const size = sizeLine.split(' ')[1];
+
+  const mtime = dateWrittenLine.slice(11);
+  const atime = dateAccessedLine.slice(12);
+  const ctime = dateCreatedLine.slice(11);
+
+  return {
+    deleted,
+    attributes,
+    size,
+    mtime,
+    atime,
+    ctime,
+  };
+};
+
+const getFilesForKeyword = async (
   imagePath: string,
   searchString: string,
-  startSectorList: number[]
-): Promise<string> => {
-  const stringsOutput: string = await runCliTool(
-    `strings -t d ${imagePath} | grep -I ${searchString}`
-  );
+  partitions: Partition[]
+): Promise<KeywordFile[]> => {
+  const result: KeywordFile[] = [];
+
+  console.log(`Finding matches for keyword ${searchString}`);
+
+  let stringsOutput: string = '';
+
+  try {
+    stringsOutput = await runCliTool(
+      `strings -t d ${imagePath} | grep -i ${searchString}`
+    );
+  } catch (error) {
+    return result;
+  }
+
+  console.log(`Converted disk to strings.`);
 
   const keywordMatches = parseStringsOutputToMatches(stringsOutput);
+  console.log(`Potential matches found:`);
+  console.log(keywordMatches);
+
+  const sectorSizeInBytes = 512; // assumption
 
   for (const match of keywordMatches) {
-  }
+    // Convert the byte value to a sector offset using the sector size.
+    const matchedFileSectorOffset =
+      parseInt(match.offset, 10) / sectorSizeInBytes;
+    let partitionContainingFile = null;
 
-  let leastOffsetDifference: number = 0;
-  let leastOffsetDifferenceFinal: number = 0;
-  let startSectorMain: number = 0;
+    // Find the partition that the file is in.
+    for (let i: number = 0; i < partitions.length; i++) {
+      if (matchedFileSectorOffset > partitions[i].start) {
+        partitionContainingFile = partitions[i];
+      }
+    }
 
-  let loopValue: number = 10;
-  const sectorSizeByte = 512;
-
-  for (let i: number = 0; i < startSectorList.length; i++) {
-    loopValue =
-      startSectorList[i] * (sectorSizeByte - parseInt(stringsOutput, 10));
-
-    if (loopValue >= 0) {
-      leastOffsetDifference = loopValue;
-    } else {
-      leastOffsetDifferenceFinal = leastOffsetDifference;
-
-      startSectorMain = startSectorList[i];
-
-      console.log(
-        `Found the partition. Its starting byte offset is: ${startSectorMain} ` +
-          `and the difference is: ${leastOffsetDifferenceFinal}.`
-      );
-
+    if (partitionContainingFile === null) {
       break;
     }
+
+    console.log(`Possible match found in partition:`);
+    console.log(partitionContainingFile);
+
+    // Find the sector number from the start of the partition.
+    const matchedFileSectorOffsetFromPartitionStartSector = Math.round(
+      matchedFileSectorOffset - partitionContainingFile.start
+    );
+
+    // Find the inode.
+    const fileiNode = await runCliTool(
+      `ifind -o ${partitionContainingFile.start} ${imagePath}` +
+        ` -d ${matchedFileSectorOffsetFromPartitionStartSector} `
+    );
+
+    if (fileiNode === 'Inode not found\n') {
+      break;
+    }
+
+    // Find the file path (relative to the partition).
+    const filePath = await runCliTool(
+      `ffind -o ${partitionContainingFile.start} ${imagePath} ${fileiNode}`
+    );
+
+    // Find further metadata.
+    const fileInformationRaw = await runCliTool(
+      `istat -o ${partitionContainingFile.start} ${imagePath} ${fileiNode}`
+    );
+
+    const fileInformationProcessed =
+      processFileInformationRaw(fileInformationRaw);
+
+    const hash = await getFileHashAsync(
+      imagePath,
+      partitionContainingFile,
+      fileiNode,
+      false
+    );
+
+    const resultFile: KeywordFile = {
+      inode: fileiNode,
+      deleted: fileInformationProcessed.deleted,
+      fileAttributes: fileInformationProcessed.attributes,
+      filePath,
+      matches: match.matchedString,
+      size: fileInformationProcessed.size,
+      mtime: fileInformationProcessed.mtime,
+      atime: fileInformationProcessed.atime,
+      ctime: fileInformationProcessed.ctime,
+      hash,
+    };
+
+    console.log(`Matched file found:`);
+    console.log(resultFile);
+
+    result.push(resultFile);
   }
 
-  const fsstatCommand: string = `fsstat -o expr ${startSectorMain} ${imagePath}`;
-  const fileSystemTypeLine: string = await runCliTool(
-    ` ${fsstatCommand} | grep 'File System Type'`
-  );
+  console.log(`All matches for keyword ${searchString}: `);
+  console.log(result);
 
-  // possible output: File System Type: smth...So, need to split it to get the “smth”
-  const fileSystemType: number = parseInt(fileSystemTypeLine.split(':')[1], 10);
-
-  // limiting it to print only first instance of “Size:” as it can be block size or sector size
-  const partitionBlockOrSectorSizeUnsplit: string = await runCliTool(
-    `${fsstatCommand} | grep  -o 'Size:'`
-  );
-
-  // possible output: Block Size: number...So, need to split it to get the “number”
-  const partitionBlockOrSectorSize: number = parseInt(
-    partitionBlockOrSectorSizeUnsplit.split(':')[1],
-    10
-  );
-
-  const blockNum: number =
-    leastOffsetDifferenceFinal / partitionBlockOrSectorSize;
-
-  const inode: string = await runCliTool(
-    `ifind -f ${fileSystemType} -o ${startSectorMain} -d ${blockNum} ${imagePath}`
-  );
-
-  // Note: If it doesn’t come as an integer number, it will need to be carved out as the file
-  // has been archived and deleted. Most probably if it's deleted, it will come
-  // as a large number but not sure
-  const fileDetails: string = await runCliTool(
-    `icat -f ${fileSystemType} -o ${startSectorMain} ${imagePath} ${inode}`
-  );
-
-  return fileDetails;
+  return result;
 };
+
+export const getFilesForAllKeywords = async (
+  imagePath: string,
+  searchString: string,
+  partitions: Partition[]
+): Promise<KeywordFile[]> => {
+  let result: KeywordFile[] = [];
+
+  const keywords = searchString.split(',');
+
+  for (const keyword of keywords) {
+    const files: KeywordFile[] = await getFilesForKeyword(
+      imagePath,
+      keyword,
+      partitions
+    );
+
+    result = result.concat(files);
+  }
+
+  return result;
+};
+
+// -------------------------------------------------------------------------------------------------
+// Carved Processing
 
 export type CarvedFile = {
   filename: string;
