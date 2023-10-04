@@ -282,7 +282,9 @@ export const getCarvedFiles = async (
     attributeNamePrefix: '',
   });
   const now = Date.now();
+
   await runCliTool(`rm -rf ./${FOLDER_NAME}.*`);
+
   for (let i = 1; i < startSectorList.length; i++) {
     await runCliTool(
       // automatic create FOLDER_NAME with index. (FOLDER_NAME.1)
@@ -304,12 +306,8 @@ export const getCarvedFiles = async (
       };
     }[] = Array.isArray(report.dfxml.fileobject)
       ? report.dfxml.fileobject
-      : [report.dfxml.fileobject];
+      : [report.dfxml.fileobject].filter((file) => file !== undefined);
 
-    /* Required fixing:
-       Problem: When carving a result with null enclosed array, then program crashes.
-       Potential solution: Create a if condition that detect array with null inside
-    */
     await Promise.all(
       files.map(async (file) => {
         const exifData = await exiftool
