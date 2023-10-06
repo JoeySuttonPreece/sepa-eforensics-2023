@@ -1,4 +1,4 @@
-import { KeywordFile } from '../../domain/other-cli-tools';
+import { KeywordFile } from '../../domain/file-system-tools';
 
 function KeywordFilesComponent({
   keywordFiles,

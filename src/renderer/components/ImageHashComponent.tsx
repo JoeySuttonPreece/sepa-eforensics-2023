@@ -1,4 +1,4 @@
-import { Hash } from '../../domain/other-cli-tools';
+import { Hash } from '../../domain/file-system-tools';
 
 function ImageHashComponent({ hash, title }: { hash: Hash; title: string }) {
   return (
