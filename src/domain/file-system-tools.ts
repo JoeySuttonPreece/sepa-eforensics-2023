@@ -1,6 +1,24 @@
 import { runCliTool } from './runners';
 import { Partition, PartitionTable } from './volume-system-tools';
 
+// Timezone info
+export async function getTimeZone(
+  partitionTable: PartitionTable,
+  imagePath: string
+) {
+  const TIMEPATH = '/etc/timezone';
+  const source = await getInodeAtFilePath(TIMEPATH, partitionTable, imagePath);
+  console.log(source);
+  if (source == undefined) return undefined;
+  const { inode, partition } = source;
+
+  const timezone = await runCliTool(
+    `icat -o ${partition.start} ${imagePath} ${inode}`
+  );
+
+  return timezone;
+}
+
 export const listFiles = async (volume: string, offset: number) => {
   // TODO: parse text output into object
   return runCliTool(`fls ${volume} -o ${offset}`);
@@ -251,9 +269,12 @@ export async function getInodeAtFilePath(
     // start chasing the filepath
     for (let i = 0; i < fileparts.length - 1; i++) {
       const part = fileparts[i + 1];
-      const output: string = await runCliTool(
+      const output: string | undefined = await runCliTool(
         `fls -o ${partition.start} ${imagePath} ${currentInode} `
-      );
+      ).catch(() => {
+        return undefined;
+      });
+      if (output == undefined) break;
       const lines: string[] = output.split('\n');
       const matrix: string[][] = lines.map((line) => line.split(/\s+/));
       let found = false;

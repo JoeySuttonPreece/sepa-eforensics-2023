@@ -11,7 +11,13 @@ import {
 } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
 import { runBufferedCliTool, runCliTool } from './runners';
-import { File, RenamedFile, processForRenamedFile } from './file-system-tools';
+import {
+  File,
+  RenamedFile,
+  processForRenamedFile,
+  KeywordFile,
+  getTimeZone,
+} from './file-system-tools';
 import { TimelineEntry, buildTimeline } from './timeline-tools';
 
 export type OrchestratorOptions = {
@@ -29,6 +35,8 @@ export type OrchestratorOptions = {
 export type ReportDetails = {
   imageName: string;
   imageHash: Hash | undefined;
+  imageHashFinal: Hash | undefined;
+  timezone: string | undefined;
   partitionTable: PartitionTable | undefined;
   renamedFiles: RenamedFile[] | undefined;
   deletedFiles: File[] | undefined;
@@ -179,6 +187,12 @@ export const orchestrator = async (
 
   const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
+  statusCallback('Checking Timezone...');
+  const timezone = await getTimeZone(
+    partitionTable,
+    orchestratorOptions.imagePath
+  );
+
   statusCallback('Processing Files...');
   const suspiciousFiles = await getSuspiciousFiles(
     orchestratorOptions,
@@ -246,9 +260,22 @@ export const orchestrator = async (
     orchestratorOptions.imagePath
   );
 
+  let hashFinal: Hash = {} as Hash;
+  statusCallback('Checking Integrity...');
+  try {
+    hashFinal = await getHashAsync(orchestratorOptions.imagePath);
+  } catch (error) {
+    if (error instanceof Error) {
+      statusCallback(error.message);
+      throw error;
+    }
+  }
+
   return {
     imageName: orchestratorOptions.imagePath,
     imageHash: hash || undefined,
+    imageHashFinal: hashFinal || undefined,
+    timezone: timezone,
     partitionTable: orchestratorOptions.showPartitions
       ? partitionTable
       : undefined,

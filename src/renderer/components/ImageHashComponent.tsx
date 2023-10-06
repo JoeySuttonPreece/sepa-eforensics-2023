@@ -1,9 +1,9 @@
 import { Hash } from '../../domain/other-cli-tools';
 
-function ImageHashComponent({ hash }: { hash: Hash }) {
+function ImageHashComponent({ hash, title }: { hash: Hash; title: string }) {
   return (
     <table>
-      <caption>Image Hashes</caption>
+      <caption>{title}</caption>
       <tbody>
         <tr>
           <th>File</th>

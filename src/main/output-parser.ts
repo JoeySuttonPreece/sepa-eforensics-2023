@@ -67,7 +67,7 @@ function pdfReport(output: ReportDetails, writer: Writer) {
 }
 
 function pdfImage(
-  { imageHash, imageName }: ReportDetails,
+  { imageHash, imageName, imageHashFinal, timezone }: ReportDetails,
   doc: PDF,
   y: number
 ): number {
@@ -91,7 +91,40 @@ function pdfImage(
     height
   );
   height += doc.getLineHeight();
-  doc.text(doc.splitTextToSize(`Image Hash Final: `, 200), 10, height);
+  doc.text(
+    doc.splitTextToSize(
+      `Image Hash Final (md5): ${imageHashFinal?.md5sum}`,
+      200
+    ),
+    10,
+    height
+  );
+  height += doc.getLineHeight();
+  doc.text(
+    doc.splitTextToSize(
+      `Image Hash Final (sha1): ${imageHashFinal?.sha1sum}`,
+      200
+    ),
+    10,
+    height
+  );
+  height += doc.getLineHeight();
+  doc.text(
+    doc.splitTextToSize(
+      `Integrity: ${
+        imageHashFinal?.md5sum == imageHash?.md5sum ? 'Passed' : 'Failed'
+      } `,
+      200
+    ),
+    10,
+    height
+  );
+  height += doc.getLineHeight();
+  doc.text(
+    doc.splitTextToSize(`Timezone: ${timezone ?? 'Could not Determine'} `, 200),
+    10,
+    height
+  );
   height += doc.getLineHeight();
   doc.setFontSize(14);
   return height;
@@ -324,14 +357,21 @@ function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
   return y;
 }
 
-function csvImage({ imageHash, imageName }: ReportDetails, writer: Writer) {
+function csvImage(
+  { imageHash, imageName, timezone, imageHashFinal }: ReportDetails,
+  writer: Writer
+) {
   const section = 'image-details';
   writer(
-    `ImageName, ImageHash (md5), ImageHash (sha1) FinalImageHash\n`,
+    `ImageName,Timezone, ImageHash (md5), ImageHash (sha1), FinalImageHash(md5), FinalImageHash{sha1}, Integrity Passed\n`,
     section
   );
   writer(
-    `'${imageName}', ${imageHash?.md5sum}, ${imageHash?.sha1sum},''\n`,
+    `'${imageName}',${timezone}, ${imageHash?.md5sum}, ${imageHash?.sha1sum},${
+      imageHashFinal?.md5sum
+    }, ${imageHashFinal?.sha1sum}, ${
+      imageHash?.md5sum == imageHashFinal?.md5sum
+    } ''\n`,
     section
   );
 }

@@ -85,10 +85,26 @@ export default function ReportPage() {
             <h3>Image: </h3>
 
             <p>{details?.imageName}</p>
+            {details?.timezone ? (
+              <p>Timezone: {details.timezone}</p>
+            ) : (
+              <p>Could not Determine Timezone</p>
+            )}
 
             {details?.imageHash ? (
-              <ImageHashComponent hash={details.imageHash} />
+              <ImageHashComponent hash={details.imageHash} title="Image Hash" />
             ) : null}
+            {details?.imageHashFinal ? (
+              <ImageHashComponent
+                hash={details.imageHashFinal}
+                title="Image Hash Post Analysis"
+              />
+            ) : null}
+            {details?.imageHash?.md5sum == details?.imageHashFinal?.md5sum ? (
+              <p>Image Integrity Passed</p>
+            ) : (
+              <p>Image Integrity Failed</p>
+            )}
 
             <h3>File Info</h3>
 
