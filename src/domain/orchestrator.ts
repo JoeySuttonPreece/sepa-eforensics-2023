@@ -2,11 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import {
   CarvedFile,
-  Hash,
   getCarvedFiles,
   getFileHashAsync,
   getHashAsync,
-  KeywordFile,
   getFilesForAllKeywords,
 } from './other-cli-tools';
 import { PartitionTable, getPartitionTable } from './volume-system-tools';
@@ -16,6 +14,7 @@ import {
   RenamedFile,
   processForRenamedFile,
   KeywordFile,
+  Hash,
   getTimeZone,
 } from './file-system-tools';
 import { TimelineEntry, buildTimeline } from './timeline-tools';
@@ -246,7 +245,7 @@ export const orchestrator = async (
         atime: new Date(keywordFile.atime),
         ctime: new Date(keywordFile.ctime),
         crtime: new Date(keywordFile.ctime),
-        size: keywordFile.size,
+        size: Number(keywordFile.size),
         uid: 'N/A',
         gid: 'N/A',
         hash: keywordFile.hash,

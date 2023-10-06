@@ -2,11 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import jsPDF from 'jspdf';
 import { UserOptions } from 'jspdf-autotable';
-import { RenamedFile, File } from 'domain/file-system-tools';
+import { RenamedFile, File, KeywordFile } from 'domain/file-system-tools';
 import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
 import { TimelineEntry } from 'domain/timeline-tools';
-import { CarvedFile, KeywordFile } from 'domain/other-cli-tools';
+import { CarvedFile } from 'domain/other-cli-tools';
 
 type PDF = jsPDF & {
   autoTable: (options: UserOptions) => void;
@@ -257,14 +257,14 @@ function pdfKeywordFile(
   height += doc.getLineHeight();
   for (const keyword of keywordFiles) {
     keywordBody.push([
-      keyword.file.inode,
-      keyword.file.fileName,
-      keyword.matches.join(','),
-      `${keyword.file.size}`,
-      keyword.file.mtime.toLocaleString(),
-      keyword.file.atime.toLocaleString(),
-      keyword.file.ctime.toLocaleString(),
-      keyword.file.hash.sha1sum,
+      keyword.inode,
+      keyword.filePath,
+      keyword.matches,
+      `${keyword.size}`,
+      keyword.mtime,
+      keyword.atime,
+      keyword.ctime,
+      keyword.hash.sha1sum,
     ]);
   }
   if (keywordBody.length > 0) {
@@ -396,7 +396,7 @@ function csvRenamedFile(renamedFiles: RenamedFile[], writer: Writer) {
   for (const renamed of renamedFiles) {
     const extensions = renamed.trueExtensions.join(' ');
     writer(
-      `${renamed.file.inode}, '${renamed.file.fileName}', ${extensions},${renamed.file.size},${renamed.file.mtime},${renamed.file.atime},${renamed.file.ctime},${renamed.file.hash}\n`,
+      `${renamed.file.inode}, '${renamed.file.fileName}', ${extensions},${renamed.file.size},${renamed.file.mtime},${renamed.file.atime},${renamed.file.ctime},${renamed.file.hash.sha1sum}\n`,
       section
     );
   }
@@ -407,7 +407,7 @@ function csvDeletedFile(deletedFiles: File[], writer: Writer) {
   writer(`Inode,Filename, Size, Modified, Accessed, Created, Hash\n`, section);
   for (const deleted of deletedFiles) {
     writer(
-      `${deleted.inode}, '${deleted.fileName}',${deleted.size},${deleted.mtime},${deleted.atime},${deleted.ctime},${deleted.hash}\n`,
+      `${deleted.inode}, '${deleted.fileName}',${deleted.size},${deleted.mtime},${deleted.atime},${deleted.ctime},${deleted.hash.sha1sum}\n`,
       section
     );
   }
@@ -420,9 +420,9 @@ function csvKeywordFile(keywordFiles: KeywordFile[], writer: Writer) {
     section
   );
   for (const keyword of keywordFiles) {
-    const matches = keyword.matches.join(':');
+    const matches = keyword.matches;
     writer(
-      `${keyword.file.inode}, '${keyword.file.fileName}', ${matches},${keyword.file.size},${keyword.file.mtime},${keyword.file.atime},${keyword.file.ctime},${keyword.file.hash}\n`,
+      `${keyword.inode}, '${keyword.filePath}', ${matches},${keyword.size},${keyword.mtime},${keyword.atime},${keyword.ctime},${keyword.hash.sha1sum}\n`,
       section
     );
   }
