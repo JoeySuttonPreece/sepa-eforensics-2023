@@ -200,7 +200,7 @@ export const orchestrator = async (
 
   let keywordFiles: KeywordFile[] = [];
   if (orchestratorOptions.includeKeywordSearchFiles) {
-    statusCallback('Searching for keyword matches...');
+    statusCallback('Searching for keyword matches. This might take a while...');
 
     try {
       keywordFiles = await getFilesForAllKeywords(
@@ -274,7 +274,7 @@ export const orchestrator = async (
     imageName: orchestratorOptions.imagePath,
     imageHash: hash || undefined,
     imageHashFinal: hashFinal || undefined,
-    timezone: timezone,
+    timezone,
     partitionTable: orchestratorOptions.showPartitions
       ? partitionTable
       : undefined,

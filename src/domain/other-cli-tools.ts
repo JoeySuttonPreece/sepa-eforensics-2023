@@ -79,7 +79,7 @@ const parseStringsOutputToMatches = (stringsOutput: string): KeywordMatch[] => {
 
     const splittedLine = line.split(' ');
 
-    const offset: string = splittedLine.shift();
+    const offset: string = splittedLine.shift() as string;
 
     const matchedString = splittedLine.join(' ');
 
@@ -123,18 +123,18 @@ const processFileInformationRaw = (fileInformationRaw: string): iStatData => {
 
 const getFilesForKeyword = async (
   imagePath: string,
-  searchString: string,
+  keyword: string,
   partitions: Partition[]
 ): Promise<KeywordFile[]> => {
   const result: KeywordFile[] = [];
 
-  console.log(`Finding matches for keyword ${searchString}`);
+  console.log(`Finding matches for keyword ${keyword}`);
 
   let stringsOutput: string = '';
 
   try {
     stringsOutput = await runCliTool(
-      `strings -t d ${imagePath} | grep -i ${searchString}`
+      `strings -t d ${imagePath} | grep -i ${keyword}`
     );
   } catch (error) {
     return result;
@@ -161,8 +161,10 @@ const getFilesForKeyword = async (
       }
     }
 
+    // Partition not found.
     if (partitionContainingFile === null) {
-      break;
+      console.log(`Partition not found for match at offset ${match.offset}`);
+      continue;
     }
 
     console.log(`Possible match found in partition:`);
@@ -180,8 +182,11 @@ const getFilesForKeyword = async (
     );
 
     if (fileiNode === 'Inode not found\n') {
-      break;
+      console.log(`iNode not found for match at offset ${match.offset}`);
+      continue;
     }
+
+    console.log(`Found an iNode: ${fileiNode}`);
 
     // Find the file path (relative to the partition).
     const filePath = await runCliTool(
@@ -196,11 +201,15 @@ const getFilesForKeyword = async (
     const fileInformationProcessed =
       processFileInformationRaw(fileInformationRaw);
 
+    if (fileInformationProcessed.deleted) {
+      filePath.replace(/\*/g, '');
+    }
+
     const hash = await getFileHashAsync(
       imagePath,
       partitionContainingFile,
       fileiNode,
-      false
+      true
     );
 
     const resultFile: KeywordFile = {
@@ -208,6 +217,7 @@ const getFilesForKeyword = async (
       deleted: fileInformationProcessed.deleted,
       fileAttributes: fileInformationProcessed.attributes,
       filePath,
+      matchedKeywords: keyword,
       matches: match.matchedString,
       size: fileInformationProcessed.size,
       mtime: fileInformationProcessed.mtime,
@@ -219,10 +229,22 @@ const getFilesForKeyword = async (
     console.log(`Matched file found:`);
     console.log(resultFile);
 
-    result.push(resultFile);
+    let fileAlreadyFound = false;
+
+    for await (const file of result) {
+      if (file.filePath === resultFile.filePath) {
+        file.matchedKeywords += `, ${keyword}`;
+        fileAlreadyFound = true;
+        break;
+      }
+    }
+
+    if (!fileAlreadyFound) {
+      result.push(resultFile);
+    }
   }
 
-  console.log(`All matches for keyword ${searchString}: `);
+  console.log(`All matches for keyword ${keyword}: `);
   console.log(result);
 
   return result;
@@ -235,7 +257,7 @@ export const getFilesForAllKeywords = async (
 ): Promise<KeywordFile[]> => {
   let result: KeywordFile[] = [];
 
-  const keywords = searchString.split(',');
+  const keywords = searchString.split(', ');
 
   for (const keyword of keywords) {
     const files: KeywordFile[] = await getFilesForKeyword(

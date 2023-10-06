@@ -62,6 +62,7 @@ export type KeywordFile = {
   filePath: string;
   deleted: boolean;
   fileAttributes: string;
+  matchedKeywords: string;
   matches: string;
   size: string;
   mtime: string;
@@ -269,12 +270,16 @@ export async function getInodeAtFilePath(
     // start chasing the filepath
     for (let i = 0; i < fileparts.length - 1; i++) {
       const part = fileparts[i + 1];
-      const output: string | undefined = await runCliTool(
-        `fls -o ${partition.start} ${imagePath} ${currentInode} `
-      ).catch(() => {
+
+      let output: string | undefined;
+      try {
+        output = await runCliTool(
+          `fls -o ${partition.start} ${imagePath} ${currentInode} `
+        );
+      } catch (err) {
         return undefined;
-      });
-      if (output == undefined) break;
+      }
+      if (output === undefined) break;
       const lines: string[] = output.split('\n');
       const matrix: string[][] = lines.map((line) => line.split(/\s+/));
       let found = false;
