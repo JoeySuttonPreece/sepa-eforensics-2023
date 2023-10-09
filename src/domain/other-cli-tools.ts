@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
+import { promisify } from 'util';
 import { XMLParser } from 'fast-xml-parser';
-import { ExifDateTime, exiftool } from 'exiftool-vendored';
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 import { Hash, KeywordFile } from './file-system-tools';
@@ -280,7 +280,7 @@ export type CarvedFile = {
   size: number;
   sector: number;
   modifiedDate?: Date;
-  filetype?: string;
+  filetype: string;
 };
 
 // BEHOLD THE ACCURSED RELIC OF A BYGONE AGE
@@ -304,7 +304,7 @@ export const getCarvedFiles = async (
     attributeNamePrefix: '',
   });
   const now = Date.now();
-
+  const statAsync = promisify(fs.stat);
   await runCliTool(`rm -rf ./${FOLDER_NAME}.*`);
 
   for (let i = 1; i < startSectorList.length; i++) {
@@ -329,28 +329,30 @@ export const getCarvedFiles = async (
     }[] = Array.isArray(report.dfxml.fileobject)
       ? report.dfxml.fileobject
       : [report.dfxml.fileobject].filter((file) => file !== undefined);
-
-    await Promise.all(
-      files.map(async (file) => {
-        const exifData = await exiftool
-          .read(`./${FOLDER_NAME}.1/${file.filename}`)
-          .catch(() => console.log(`exiftool failed: ${file.filename}`));
-
-        const modifiedDate = (
-          exifData?.FileModifyDate as ExifDateTime
-        )?.toDate();
-
+    // Get date type
+    for (const file of files) {
+      const carvedFilePath: string = `./${FOLDER_NAME}.1/${file.filename}`;
+      try {
+        const stats = await statAsync(carvedFilePath);
+        const modifiedDate = stats.mtime;
+        let filetype = await runCliTool(
+          `file -b --extension ${carvedFilePath}`
+        );
+        if (filetype.trim() === '???' || filetype.trim() === null) {
+          filetype = 'unknown';
+        }
         results.push({
           filename: file.filename,
           size: file.filesize,
           sector: file.byte_runs.byte_run.xml_attributes.img_offset,
-          filetype: exifData?.FileType,
+          filetype,
           modifiedDate:
             modifiedDate?.getTime() > now ? undefined : modifiedDate,
         });
-      })
-    );
-
+      } catch (err: any) {
+        console.error(`Error while getting file stats: ${err.message}`);
+      }
+    }
     await runCliTool(`rm -rf ./${FOLDER_NAME}.*`);
   }
 
