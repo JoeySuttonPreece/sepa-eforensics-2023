@@ -266,11 +266,13 @@ const matchSignature = (
   header: string
 ): { result: boolean; extensions: string[]; match: string } => {
   for (const sigExt of SIGNATURES) {
-    if (header.includes(sigExt.sig))
+    if (header.includes(sigExt.sig)) {
       return { result: true, extensions: sigExt.ext, match: sigExt.sig };
+    }
   }
 
-  return { result: false, extensions: [''], match: '' };
+  // We should assume that any file that has a random header, is likley a headerless text file
+  return { result: false, extensions: ['txt'], match: '' };
 };
 
 /**
@@ -290,7 +292,10 @@ export const processForRenamedFile = async (
   );
   const match = matchSignature(header);
 
-  if (!match.result) return false;
+  if (!match.result) {
+    // this means it has no signature so lets check if it has an extension cos if it does then its likley attempting to be obscured
+    if (!file.fileName.includes('.')) return false;
+  }
 
   const splitFileName = file.fileName.split('.');
   const suspectExtension = splitFileName[splitFileName.length - 1];

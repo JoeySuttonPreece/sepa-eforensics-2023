@@ -58,6 +58,7 @@ export async function buildTimeline(
   } catch {
     userLogs = [];
   }
+  console.log(userLogs);
 
   // get user history
   for await (const user of userLogs) {
@@ -66,6 +67,7 @@ export async function buildTimeline(
     } catch {
       user.history = [];
     }
+    console.log(user.history);
   }
 
   // create timeline item
@@ -104,12 +106,15 @@ export async function getUserOnTime(
     partitionTable,
     imagePath
   );
+  console.log('User Logs');
+  console.log(source);
   if (source === undefined) return [];
   const { inode, partition } = source;
   const logs = await runCliTool(
     // Note the -F switch does not work in ReHL or CentOS 5
     `icat -o ${partition.start} ${imagePath} ${inode} | last -F`
   );
+  console.log(logs);
   const lines: string[] = logs.split('\n');
   const matrix: string[][] = lines.map((line) => line.split(/\s+/));
   const userLogs: { [key: string]: User } = {};
@@ -133,20 +138,22 @@ export async function getUserOnTime(
       Number(startTime[2])
     );
 
-    if (entry[8] === 'still' || entry[9] === 'crash' || entry[9] === 'down') {
-      // eslint-disable-next-line no-continue
-      continue; // not sure what to do here if should do current date, or date of computer etc
+    let end;
+    if (entry[9] === 'crash' || entry[9] === 'down') {
+      end = new Date('00/00/00 00:00:00');
+    } else if (entry[8] === 'still') {
+      end = new Date();
+    } else {
+      const endTime = entry[12].split(':');
+      end = new Date(
+        Number(entry[13]),
+        monthMap[entry[10].toLowerCase()],
+        Number(entry[11]),
+        Number(endTime[0]),
+        Number(endTime[1]),
+        Number(endTime[2])
+      );
     }
-
-    const endTime = entry[12].split(':');
-    const end = new Date(
-      Number(entry[13]),
-      monthMap[entry[10].toLowerCase()],
-      Number(entry[11]),
-      Number(endTime[0]),
-      Number(endTime[1]),
-      Number(endTime[2])
-    );
 
     const from = entry[2];
 
@@ -163,6 +170,7 @@ function attributeUser(userLogs: User[], date: Date) {
   for (const user of userLogs) {
     for (const log of user.logs) {
       if (log.on <= date && log.off >= date) {
+        console.log('user is on');
         suspectUsers.push(user);
         break;
       }
