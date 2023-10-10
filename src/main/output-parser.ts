@@ -40,7 +40,7 @@ export const Print = (
     if (output.carvedFiles) csvCarvedFile(output.carvedFiles, writer);
     if (output.timeline) csvTimeline(output.timeline, writer);
   } else if (format === 'json') {
-    writer(JSON.stringify(output), 'report');
+    writer(JSON.stringify(output, null, 2), 'report');
   } else if (format === 'pdf') {
     pdfReport(output, writer);
   }
@@ -420,7 +420,7 @@ function csvKeywordFile(keywordFiles: KeywordFile[], writer: Writer) {
     section
   );
   for (const keyword of keywordFiles) {
-    const matches = keyword.matches;
+    const { matches } = keyword;
     writer(
       `${keyword.inode}, '${keyword.filePath}', ${matches},${keyword.size},${keyword.mtime},${keyword.atime},${keyword.ctime},${keyword.hash.sha1sum}\n`,
       section
