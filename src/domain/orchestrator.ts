@@ -181,22 +181,26 @@ export const orchestrator = async (
     }
   }
 
-  // console.log(imagePath);
   statusCallback('Reading Partition Table...');
-
   const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
-  statusCallback('Checking Timezone...');
+  statusCallback('Locating Timezone...');
   const timezone = await getTimeZone(
     partitionTable,
     orchestratorOptions.imagePath
   );
 
-  statusCallback('Processing Files...');
-  const suspiciousFiles = await getSuspiciousFiles(
-    orchestratorOptions,
-    partitionTable
-  );
+  let suspiciousFiles: SuspiciousFiles | undefined;
+  if (
+    orchestratorOptions.includeDeletedFiles ||
+    orchestratorOptions.includeRenamedFiles
+  ) {
+    statusCallback('Processing Files...');
+    suspiciousFiles = await getSuspiciousFiles(
+      orchestratorOptions,
+      partitionTable
+    );
+  }
 
   let keywordFiles: KeywordFile[] = [];
   if (orchestratorOptions.includeKeywordSearchFiles) {
@@ -227,37 +231,44 @@ export const orchestrator = async (
     );
   }
 
-  statusCallback('Building Timeline...');
-  // consider some refactoring sprint 4
-  const timelineFiles = suspiciousFiles.renamedFiles.map((renamedFile) => {
-    return renamedFile.file;
-  });
-  timelineFiles.push(
-    ...keywordFiles.map((keywordFile) => {
-      return {
-        fileNameFileType: keywordFile.fileAttributes,
-        metadataFileType: keywordFile.fileAttributes,
-        deleted: keywordFile.deleted,
-        inode: keywordFile.inode,
-        reallocated: keywordFile.deleted,
-        fileName: keywordFile.filePath,
-        mtime: new Date(keywordFile.mtime),
-        atime: new Date(keywordFile.atime),
-        ctime: new Date(keywordFile.ctime),
-        crtime: new Date(keywordFile.ctime),
-        size: Number(keywordFile.size),
-        uid: 'N/A',
-        gid: 'N/A',
-        hash: keywordFile.hash,
-      };
-    })
-  );
-  timelineFiles.push(...suspiciousFiles.deletedFiles);
-  const timeline = await buildTimeline(
-    timelineFiles,
-    partitionTable,
-    orchestratorOptions.imagePath
-  );
+  let timeline: TimelineEntry[] | undefined;
+  if (orchestratorOptions.showTimeline) {
+    statusCallback('Building Timeline...');
+    // consider some refactoring sprint 4
+    const timelineFiles = [];
+    if (suspiciousFiles !== undefined) {
+      suspiciousFiles.renamedFiles.forEach((renamedFile) => {
+        timelineFiles.push(renamedFile.file);
+      });
+      timelineFiles.push(...suspiciousFiles.deletedFiles);
+    }
+    timelineFiles.push(
+      ...keywordFiles.map((keywordFile) => {
+        return {
+          fileNameFileType: keywordFile.fileAttributes,
+          metadataFileType: keywordFile.fileAttributes,
+          deleted: keywordFile.deleted,
+          inode: keywordFile.inode,
+          reallocated: keywordFile.deleted,
+          fileName: keywordFile.filePath,
+          mtime: new Date(keywordFile.mtime),
+          atime: new Date(keywordFile.atime),
+          ctime: new Date(keywordFile.ctime),
+          crtime: new Date(keywordFile.ctime),
+          size: Number(keywordFile.size),
+          uid: 'N/A',
+          gid: 'N/A',
+          hash: keywordFile.hash,
+        };
+      })
+    );
+
+    timeline = await buildTimeline(
+      timelineFiles,
+      partitionTable,
+      orchestratorOptions.imagePath
+    );
+  }
 
   let hashFinal: Hash = {} as Hash;
   statusCallback('Checking Integrity...');
@@ -279,11 +290,11 @@ export const orchestrator = async (
       ? partitionTable
       : undefined,
     renamedFiles:
-      orchestratorOptions.includeRenamedFiles && suspiciousFiles.renamedFiles
+      orchestratorOptions.includeRenamedFiles && suspiciousFiles?.renamedFiles
         ? suspiciousFiles.renamedFiles
         : undefined,
     deletedFiles:
-      orchestratorOptions.includeDeletedFiles && suspiciousFiles.deletedFiles
+      orchestratorOptions.includeDeletedFiles && suspiciousFiles?.deletedFiles
         ? suspiciousFiles.deletedFiles
         : undefined,
     keywordFiles:
