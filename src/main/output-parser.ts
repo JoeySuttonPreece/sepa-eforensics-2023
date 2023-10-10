@@ -1,12 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import jsPDF from 'jspdf';
-import { UserOptions } from 'jspdf-autotable';
+import { applyPlugin, UserOptions } from 'jspdf-autotable';
 import { RenamedFile, File, KeywordFile } from 'domain/file-system-tools';
 import { ReportDetails } from 'domain/orchestrator';
 import { PartitionTable } from 'domain/volume-system-tools';
 import { TimelineEntry } from 'domain/timeline-tools';
 import { CarvedFile } from 'domain/other-cli-tools';
+
+applyPlugin(jsPDF);
 
 type PDF = jsPDF & {
   autoTable: (options: UserOptions) => void;
