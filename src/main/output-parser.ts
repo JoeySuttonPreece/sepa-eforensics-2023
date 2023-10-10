@@ -1,3 +1,6 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable new-cap */
+/* eslint-disable no-use-before-define */
 import fs from 'fs';
 import path from 'path';
 import jsPDF from 'jspdf';
@@ -114,7 +117,7 @@ function pdfImage(
   doc.text(
     doc.splitTextToSize(
       `Integrity: ${
-        imageHashFinal?.md5sum == imageHash?.md5sum ? 'Passed' : 'Failed'
+        imageHashFinal?.md5sum === imageHash?.md5sum ? 'Passed' : 'Failed'
       } `,
       200
     ),
@@ -334,18 +337,18 @@ function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
     doc.text(doc.splitTextToSize(`${entry.file.inode}`, 15), 35, y);
     doc.text(doc.splitTextToSize(entry.file.fileName, 50), 50, y);
 
-    if (entry.suspectedUsers.length == 0) {
+    if (entry.suspectedUsers.length === 0) {
       y += doc.getLineHeight();
     }
 
     for (const user of entry.suspectedUsers) {
-      if (entry.operations.length == 0) {
+      if (entry.operations.length === 0) {
         doc.text(doc.splitTextToSize(user.name, 20), 105, y);
         y += doc.getLineHeight();
       }
 
       for (const op of entry.operations) {
-        if ((op.user.name = user.name)) {
+        if (op.user.name === user.name) {
           doc.text(doc.splitTextToSize(user.name, 25), 105, y);
           doc.text(doc.splitTextToSize(op.command, 70), 130, y);
           y += doc.getLineHeight();
@@ -372,7 +375,7 @@ function csvImage(
     `'${imageName}',${timezone}, ${imageHash?.md5sum}, ${imageHash?.sha1sum},${
       imageHashFinal?.md5sum
     }, ${imageHashFinal?.sha1sum}, ${
-      imageHash?.md5sum == imageHashFinal?.md5sum
+      imageHash?.md5sum === imageHashFinal?.md5sum
     } ''\n`,
     section
   );
@@ -450,14 +453,14 @@ function csvTimeline(timeline: TimelineEntry[], writer: Writer) {
     section
   );
   for (const entry of timeline) {
-    if (entry.suspectedUsers.length == 0) {
+    if (entry.suspectedUsers.length === 0) {
       writer(
         `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, none, none`,
         section
       );
     }
     for (const user of entry.suspectedUsers) {
-      if (entry.operations.length == 0) {
+      if (entry.operations.length === 0) {
         writer(
           `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, ${user.name}, none`,
           section
@@ -465,7 +468,7 @@ function csvTimeline(timeline: TimelineEntry[], writer: Writer) {
       }
 
       for (const op of entry.operations) {
-        if ((op.user.name = user.name)) {
+        if (op.user.name === user.name) {
           writer(
             `${entry.date}, ${entry.file.inode}, ${entry.file.fileName}, ${user.name}, ${op.command}`,
             section
