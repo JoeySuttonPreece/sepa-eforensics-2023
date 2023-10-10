@@ -154,16 +154,6 @@ export default function StartPage() {
         <div
           onMouseEnter={() => {
             setTipMsg(
-              'If Carved Files is also selected this will save a copy of the identified file after attempting to carve.'
-            );
-          }}
-        >
-          <input ref={keepCarvedInput} id="saveCarved" type="checkbox" />
-          <label htmlFor="saveCarved">Save Carved Files</label>
-        </div>
-        <div
-          onMouseEnter={() => {
-            setTipMsg(
               'The report will include a timeline built form the modification date of the previously included suspicous file, and will attempt ot attribute a user and suspected operations conducted on the file'
             );
           }}

@@ -183,7 +183,6 @@ app
       const includeKeywordSearchFiles = include.includes('k');
       const showTimeline = include.includes('t');
       const searchString = keywords;
-      const keepRecoveredFiles = include.includes('s');
 
       const output = await orchestrator(
         {
@@ -195,11 +194,13 @@ app
           includeDeletedFiles,
           includeKeywordSearchFiles,
           includeCarvedFiles,
-          keepRecoveredFiles,
         },
         (msg) => {} // don't want to log it to prevent cluttering cli output
       );
-      if (output != null) Print(output, out, report);
+      if (output != null) {
+        Print(output, report, out);
+        console.log('AEAS done!!!');
+      }
     } else {
       createWindow();
       app.on('activate', () => {

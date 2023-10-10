@@ -28,7 +28,6 @@ export type OrchestratorOptions = {
   includeDeletedFiles: boolean;
   includeKeywordSearchFiles: boolean;
   includeCarvedFiles: boolean;
-  keepRecoveredFiles: boolean;
 };
 
 export type ReportDetails = {
