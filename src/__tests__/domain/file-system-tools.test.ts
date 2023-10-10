@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { processForRenamedFile, File } from '../../domain/file-system-tools';
 import { Partition } from '../../domain/volume-system-tools';
 
-jest.mock('../../domain/runner', () => {
+jest.mock('../../domain/runners', () => {
   return {
     runCliTool: jest
       .fn()
@@ -35,14 +35,14 @@ test('Renamed File Processing', async () => {
     metadataFileType: '',
     deleted: false,
     reallocated: false,
-    crtime: '',
+    crtime: new Date(),
     atime: new Date(),
     ctime: new Date(),
     mtime: new Date(),
     size: 64,
     uid: '',
     gid: '',
-    hash: '',
+    hash: { md5sum: '', sha1sum: '', fileName: '' },
   };
 
   const noMatchResult = await processForRenamedFile(file, 'path', partition);
@@ -54,8 +54,8 @@ test('Renamed File Processing', async () => {
   );
   expect(correctExtensionResult).toBe(false);
   const renamedResult = await processForRenamedFile(file, 'path', partition);
-  if (renamedResult !== false) {
-    expect(renamedResult.trueExtensions[0]).toBe('jpg');
-    expect(renamedResult.matchedSignature).toBe('ffd8ffe0');
-  }
+  if (renamedResult === false)
+    throw new Error("Reneamed Result Shouldn't be false in this case");
+  expect(renamedResult.trueExtensions[0]).toBe('jpg');
+  expect(renamedResult.matchedSignature).toBe('ffd8ffe0');
 });

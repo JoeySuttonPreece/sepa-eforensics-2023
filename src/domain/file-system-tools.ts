@@ -201,7 +201,7 @@ const SIGNATURES = [
   { sig: '494433', ext: ['mp3'] },
   { sig: '4344303031', ext: ['iso'] },
   { sig: '4344303031', ext: ['cdi'] },
-  { sig: 'd0cf11e0a1b11ae1', ext: ['doc', 'xls', 'ppt', 'msi', 'msg'] },
+  { sig: 'd0cf11e0a1b11ae1', ext: ['doc', 'xls', 'ppt', 'msi', 'msg', 'pps'] },
   { sig: '7573746172003030', ext: ['tar'] },
   { sig: '7573746172202000', ext: ['tar'] },
   { sig: '377abcaf271c', ext: ['7z'] },
