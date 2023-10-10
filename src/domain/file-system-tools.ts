@@ -8,15 +8,17 @@ export async function getTimeZone(
 ) {
   const TIMEPATH = '/etc/timezone';
   const source = await getInodeAtFilePath(TIMEPATH, partitionTable, imagePath);
-  console.log(source);
-  if (source == undefined) return undefined;
+  if (source === undefined) return undefined;
   const { inode, partition } = source;
 
-  const timezone = await runCliTool(
-    `icat -o ${partition.start} ${imagePath} ${inode}`
-  );
-
-  return timezone;
+  try {
+    const timezone = await runCliTool(
+      `icat -o ${partition.start} ${imagePath} ${inode}`
+    );
+    return timezone;
+  } catch {
+    return undefined;
+  }
 }
 
 export const listFiles = async (volume: string, offset: number) => {
@@ -273,11 +275,12 @@ export async function getInodeAtFilePath(
 
       let output: string | undefined;
       try {
+        // eslint-disable-next-line no-await-in-loop
         output = await runCliTool(
           `fls -o ${partition.start} ${imagePath} ${currentInode} `
         );
       } catch (err) {
-        return undefined;
+        break;
       }
       if (output === undefined) break;
       const lines: string[] = output.split('\n');
@@ -285,11 +288,11 @@ export async function getInodeAtFilePath(
       let found = false;
       for (const entry of matrix) {
         // check if the next part of the file path is in the fls ouptut
-        if (entry[2] == part) {
+        if (entry[2] === part) {
           found = true;
           currentInode = entry[1].slice(0, -1);
           // this is the file we are looking for we can return the inode
-          if (part == fileparts[fileparts.length - 1]) {
+          if (part === fileparts[fileparts.length - 1]) {
             return { inode: Number(currentInode), partition }; // this is the final one we were looking for
           }
           // we found the next part of the file path in the list we can break to do the next part
