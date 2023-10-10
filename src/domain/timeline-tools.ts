@@ -1,14 +1,7 @@
-import { takeHeapSnapshot } from 'node:process';
+/* eslint-disable no-await-in-loop */
 import { File, getInodeAtFilePath } from './file-system-tools';
 import { runCliTool } from './runners';
-import { Partition, PartitionTable } from './volume-system-tools';
-
-export type TimelineEntry = {
-  date: Date;
-  file: File;
-  suspectedUsers: User[];
-  operations: Operation[];
-};
+import { PartitionTable } from './volume-system-tools';
 
 export type User = {
   name: string;
@@ -19,6 +12,13 @@ export type User = {
 export type Operation = {
   user: User;
   command: string;
+};
+
+export type TimelineEntry = {
+  date: Date;
+  file: File;
+  suspectedUsers: User[];
+  operations: Operation[];
 };
 
 const monthMap: { [key: string]: number } = {
@@ -44,33 +44,33 @@ export async function buildTimeline(
   partitionTable: PartitionTable,
   imagePath: string
 ): Promise<TimelineEntry[]> {
-  let timeline: TimelineEntry[] = [];
+  const timeline: TimelineEntry[] = [];
 
-  //sort suspicous files chroniliogically
+  // sort suspicous files chroniliogically
   suspicousFiles.sort((a, b) => {
     return a.mtime.getTime() - b.mtime.getTime();
   });
 
-  //get User Logon and Logoff time
-  let userLogs: User[] = [];
-  await getUserOnTime(partitionTable, imagePath)
-    .then((value) => {
-      userLogs = value;
-    })
-    .catch((reason) => {});
+  // get User Logon and Logoff time
+  let userLogs: User[];
+  try {
+    userLogs = await getUserOnTime(partitionTable, imagePath);
+  } catch {
+    userLogs = [];
+  }
 
   // get user history
-  for (let user of userLogs) {
-    await getUserHistory(user.name, partitionTable, imagePath)
-      .then((value) => {
-        user.history = value;
-      })
-      .catch((reason) => {});
+  for await (const user of userLogs) {
+    try {
+      user.history = await getUserHistory(user.name, partitionTable, imagePath);
+    } catch {
+      user.history = [];
+    }
   }
 
   // create timeline item
-  for (let file of suspicousFiles) {
-    let timelineEntry: TimelineEntry = {
+  for (const file of suspicousFiles) {
+    const timelineEntry: TimelineEntry = {
       date: file.mtime,
       file,
       suspectedUsers: [],
@@ -104,22 +104,27 @@ export async function getUserOnTime(
     partitionTable,
     imagePath
   );
-  if (source == undefined) return [];
+  if (source === undefined) return [];
   const { inode, partition } = source;
   const logs = await runCliTool(
-    //Note the -F switch does not work in ReHL or CentOS 5
+    // Note the -F switch does not work in ReHL or CentOS 5
     `icat -o ${partition.start} ${imagePath} ${inode} | last -F`
   );
   const lines: string[] = logs.split('\n');
   const matrix: string[][] = lines.map((line) => line.split(/\s+/));
-  let userLogs: { [key: string]: User } = {};
-  for (let entry of matrix) {
-    let user = entry[0];
-    if (user == 'reboot') continue;
-    let userLog: User = userLogs[user] ?? { name: user, logs: [], history: [] };
+  const userLogs: { [key: string]: User } = {};
+  for (const entry of matrix) {
+    const user = entry[0];
+    // eslint-disable-next-line no-continue
+    if (user === 'reboot') continue;
+    const userLog: User = userLogs[user] ?? {
+      name: user,
+      logs: [],
+      history: [],
+    };
 
-    let startTime = entry[6].split(':');
-    let start = new Date(
+    const startTime = entry[6].split(':');
+    const start = new Date(
       Number(entry[7]),
       monthMap[entry[4].toLowerCase()],
       Number(entry[5]),
@@ -128,12 +133,13 @@ export async function getUserOnTime(
       Number(startTime[2])
     );
 
-    if (entry[8] == 'still' || entry[9] == 'crash' || entry[9] == 'down') {
+    if (entry[8] === 'still' || entry[9] === 'crash' || entry[9] === 'down') {
+      // eslint-disable-next-line no-continue
       continue; // not sure what to do here if should do current date, or date of computer etc
     }
 
-    let endTime = entry[12].split(':');
-    let end = new Date(
+    const endTime = entry[12].split(':');
+    const end = new Date(
       Number(entry[13]),
       monthMap[entry[10].toLowerCase()],
       Number(entry[11]),
@@ -142,20 +148,20 @@ export async function getUserOnTime(
       Number(endTime[2])
     );
 
-    let from = entry[2];
+    const from = entry[2];
 
     userLog.logs.push({ on: start, off: end, from });
 
     userLogs[user] = userLog;
   }
-  //Step 3 return array of user logon and log off times
+  // Step 3 return array of user logon and log off times
   return [...Object.values(userLogs)];
 }
 
 function attributeUser(userLogs: User[], date: Date) {
-  let suspectUsers: User[] = [];
-  for (let user of userLogs) {
-    for (let log of user.logs) {
+  const suspectUsers: User[] = [];
+  for (const user of userLogs) {
+    for (const log of user.logs) {
       if (log.on <= date && log.off >= date) {
         suspectUsers.push(user);
         break;
@@ -171,53 +177,54 @@ async function getUserHistory(
   partitionTable: PartitionTable,
   imagePath: string
 ) {
-  let history: string[] = [];
+  const history: string[] = [];
 
   // get home direcotry
-  let homePath = `/home/${user}`;
+  const homePath = `/home/${user}`;
   const source = await getInodeAtFilePath(homePath, partitionTable, imagePath);
-  if (source == undefined) return history;
+  if (source === undefined) return history;
 
   const { inode: homeDirInode, partition: homePartition } = source;
 
-  //find hisotry files
-  let historyFiles = [];
-  let historyFileReg = /\.?[a-zA-Z0-9]+_history/; // why doesnt thus work!!!
+  // find hisotry files
+  const historyFiles = [];
+  const historyFileReg = /\.?[a-zA-Z0-9]+_history/; // why doesnt thus work!!!
 
-  let output: string = await runCliTool(
+  const output: string = await runCliTool(
     `fls -o ${homePartition.start} ${imagePath} ${homeDirInode} `
   );
   const lines: string[] = output.split('\n');
-  //there may be more than one history file
+  // there may be more than one history file
   for (let entry of lines) {
     entry = entry.trim();
     if (historyFileReg.test(entry)) {
-      let parts = entry.split(/\s+/);
+      const parts = entry.split(/\s+/);
       historyFiles.push(parts[1].slice(0, -1));
     }
   }
 
-  //read hisotry = there may have been more than one hisotry file
-  for (let inode of historyFiles) {
-    let output = await runCliTool(
+  // read hisotry = there may have been more than one hisotry file
+  for (const inode of historyFiles) {
+    const content = await runCliTool(
       `icat -o ${homePartition.start} ${imagePath} ${inode}`
     );
-    let lines: string[] = output.split('\n');
-    history.push(...lines);
+    const rows: string[] = content.split('\n');
+    history.push(...rows);
   }
   return history;
 }
 
 function identifyOperations(file: File, users: User[]): Operation[] {
-  let operations: Operation[] = [];
-  let filepathParts = file.fileName.split('/').map((name) => {
+  const operations: Operation[] = [];
+  const filepathParts = file.fileName.split('/').map((name) => {
     return name.trim();
   });
 
-  for (let user of users) {
-    for (let name of filepathParts) {
-      if (name == '') continue;
-      for (let command of user.history) {
+  for (const user of users) {
+    for (const name of filepathParts) {
+      // eslint-disable-next-line no-continue
+      if (name === '') continue;
+      for (const command of user.history) {
         if (command.includes(name)) {
           operations.push({ user, command });
         }

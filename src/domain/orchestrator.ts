@@ -111,18 +111,16 @@ export const getSuspiciousFiles = async (
   partitionTable: PartitionTable
 ): Promise<SuspiciousFiles> => {
   // DON'T FORGET ORCHESTRATOR OPTIONS, CHECK IF WE WANT TO SEARCH FOR THINGS
-  console.log('Suspicious files called.');
   const renamedFiles: RenamedFile[] = [];
   const deletedFiles: File[] = [];
 
   for await (const partition of partitionTable.partitions) {
-    console.log(partition);
     const files = await runBufferedCliTool<File>(
       `fls -o ${partition.start} -l -p -r ${options.imagePath}`,
       fileListProcessor
-    ).catch(() =>
-      console.log(`Couldn't read partition: ${partition.description}`)
-    );
+    ).catch(() => {
+      // console.log(`Couldn't read partition: ${partition.description}`)
+    });
 
     // eslint-disable-next-line no-continue
     if (!files) continue;
@@ -134,7 +132,6 @@ export const getSuspiciousFiles = async (
         file.inode,
         false
       );
-      console.log(file.hash);
 
       // renamed
       const renamedFile = await processForRenamedFile(
@@ -152,9 +149,6 @@ export const getSuspiciousFiles = async (
       }
     }
   }
-
-  console.log(renamedFiles);
-  console.log(deletedFiles);
   return { renamedFiles, deletedFiles };
 };
 
