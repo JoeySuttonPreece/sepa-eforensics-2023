@@ -1,4 +1,8 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-await-in-loop */
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { File, getInodeAtFilePath } from './file-system-tools';
 import { runCliTool } from './runners';
 import { PartitionTable } from './volume-system-tools';
@@ -55,19 +59,17 @@ export async function buildTimeline(
   let userLogs: User[];
   try {
     userLogs = await getUserOnTime(partitionTable, imagePath);
-  } catch {
+  } catch (e) {
     userLogs = [];
   }
-  console.log(userLogs);
 
   // get user history
   for await (const user of userLogs) {
     try {
       user.history = await getUserHistory(user.name, partitionTable, imagePath);
-    } catch {
+    } catch (e) {
       user.history = [];
     }
-    console.log(user.history);
   }
 
   // create timeline item
@@ -106,22 +108,46 @@ export async function getUserOnTime(
     partitionTable,
     imagePath
   );
-  console.log('User Logs');
-  console.log(source);
   if (source === undefined) return [];
   const { inode, partition } = source;
-  const logs = await runCliTool(
-    // Note the -F switch does not work in ReHL or CentOS 5
-    `icat -o ${partition.start} ${imagePath} ${inode} | last -F`
-  );
-  console.log(logs);
+
+  let logs;
+  let tmpDir;
+  try {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aeas-time-log'));
+    await runCliTool(
+      // Note the -F switch does not work in ReHL or CentOS 5
+      `icat -o ${partition.start} ${imagePath} ${inode} > ${path.join(
+        tmpDir,
+        'logData'
+      )}`
+    );
+    logs = await runCliTool(
+      `TZ=utc last -f '${path.join(tmpDir, 'logData')}' -F`
+    );
+  } catch (e) {
+    logs = undefined;
+  } finally {
+    try {
+      if (tmpDir) {
+        fs.rmSync(tmpDir, { recursive: true });
+      }
+    } catch (e) {
+      console.error(
+        `An error has occurred while removing the temp folder at ${tmpDir}. Please remove it manually. Error: ${e}`
+      );
+    }
+  }
+
+  if (logs === undefined) return [];
+
   const lines: string[] = logs.split('\n');
   const matrix: string[][] = lines.map((line) => line.split(/\s+/));
   const userLogs: { [key: string]: User } = {};
   for (const entry of matrix) {
     const user = entry[0];
     // eslint-disable-next-line no-continue
-    if (user === 'reboot') continue;
+    if (user === 'reboot' || user === 'logData' || user.trim() === '') continue;
     const userLog: User = userLogs[user] ?? {
       name: user,
       logs: [],
@@ -139,27 +165,31 @@ export async function getUserOnTime(
     );
 
     let end;
-    if (entry[9] === 'crash' || entry[9] === 'down') {
-      end = new Date('00/00/00 00:00:00');
-    } else if (entry[8] === 'still') {
-      end = new Date();
-    } else {
-      const endTime = entry[12].split(':');
-      end = new Date(
-        Number(entry[13]),
-        monthMap[entry[10].toLowerCase()],
-        Number(entry[11]),
-        Number(endTime[0]),
-        Number(endTime[1]),
-        Number(endTime[2])
-      );
+    try {
+      if (entry[9] === 'crash' || entry[9] === 'down' || entry[8] === 'gone') {
+        end = new Date('00/00/00 00:00:00');
+      } else if (entry[8] === 'still') {
+        end = new Date();
+      } else {
+        const endTime = entry[12].split(':');
+        end = new Date(
+          Number(entry[13]),
+          monthMap[entry[10].toLowerCase()],
+          Number(entry[11]),
+          Number(endTime[0]),
+          Number(endTime[1]),
+          Number(endTime[2])
+        );
+      }
+      const from = entry[2];
+
+      userLog.logs.push({ on: start, off: end, from });
+
+      userLogs[user] = userLog;
+    } catch {
+      // eslint-disable-next-line no-continue
+      continue;
     }
-
-    const from = entry[2];
-
-    userLog.logs.push({ on: start, off: end, from });
-
-    userLogs[user] = userLog;
   }
   // Step 3 return array of user logon and log off times
   return [...Object.values(userLogs)];
@@ -170,7 +200,6 @@ function attributeUser(userLogs: User[], date: Date) {
   for (const user of userLogs) {
     for (const log of user.logs) {
       if (log.on <= date && log.off >= date) {
-        console.log('user is on');
         suspectUsers.push(user);
         break;
       }
@@ -196,7 +225,7 @@ async function getUserHistory(
 
   // find hisotry files
   const historyFiles = [];
-  const historyFileReg = /\.?[a-zA-Z0-9]+_history/; // why doesnt thus work!!!
+  const historyFileReg = /\.?[a-zA-Z0-9]+_history/;
 
   const output: string = await runCliTool(
     `fls -o ${homePartition.start} ${imagePath} ${homeDirInode} `
@@ -205,6 +234,8 @@ async function getUserHistory(
   // there may be more than one history file
   for (let entry of lines) {
     entry = entry.trim();
+    // eslint-disable-next-line no-continue
+    if (entry.includes('*')) continue;
     if (historyFileReg.test(entry)) {
       const parts = entry.split(/\s+/);
       historyFiles.push(parts[1].slice(0, -1));
@@ -224,10 +255,9 @@ async function getUserHistory(
 
 function identifyOperations(file: File, users: User[]): Operation[] {
   const operations: Operation[] = [];
-  const filepathParts = file.fileName.split('/').map((name) => {
+  const filepathParts = file.fileName.split(/(?<=\/)/).map((name) => {
     return name.trim();
   });
-
   for (const user of users) {
     for (const name of filepathParts) {
       // eslint-disable-next-line no-continue
