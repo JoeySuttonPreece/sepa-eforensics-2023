@@ -18,6 +18,7 @@ import { hideBin } from 'yargs/helpers';
 
 import {
   orchestrator,
+  validateDMG,
   validateImage,
   validateZip,
 } from '../domain/orchestrator';
@@ -164,8 +165,9 @@ app
         );
         return;
       }
-      imagePath = await validateZip(imagePath);
 
+      imagePath = await validateDMG(imagePath);
+      imagePath = await validateZip(imagePath);
       if (include == null) {
         include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
       } else {

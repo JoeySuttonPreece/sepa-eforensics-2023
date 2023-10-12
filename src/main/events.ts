@@ -4,6 +4,7 @@ import {
   orchestrator,
   validateImage,
   validateZip,
+  validateDMG,
 } from '../domain/orchestrator';
 import { Print } from './output-parser';
 
@@ -42,6 +43,16 @@ ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
 
   if (valid) {
     await validateZip(imagePath)
+      .then((newPath) => {
+        valid = true;
+        finalPath = newPath;
+      })
+      .catch(() => {
+        valid = false;
+        reason =
+          'image could not be extracted to a supported forensic file type';
+      });
+    await validateDMG(imagePath)
       .then((newPath) => {
         valid = true;
         finalPath = newPath;

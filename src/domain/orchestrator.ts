@@ -305,6 +305,9 @@ export const orchestrator = async (
 
 export const validateImage = async (imagePath: string) => {
   let validType = false;
+  const IMAGETYPES = ['dmg'];
+  const splitName = imagePath.split('.');
+  const ext = splitName[splitName.length - 1].toLowerCase();
   const tskImageInfo = await runCliTool(
     `tsk_imageinfo ${imagePath}| grep "TSK Support"`
   ).catch(() => {
@@ -314,7 +317,8 @@ export const validateImage = async (imagePath: string) => {
   const zipfile = await runCliTool(`file -b --mime-type ${imagePath}`);
   if (
     tskImageInfo.trim() === 'TSK Support: Yes' ||
-    zipfile.trim() === 'application/zip'
+    zipfile.trim() === 'application/zip' ||
+    IMAGETYPES.includes(ext)
   ) {
     validType = true;
     return validType && fs.existsSync(imagePath);
@@ -322,6 +326,29 @@ export const validateImage = async (imagePath: string) => {
   return validType && fs.existsSync(imagePath);
 };
 
+export const validateDMG = async (imagePath: string) => {
+  const IMAGETYPES = ['dmg'];
+  const splitName = imagePath.split('.');
+  const ext = splitName[splitName.length - 1].toLowerCase();
+  const rawFileName = imagePath.replace(/^.*[\\/]/, '');
+  let newImagePath = '';
+
+  if (IMAGETYPES.includes(ext)) {
+    await runCliTool(
+      `dmg2img -i ${imagePath} -o ${path.dirname(imagePath)}/${rawFileName}.raw`
+    ).catch(() => {
+      return '';
+    });
+    newImagePath = newImagePath.concat(
+      path.dirname(imagePath),
+      '/',
+      rawFileName,
+      '.raw'
+    );
+    return newImagePath;
+  }
+  return imagePath;
+};
 export const validateZip = async (imagePath: string) => {
   let zipfile = '';
   const zipFileName = imagePath.replace(/^.*[\\/]/, '');
