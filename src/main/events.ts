@@ -1,3 +1,4 @@
+/* eslint-disable promise/always-return */
 import { ipcMain, dialog } from 'electron';
 
 import {
@@ -42,7 +43,7 @@ ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
   let reason = 'image ready for analysis';
 
   if (valid) {
-    await validateZip(imagePath)
+    await validateZip(finalPath)
       .then((newPath) => {
         valid = true;
         finalPath = newPath;
@@ -52,7 +53,7 @@ ipcMain.on('validate:imagePath', async (event, [imagePath]) => {
         reason =
           'image could not be extracted to a supported forensic file type';
       });
-    await validateDMG(imagePath)
+    await validateDMG(finalPath)
       .then((newPath) => {
         valid = true;
         finalPath = newPath;

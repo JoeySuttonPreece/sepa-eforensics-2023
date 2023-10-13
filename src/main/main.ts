@@ -159,15 +159,15 @@ app
       }).argv;
 
     if (commandLine) {
-      imagePath = await validateZip(imagePath);
-      imagePath = await validateDMG(imagePath);
-      
       if ((await validateImage(imagePath)) === false || imagePath == null) {
         console.log(
           `Image could not be found or is incorrect type: imagePath was ${imagePath}}`
         );
         return;
       }
+
+      imagePath = await validateZip(imagePath);
+      imagePath = await validateDMG(imagePath);
 
       if (include == null) {
         include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
