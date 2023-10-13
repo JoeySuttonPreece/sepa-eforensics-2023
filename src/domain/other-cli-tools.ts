@@ -279,6 +279,7 @@ export type CarvedFile = {
   filename: string;
   size: number;
   sector: number;
+  img_offset: number;
   modifiedDate?: Date;
   filetype: string;
 };
@@ -344,8 +345,10 @@ export const getCarvedFiles = async (
         results.push({
           filename: file.filename,
           size: file.filesize,
-          sector: file.byte_runs.byte_run.xml_attributes.img_offset,
-          filetype,
+          sector: file.byte_runs.byte_run.xml_attributes.offset / sectorSize,
+          img_offset:
+            file.byte_runs.byte_run.xml_attributes.img_offset / sectorSize,
+          filetype: exifData?.FileType,
           modifiedDate:
             modifiedDate?.getTime() > now ? undefined : modifiedDate,
         });

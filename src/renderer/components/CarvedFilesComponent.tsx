@@ -13,6 +13,7 @@ export default function CarvedFilesComponent({
           <th>File Name</th>
           <th>Size</th>
           <th>Sector</th>
+          <th>img</th>
           <th>Modified Date</th>
           <th>Filetype</th>
         </tr>
@@ -22,6 +23,7 @@ export default function CarvedFilesComponent({
               <td>{file.filename}</td>
               <td>{file.size}</td>
               <td>{file.sector}</td>
+              <td>{file.img_offset}</td>
               <td>{file.modifiedDate?.toLocaleString()}</td>
               <td>{file.filetype}</td>
             </tr>
