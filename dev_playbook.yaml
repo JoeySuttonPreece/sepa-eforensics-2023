@@ -1,4 +1,4 @@
-- name: Set up AEAS dev
+- name: Set up AEAS dev environment only
   hosts: localhost
   connection: local
   tasks:
