@@ -1,4 +1,4 @@
-- name: Set up AEAS dev
+- name: Set up AEAS
   hosts: localhost
   connection: local
   tasks:
@@ -67,7 +67,7 @@
       ansible.builtin.git:
         repo: https://git.cgsecurity.org/testdisk.git
         dest: /tmp/testdisk
-      
+
     - name: Create TextDisk config folder
       file:
         path: /tmp/testdisk/config
@@ -87,32 +87,3 @@
       command: make install
       args:
         chdir: /tmp/testdisk
-
-    # These are technically optional but make development a whole lot easier
-
-    - name: Install Git
-      become: yes
-      ansible.builtin.apt:
-        name: git
-
-    - name: Download GitHub CLI archive keyring
-      become: yes
-      ansible.builtin.get_url:
-        url: "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
-        dest: "/usr/share/keyrings/githubcli-archive-keyring.gpg"
-        mode: "0644"
-
-    - name: Add GitHub CLI to repos
-      become: yes
-      ansible.builtin.copy:
-        content: "deb [arch=amd64 signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n"
-        dest: /etc/apt/sources.list.d/github-cli.list
-        mode: '0644'
-
-    - name: Install GitHub CLI
-      become: yes
-      ansible.builtin.apt:
-        name: gh
-        update_cache: yes
-
-
