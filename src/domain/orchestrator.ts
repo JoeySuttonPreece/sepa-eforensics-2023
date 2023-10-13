@@ -373,7 +373,10 @@ export const validateZip = async (imagePath: string) => {
       const tskImageInfo = await runCliTool(
         `tsk_imageinfo ${files}| grep "TSK Support"`
       );
-      if (tskImageInfo.trim() === 'TSK Support: Yes') {
+      const IMAGETYPES = ['dmg'];
+      const splitName = files.split('.');
+      const ext = splitName[splitName.length - 1].toLowerCase();
+      if (tskImageInfo.trim() === 'TSK Support: Yes' || IMAGETYPES.includes(ext) ) {
         validImageFileZip = files;
       }
     }
