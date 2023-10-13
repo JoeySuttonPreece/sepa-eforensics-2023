@@ -25,7 +25,7 @@ export default function CarvedFilesComponent({
               <td>{file.sector}</td>
               <td>{file.img_offset}</td>
               <td>{file.modifiedDate?.toLocaleString()}</td>
-              <td>{file.filetype}</td>
+              <td>{file.finalfileextension}</td>
             </tr>
           );
         })}

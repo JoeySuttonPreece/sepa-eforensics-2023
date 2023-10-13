@@ -157,8 +157,7 @@ const SIGNATURES = [
   { sig: '425a68', ext: ['bz2'] },
   { sig: '47494638376147494638396', ext: ['gif'] },
   { sig: '425047fb', ext: ['bpg'] },
-  { sig: 'ffd8ffe0', ext: ['jpg', 'jpeg'] },
-  { sig: 'ffd8ffee', ext: ['jpg', 'jpeg'] },
+  { sig: 'ffd8ffe', ext: ['jpg', 'jpeg'] },
   {
     sig: '0000000c6a5020200d0a870a',
     ext: ['jp2', 'j2k', 'jpf', 'jpm', 'jpg2', 'j2c', 'jpc', 'jpx', 'mj2'],
@@ -271,7 +270,7 @@ const SIGNATURES = [
   { sig: '52656365697665643a', ext: ['eml'] },
 ];
 
-const matchSignature = (
+export const matchSignature = (
   header: string
 ): { result: boolean; extensions: string[]; match: string } => {
   for (const sigExt of SIGNATURES) {

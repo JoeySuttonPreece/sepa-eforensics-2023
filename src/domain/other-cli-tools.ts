@@ -6,7 +6,7 @@ import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 import {
   Hash,
-  KeywordFile,
+  KeywordFile, matchSignature,
   KeywordWithMatches,
   KeywordMatch,
 } from './file-system-tools';
@@ -325,7 +325,7 @@ export type CarvedFile = {
   sector: number;
   img_offset: number;
   modifiedDate?: Date;
-  filetype: string;
+  finalfileextension: string;
 };
 
 // BEHOLD THE ACCURSED RELIC OF A BYGONE AGE
@@ -381,21 +381,35 @@ export const getCarvedFiles = async (
         const stats = await statAsync(carvedFilePath);
         const modifiedDate = stats.mtime;
         let filetype = await runCliTool(
-          `file -b --extension ${carvedFilePath}`
+          `xxd -p -l 16 ${carvedFilePath}`
+          //`file -b --extension ${carvedFilePath}`
         );
+        console.log(filetype);
+        let newfiletype = matchSignature(filetype)
+        console.log(newfiletype);
+        if (newfiletype.result === false) {
+          newfiletype.extensions = ['unknown'];
+        }
+        /*
         if (filetype.trim() === '???' || filetype.trim() === null) {
           filetype = 'unknown';
         }
+        */
+
+        console.log(newfiletype.extensions);
+        console.log(newfiletype.extensions.join(' '));
+
+        let finalfileextension = newfiletype.extensions.join(' ');
         results.push({
           filename: file.filename,
           size: file.filesize,
-          sector: file.byte_runs.byte_run.xml_attributes.offset / sectorSize,
-          img_offset:
-            file.byte_runs.byte_run.xml_attributes.img_offset / sectorSize,
-          filetype: exifData?.FileType,
+          sector: file.byte_runs.byte_run.xml_attributes.img_offset,
+        finalfileextension,
           modifiedDate:
             modifiedDate?.getTime() > now ? undefined : modifiedDate,
         });
+
+        console.log(newfiletype);
       } catch (err: any) {
         console.error(`Error while getting file stats: ${err.message}`);
       }
