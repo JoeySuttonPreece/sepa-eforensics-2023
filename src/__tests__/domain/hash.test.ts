@@ -2,6 +2,7 @@ import util from 'node:util';
 import '@testing-library/jest-dom';
 import { exec } from 'child_process';
 import download from 'download';
+import { Hash } from 'domain/file-system-tools';
 import { getHashAsync } from '../../domain/other-cli-tools';
 
 const promisifiedExec = util.promisify(exec);
@@ -11,11 +12,11 @@ const fileName = 'test.E01';
 const downloadedFilePath = `${downloadFolder}/${fileName}`;
 
 afterAll(async () => {
-  const { stdout, stderr } = await promisifiedExec(`rm ${downloadedFilePath}`);
+  const { stdout } = await promisifiedExec(`rm ${downloadedFilePath}`);
   console.log(stdout);
 });
 
-test('getMD5Hash works with E01.', async () => {
+test('hash works with E01.', async () => {
   const url: string =
     'https://digitalcorpora.s3.amazonaws.com/corpora/drives/nps-2009-casper-rw/ubnist1.casper-rw.gen0.E01';
 
@@ -28,16 +29,13 @@ test('getMD5Hash works with E01.', async () => {
   console.log('Done');
   console.log(`Downloaded to ${downloadFolder}`);
 
-  let data = '';
-  let md5Hash = '';
+  let expectedMD5Hash = '';
 
-  const { stdout, stderr } = await promisifiedExec(
-    `md5sum ${downloadedFilePath}`
-  );
+  const { stdout } = await promisifiedExec(`md5sum ${downloadedFilePath}`);
 
-  md5Hash = stdout;
+  expectedMD5Hash = stdout;
 
-  data = await getHashAsync(downloadedFilePath);
+  const actualHash: Hash = await getHashAsync(downloadedFilePath);
 
-  expect(data).toBe(md5Hash);
+  expect(actualHash.md5sum).toBe(expectedMD5Hash);
 }, 60000);

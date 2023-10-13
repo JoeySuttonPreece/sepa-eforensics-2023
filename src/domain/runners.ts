@@ -8,13 +8,19 @@ import { createInterface } from 'node:readline/promises';
  */
 export const runCliTool = async (bin: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    exec(bin, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-        return;
+    exec(
+      bin,
+      {
+        maxBuffer: 10 * 1024 * 1024,
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve(stdout);
       }
-      resolve(stdout);
-    });
+    );
   });
 };
 

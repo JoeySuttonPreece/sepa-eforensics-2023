@@ -107,13 +107,22 @@ export type RenamedFile = {
   trueExtensions: string[];
 };
 
+export type KeywordMatch = {
+  offset: string;
+  matchedString: string;
+};
+
+export type KeywordWithMatches = {
+  keyword: string;
+  matches: KeywordMatch[];
+};
+
 export type KeywordFile = {
   inode: string;
   filePath: string;
   deleted: boolean;
   fileAttributes: string;
-  matchedKeywords: string;
-  matches: string;
+  keywordsWithMatches: KeywordWithMatches[];
   size: string;
   mtime: string;
   atime: string;
