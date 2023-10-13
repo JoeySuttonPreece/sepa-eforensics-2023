@@ -42,7 +42,7 @@
     - name: Install dmg2raw
       become: yes
       ansible.builtin.apt:
-        name: dmg2raw
+        name: dmg2img
 
     - name: Install TestDisk dependencies
       become: yes
@@ -74,7 +74,7 @@
         state: directory
 
     - name: Generate TestDisk configuration
-      command: autoreconf --install -W all -I config /tmp/textdisk/config
+      command: autoreconf --install -W all -I /tmp/testdisk/config
       args:
         chdir: /tmp/testdisk
 
@@ -84,6 +84,7 @@
         chdir: /tmp/testdisk
 
     - name: Build and install TestDisk
+      become: yes
       command: make install
       args:
         chdir: /tmp/testdisk
