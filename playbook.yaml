@@ -39,7 +39,7 @@
         dest: /usr/bin/yq
         mode: '0755'  # Set the file mode to make it executable
 
-    - name: Install dmg2raw
+    - name: Install dmg2img
       become: yes
       ansible.builtin.apt:
         name: dmg2img
