@@ -94,7 +94,6 @@ export async function buildTimeline(
 
     timeline.push(timelineEntry);
   }
-
   return timeline;
 }
 
@@ -140,7 +139,6 @@ export async function getUserOnTime(
   }
 
   if (logs === undefined) return [];
-
   const lines: string[] = logs.split('\n');
   const matrix: string[][] = lines.map((line) => line.split(/\s+/));
   const userLogs: { [key: string]: User } = {};
@@ -166,9 +164,9 @@ export async function getUserOnTime(
 
     let end;
     try {
-      if (entry[9] === 'crash' || entry[9] === 'down' || entry[8] === 'gone') {
+      if (entry[9] === 'crash' || entry[9] === 'down') {
         end = new Date('00/00/00 00:00:00');
-      } else if (entry[8] === 'still') {
+      } else if (entry[8] === 'still' || entry[8] === 'gone') {
         end = new Date();
       } else {
         const endTime = entry[12].split(':');
