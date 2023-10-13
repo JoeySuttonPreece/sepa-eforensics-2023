@@ -298,7 +298,8 @@ export const processForRenamedFile = async (
   }
 
   const splitFileName = file.fileName.split('.');
-  const suspectExtension = splitFileName[splitFileName.length - 1];
+  const suspectExtension =
+    splitFileName[splitFileName.length - 1].toLowerCase();
 
   if (match.extensions.includes(suspectExtension)) return false;
 
