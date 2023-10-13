@@ -310,7 +310,7 @@ export const getCarvedFiles = async (
   for (let i = 1; i < startSectorList.length; i++) {
     await runCliTool(
       // automatic create FOLDER_NAME with index. (FOLDER_NAME.1)
-      `photorec /d ${FOLDER_NAME} /cmd ${imagePath} wholespace,${i},fileopt,everything,enable,options,paranoid,search `
+      `photorec /d ${FOLDER_NAME} /cmd ${imagePath} wholespace,${i},options,paranoid,search `
     );
 
     const report = parser.parse(
