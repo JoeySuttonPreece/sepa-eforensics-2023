@@ -39,10 +39,54 @@
         dest: /usr/bin/yq
         mode: '0755'  # Set the file mode to make it executable
 
-    - name: Install testdisk
+    - name: Install dmg2raw
       become: yes
       ansible.builtin.apt:
-        name: testdisk
+        name: dmg2raw
+
+    - name: Install TestDisk dependencies
+      become: yes
+      ansible.builtin.apt:
+        name:
+          - build-essential
+          - e2fslibs-dev
+          - libewf-dev
+          - libncurses5-dev
+          - libncursesw5-dev
+          - ntfs-3g-dev
+          - libjpeg-dev
+          - uuid-dev
+          - zlib1g-dev
+          - qtbase5-dev
+          - qttools5-dev-tools
+          - pkg-config
+          - dh-autoreconf
+          - git
+
+    - name: Clone TestDisk repo
+      ansible.builtin.git:
+        repo: https://git.cgsecurity.org/testdisk.git
+        dest: /tmp/testdisk
+      
+    - name: Create TextDisk config folder
+      file:
+        path: /tmp/testdisk/config
+        state: directory
+
+    - name: Generate TestDisk configuration
+      command: autoreconf --install -W all -I config /tmp/textdisk/config
+      args:
+        chdir: /tmp/testdisk
+
+    - name: Configure TestDisk
+      command: ./configure
+      args:
+        chdir: /tmp/testdisk
+
+    - name: Build and install TestDisk
+      command: make install
+      args:
+        chdir: /tmp/testdisk
 
     # These are technically optional but make development a whole lot easier
 
