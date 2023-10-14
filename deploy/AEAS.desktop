@@ -1,6 +1,7 @@
-Encoding=UTF-8
+[Desktop Entry]
 Type=Application
 Name=AEAS
-Categories=Utility;
-Exec=/usr/bin/AEAS
 Icon=/opt/AEAS/ICON-V1.gif
+Exec=/usr/local/bin/AEAS
+Terminal=false
+Categories=System;Filesystem;
