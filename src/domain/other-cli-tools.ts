@@ -178,7 +178,7 @@ const getFilesForKeyword = async (
         ` -d ${matchedFileSectorOffsetFromPartitionStartSector} `
     );
 
-    if (fileiNode === 'Inode not found\n') {
+    if (Number.isNaN(Number(fileiNode))) {
       console.log(`iNode not found for match at offset ${match.offset}`);
       continue;
     }
