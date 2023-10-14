@@ -1,0 +1,2 @@
+#!/bin/sh
+/opt/AEAS/AEAS.AppImage 2>/dev/null

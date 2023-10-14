@@ -1,0 +1,6 @@
+Encoding=UTF-8
+Type=Application
+Name=AEAS
+Categories=Utility;
+Exec=/usr/bin/AEAS
+Icon=/opt/AEAS/ICON-V1.gif
