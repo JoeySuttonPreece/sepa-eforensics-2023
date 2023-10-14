@@ -30,7 +30,7 @@ export default function StartPage() {
 
   function getOrchestratorOptions(): OrchestratorOptions | undefined {
     const imagePathValue = imagePathRef.current;
-    if (!imagePathValue || imagePathValue == null) {
+    if (!imagePathValue || imagePathValue == null || !imageValid) {
       setTipMsg(`Unable to analyse the image at ${imagePathValue}`);
       return;
     }
