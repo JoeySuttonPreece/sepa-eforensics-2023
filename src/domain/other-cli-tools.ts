@@ -6,7 +6,8 @@ import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
 import {
   Hash,
-  KeywordFile, matchSignature,
+  KeywordFile,
+  matchSignature,
   KeywordWithMatches,
   KeywordMatch,
 } from './file-system-tools';
@@ -323,7 +324,7 @@ export type CarvedFile = {
   filename: string;
   size: number;
   sector: number;
-  img_offset: number;
+  // img_offset: number;
   modifiedDate?: Date;
   finalfileextension: string;
 };
@@ -380,12 +381,12 @@ export const getCarvedFiles = async (
       try {
         const stats = await statAsync(carvedFilePath);
         const modifiedDate = stats.mtime;
-        let filetype = await runCliTool(
+        const filetype = await runCliTool(
           `xxd -p -l 16 ${carvedFilePath}`
-          //`file -b --extension ${carvedFilePath}`
+          // `file -b --extension ${carvedFilePath}`
         );
         console.log(filetype);
-        let newfiletype = matchSignature(filetype)
+        const newfiletype = matchSignature(filetype);
         console.log(newfiletype);
         if (newfiletype.result === false) {
           newfiletype.extensions = ['unknown'];
@@ -399,12 +400,12 @@ export const getCarvedFiles = async (
         console.log(newfiletype.extensions);
         console.log(newfiletype.extensions.join(' '));
 
-        let finalfileextension = newfiletype.extensions.join(' ');
+        const finalfileextension = newfiletype.extensions.join(' ');
         results.push({
           filename: file.filename,
           size: file.filesize,
           sector: file.byte_runs.byte_run.xml_attributes.img_offset,
-        finalfileextension,
+          finalfileextension,
           modifiedDate:
             modifiedDate?.getTime() > now ? undefined : modifiedDate,
         });
