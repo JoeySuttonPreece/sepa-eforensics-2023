@@ -20,11 +20,11 @@ function TimelineComponent({ timeline }: { timeline: TimelineEntry[] }) {
               <td>{entry.file.fileName}</td>
               <td>
                 {entry.suspectedUsers.map((user) => {
-                  if (entry.operations.length == 0) {
+                  if (entry.operations.length === 0) {
                     return user.name;
                   }
                   for (const op of entry.operations) {
-                    if ((op.user.name = user.name)) {
+                    if (op.user.name === user.name) {
                       return (
                         <>
                           {user.name}

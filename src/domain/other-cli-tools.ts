@@ -4,7 +4,12 @@ import { promisify } from 'util';
 import { XMLParser } from 'fast-xml-parser';
 import { runCliTool } from './runners';
 import { Partition } from './volume-system-tools';
-import { Hash, KeywordFile } from './file-system-tools';
+import {
+  Hash,
+  KeywordFile, matchSignature,
+  KeywordWithMatches,
+  KeywordMatch,
+} from './file-system-tools';
 
 // -------------------------------------------------------------------------------------------------
 // Hash Processing
@@ -52,11 +57,6 @@ export const getFileHashAsync = async (
 // -------------------------------------------------------------------------------------------------
 // Keyword File Processing
 
-type KeywordMatch = {
-  offset: string;
-  matchedString: string;
-};
-
 type iStatData = {
   deleted: boolean;
   attributes: string;
@@ -64,10 +64,6 @@ type iStatData = {
   mtime: string;
   atime: string;
   ctime: string;
-};
-
-export const getImageInString = (imagePath: string): Promise<string> => {
-  return runCliTool(`strings -t d ${imagePath}`);
 };
 
 const parseStringsOutputToMatches = (stringsOutput: string): KeywordMatch[] => {
@@ -212,13 +208,17 @@ const getFilesForKeyword = async (
       true
     );
 
+    const keywordWithMatches: KeywordWithMatches = {
+      keyword,
+      matches: [match],
+    };
+
     const resultFile: KeywordFile = {
       inode: fileiNode,
       deleted: fileInformationProcessed.deleted,
       fileAttributes: fileInformationProcessed.attributes,
       filePath,
-      matchedKeywords: keyword,
-      matches: match.matchedString,
+      keywordsWithMatches: [keywordWithMatches],
       size: fileInformationProcessed.size,
       mtime: fileInformationProcessed.mtime,
       atime: fileInformationProcessed.atime,
@@ -231,15 +231,59 @@ const getFilesForKeyword = async (
 
     let fileAlreadyFound = false;
 
-    for await (const file of result) {
+    console.log('Started looping through existing files.');
+    // Loop through existing files.
+    for (const file of result) {
+      // File already found!
+      let foundFileHasKeyword = false;
+
+      console.log('Started looping through a file');
+
       if (file.filePath === resultFile.filePath) {
-        file.matchedKeywords += `, ${keyword}`;
         fileAlreadyFound = true;
+
+        console.log('Matched file already found!');
+
+        // Loop through keywords in this file.
+        for (let i = 0; i < file.keywordsWithMatches.length; i++) {
+          console.log('Started looping through keywords of matched file.');
+          //  Already found at least 1 match for this keyword!
+          if (
+            file.keywordsWithMatches[i].keyword === keywordWithMatches.keyword
+          ) {
+            foundFileHasKeyword = true;
+            console.log(
+              'Keyword already exists in file! Adding new match to keyword:'
+            );
+            console.log(match.matchedString);
+
+            // Push the new match on to the existing keyword.
+            file.keywordsWithMatches[i].matches.push(match);
+
+            // Break out of the keyword loop.
+            break;
+          }
+        }
+
+        if (!foundFileHasKeyword) {
+          // Haven't found any matches for this keyword yet, so push a new keyword object.
+          file.keywordsWithMatches.push(keywordWithMatches);
+
+          console.log(
+            'Matched file found, but keyword not. Adding new keyword object:'
+          );
+          console.log(keywordWithMatches);
+        }
+
+        // Break out of the file loop.
         break;
+      } else {
+        console.log('This is not this file that has this match or keyword.');
       }
     }
 
     if (!fileAlreadyFound) {
+      console.log('Matched file not already found.');
       result.push(resultFile);
     }
   }
@@ -279,8 +323,9 @@ export type CarvedFile = {
   filename: string;
   size: number;
   sector: number;
+  img_offset: number;
   modifiedDate?: Date;
-  filetype: string;
+  finalfileextension: string;
 };
 
 // BEHOLD THE ACCURSED RELIC OF A BYGONE AGE
@@ -336,19 +381,35 @@ export const getCarvedFiles = async (
         const stats = await statAsync(carvedFilePath);
         const modifiedDate = stats.mtime;
         let filetype = await runCliTool(
-          `file -b --extension ${carvedFilePath}`
+          `xxd -p -l 16 ${carvedFilePath}`
+          //`file -b --extension ${carvedFilePath}`
         );
+        console.log(filetype);
+        let newfiletype = matchSignature(filetype)
+        console.log(newfiletype);
+        if (newfiletype.result === false) {
+          newfiletype.extensions = ['unknown'];
+        }
+        /*
         if (filetype.trim() === '???' || filetype.trim() === null) {
           filetype = 'unknown';
         }
+        */
+
+        console.log(newfiletype.extensions);
+        console.log(newfiletype.extensions.join(' '));
+
+        let finalfileextension = newfiletype.extensions.join(' ');
         results.push({
           filename: file.filename,
           size: file.filesize,
           sector: file.byte_runs.byte_run.xml_attributes.img_offset,
-          filetype,
+        finalfileextension,
           modifiedDate:
             modifiedDate?.getTime() > now ? undefined : modifiedDate,
         });
+
+        console.log(newfiletype);
       } catch (err: any) {
         console.error(`Error while getting file stats: ${err.message}`);
       }

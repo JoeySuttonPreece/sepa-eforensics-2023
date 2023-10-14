@@ -12,28 +12,42 @@ function KeywordFilesComponent({
         <tr>
           <th>Inode</th>
           <th>FilePath</th>
-          <th>Keyword Matches</th>
+          <th>Matched Keyword</th>
+          <th>Match</th>
+          <th>Match Offset from Beginning of Disk in Bytes</th>
           <th>Size</th>
           <th>MAC Date</th>
           <th>Hash</th>
         </tr>
-        {keywordFiles?.map((keyword, index) => {
-          return (
-            <tr key={index}>
-              <td>{keyword.inode}</td>
-              <td>{keyword.filePath}</td>
-              <td>{keyword.matches}</td>
-              <td>{keyword.size}</td>
-              <td>
-                {keyword.mtime}
-                <br />
-                {keyword.atime}
-                <br />
-                {keyword.ctime}
-              </td>
-              <td>{keyword.hash.sha1sum}</td>
-            </tr>
-          );
+        {keywordFiles?.map((keywordFile, index) => {
+          console.log(keywordFile);
+
+          return keywordFile.keywordsWithMatches.map((keywordWithMatch) => {
+            console.log(keywordWithMatch);
+
+            return keywordWithMatch.matches.map((match) => {
+              console.log(match);
+
+              return (
+                <tr key={index}>
+                  <td>{keywordFile.inode}</td>
+                  <td>{keywordFile.filePath}</td>
+                  <td>{keywordWithMatch.keyword}</td>
+                  <td>{match.matchedString}</td>
+                  <td>{match.offset}</td>
+                  <td>{keywordFile.size}</td>
+                  <td>
+                    {keywordFile.mtime}
+                    <br />
+                    {keywordFile.atime}
+                    <br />
+                    {keywordFile.ctime}
+                  </td>
+                  <td>{keywordFile.hash.sha1sum}</td>
+                </tr>
+              );
+            });
+          });
         })}
       </tbody>
     </table>
