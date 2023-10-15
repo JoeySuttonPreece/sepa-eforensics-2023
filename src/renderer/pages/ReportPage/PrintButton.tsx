@@ -1,8 +1,10 @@
+import styles from './ReportPage.scss';
+
 export default function PrintButton({ onPrint }: { onPrint: Function }) {
   return (
-    <div className="dropdown">
+    <div className={styles.dropdown}>
       <button type="button">Print</button>
-      <div className="dropdown-content">
+      <div className={styles.dropdownContent}>
         <button
           type="button"
           onClick={() => {

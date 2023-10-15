@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useRef, useState } from 'react';
 import { OrchestratorOptions } from 'domain/orchestrator';
-import './StartPage.css';
+import './StartPage.scss';
+import styles from '../../App.scss';
 
 export default function StartPage() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function StartPage() {
   }
 
   return (
-    <article id="prepare">
+    <article id={styles.prepare}>
       <section>
         <h2>Select Image</h2>
         <div

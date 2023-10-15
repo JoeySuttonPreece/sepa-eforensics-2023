@@ -10,7 +10,7 @@ import DeletedFilesComponent from '../../components/DeletedFilesComponent';
 import ImageHashComponent from '../../components/ImageHashComponent';
 import ErrorMessageComponent from '../../components/ErrorMessageComponent/ErrorMessageComponent';
 import PrintButton from './PrintButton';
-import './ReportPage.css';
+import styles from './ReportPage.scss';
 
 export default function ReportPage() {
   const [reportReady, setReportReady] = useState(false);
@@ -54,7 +54,7 @@ export default function ReportPage() {
 
   return (
     <div>
-      <header className="report-header">
+      <header className={styles.reportHeader}>
         {reportReady ? (
           <button type="button" onClick={handleReturn}>
             Discard
@@ -67,7 +67,7 @@ export default function ReportPage() {
       {errorMsg !== '' ? (
         <div>
           <ErrorMessageComponent errorMessage={errorMsg} />
-          <div className="new-report-btn-container">
+          <div className={styles.newReportBtnContainer}>
             <button type="button" onClick={handleReturn}>
               New Report
             </button>
@@ -81,7 +81,7 @@ export default function ReportPage() {
 
       {errorMsg === '' &&
         (reportReady ? (
-          <article className="report">
+          <article className={styles.report}>
             <h3>Image: </h3>
 
             <p>{details?.imageName}</p>
@@ -130,9 +130,9 @@ export default function ReportPage() {
             ) : null}
           </article>
         ) : (
-          <div className="load-view">
+          <div className={styles.loadView}>
             <div>{message}</div>
-            <div className="loader" />
+            <div className={styles.loader} />
           </div>
         ))}
     </div>

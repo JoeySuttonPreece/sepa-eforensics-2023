@@ -1,4 +1,4 @@
-import './ErrorMessageComponent.css';
+import styles from './ErrorMessageComponent.scss';
 
 export default function ErrorMessageComponent({
   errorMessage,
@@ -7,7 +7,7 @@ export default function ErrorMessageComponent({
 }) {
   return (
     <div>
-      <p className="error-message">{errorMessage}</p>
+      <p className={styles.errorMessage}>{errorMessage}</p>
     </div>
   );
 }

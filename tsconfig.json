@@ -1,5 +1,12 @@
 {
   "compilerOptions": {
+    "plugins": [{
+      "name": "typescript-plugin-css-modules",
+      "options": {
+        "classnameTransform": "camelCaseOnly",
+        "customMatcher": "\\.(c|s[ca])ss",
+      },
+    }],
     "incremental": true,
     "target": "es2021",
     "module": "commonjs",

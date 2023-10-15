@@ -1,8 +1,9 @@
 import { TimelineEntry } from 'domain/timeline-tools';
+import styles from '../pages/ReportPage/ReportPage.scss';
 
 function TimelineComponent({ timeline }: { timeline: TimelineEntry[] }) {
   return (
-    <table id="timeline">
+    <table id={styles.timeline}>
       <caption>Timeline</caption>
       <tbody>
         <tr>
@@ -16,7 +17,7 @@ function TimelineComponent({ timeline }: { timeline: TimelineEntry[] }) {
           return (
             <tr key={index}>
               <td>{entry.date.toLocaleString()}</td>
-              <td className="line">{entry.file.inode}</td>
+              <td className={styles.line}>{entry.file.inode}</td>
               <td>{entry.file.fileName}</td>
               <td>
                 {entry.suspectedUsers.map((user) => {
