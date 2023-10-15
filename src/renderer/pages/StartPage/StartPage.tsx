@@ -121,8 +121,10 @@ export default function StartPage({
             );
           }}
         >
-          <input ref={partitionInput} id="partitions" type="checkbox" />
-          <label htmlFor="partitions">Partition Details</label>
+          <label htmlFor="partitions">
+            <input ref={partitionInput} id="partitions" type="checkbox" />
+            Partition Details
+          </label>
         </div>
         <div
           onMouseEnter={() => {
@@ -131,8 +133,10 @@ export default function StartPage({
             );
           }}
         >
-          <input ref={deletedInput} id="deleted" type="checkbox" />
-          <label htmlFor="deleted">Deleted Files</label>
+          <label htmlFor="deleted">
+            <input ref={deletedInput} id="deleted" type="checkbox" />
+            Deleted Files
+          </label>
         </div>
         <div
           onMouseEnter={() => {
@@ -141,8 +145,10 @@ export default function StartPage({
             );
           }}
         >
-          <input ref={renamedInput} id="renamed" type="checkbox" />
-          <label htmlFor="renamed">Renamed Files</label>
+          <label htmlFor="renamed">
+            <input ref={renamedInput} id="renamed" type="checkbox" />
+            Renamed Files
+          </label>
         </div>
         <div
           onMouseEnter={() => {
@@ -151,8 +157,10 @@ export default function StartPage({
             );
           }}
         >
-          <input ref={carvedInput} id="carved" type="checkbox" />
-          <label htmlFor="carved">Carved Files</label>
+          <label htmlFor="carved">
+            <input ref={carvedInput} id="carved" type="checkbox" />
+            Carved Files
+          </label>
         </div>
         <div
           onMouseEnter={() => {
@@ -161,8 +169,10 @@ export default function StartPage({
             );
           }}
         >
-          <input ref={timelineInput} id="timeline" type="checkbox" />
-          <label htmlFor="timeline">File Modification Timeline</label>
+          <label htmlFor="timeline">
+            <input ref={timelineInput} id="timeline" type="checkbox" />
+            File Modification Timeline
+          </label>
         </div>
         <div
           onMouseEnter={() => {
@@ -175,9 +185,10 @@ export default function StartPage({
             );
           }}
         >
-          <label htmlFor="keywords">Keyword List</label>
-          <br />
-          <textarea ref={keywordInput} id="keywords" rows={4} cols={50} />
+          <label htmlFor="keywords">
+            Keyword List
+            <textarea ref={keywordInput} id="keywords" rows={4} cols={50} />
+          </label>
         </div>
       </section>
 
