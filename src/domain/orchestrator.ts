@@ -28,6 +28,7 @@ export type OrchestratorOptions = {
   includeDeletedFiles: boolean;
   includeKeywordSearchFiles: boolean;
   includeCarvedFiles: boolean;
+  keepRecoveredFiles: boolean;
 };
 
 export type ReportDetails = {
@@ -349,6 +350,7 @@ export const validateDMG = async (imagePath: string) => {
   }
   return imagePath;
 };
+
 export const validateZip = async (imagePath: string) => {
   let zipfile = '';
   const zipFileName = imagePath.replace(/^.*[\\/]/, '');
@@ -376,7 +378,10 @@ export const validateZip = async (imagePath: string) => {
       const IMAGETYPES = ['dmg'];
       const splitName = files.split('.');
       const ext = splitName[splitName.length - 1].toLowerCase();
-      if (tskImageInfo.trim() === 'TSK Support: Yes' || IMAGETYPES.includes(ext) ) {
+      if (
+        tskImageInfo.trim() === 'TSK Support: Yes' ||
+        IMAGETYPES.includes(ext)
+      ) {
         validImageFileZip = files;
       }
     }
