@@ -13,7 +13,7 @@ export default function StartPage({
   const [imageStatus, setImageStatus] = useState('enter image path above');
   const [imagePath, setImagePath] = useState(''); // this is used for the display imagepath in the input box
   // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
-  const imagePathRef = useRef(''); // ref becuase doesn't require reender on change
+  const imagePathRef = useRef(''); // ref because doesn't require rerender on change
 
   const partitionInput = useRef<HTMLInputElement>(null);
   const deletedInput = useRef<HTMLInputElement>(null);
@@ -147,7 +147,7 @@ export default function StartPage({
         <div
           onMouseEnter={() => {
             setStatus(
-              'The report will include details of any identfied files that remain in the unallocated space of the disk. And will atttempt to identify certain details such as: location, filename, MAC date'
+              'The report will include details of any identified files that remain in the unallocated space of the disk. And will attempt to identify certain details such as: location, filename, MAC date'
             );
           }}
         >
@@ -157,7 +157,7 @@ export default function StartPage({
         <div
           onMouseEnter={() => {
             setStatus(
-              'The report will include a timeline built form the modification date of the previously included suspicous file, and will attempt ot attribute a user and suspected operations conducted on the file'
+              'The report will include a timeline built form the modification date of the previously included suspicious file, and will attempt to attribute a user and suspected operations conducted on the file.'
             );
           }}
         >
@@ -168,7 +168,7 @@ export default function StartPage({
           onMouseEnter={() => {
             setStatus(
               [
-                'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report. ',
+                'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report.',
                 'Remember to separate each keyword with a single comma, and no spaces before or after the comma, for example: ',
                 'keyword1,this is a keyword phrase,keyword 3',
               ].join('\n')
