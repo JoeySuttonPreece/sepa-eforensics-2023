@@ -1,14 +1,37 @@
-/*
- * @NOTE: Prepend a `~` to css file paths that are in your node_modules
- *        See https://github.com/webpack-contrib/sass-loader#imports
- */
-body {
-  position: relative;
-  height: 100vh;
-  /* display: flex;
+/* @NOTE: Prepend a `~` to css file paths that are in your node_modules */
+/*     See https://github.com/webpack-contrib/sass-loader#imports       */
+
+* {
+  // outline: 1px dotted red;
+  // outline-offset: -0.5px;
+}
+
+:root {
   font-family: sans-serif;
-  justify-content: center;
-  align-items: center; */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto max-content;
+
+  > *:first-child {
+    overflow-y: auto;
+  }
+}
+
+.status-bar {
+  max-height: 6rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border-top: 2px solid #555555;
+  background-color: #f1f1f1;
+  white-space: pre-wrap;
 }
 
 button {
@@ -49,5 +72,3 @@ a:hover {
 #prepare div {
   margin:1em;
 }
-
-

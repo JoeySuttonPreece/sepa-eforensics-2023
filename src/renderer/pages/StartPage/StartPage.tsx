@@ -4,11 +4,14 @@ import { OrchestratorOptions } from 'domain/orchestrator';
 import './StartPage.scss';
 import styles from '../../App.scss';
 
-export default function StartPage() {
+export default function StartPage({
+  setStatus,
+}: {
+  setStatus: (status: string) => void;
+}) {
   const navigate = useNavigate();
   const [imageValid, setImageValid] = useState(false);
   const [imageStatus, setImageStatus] = useState('enter image path above');
-  const [tipMsg, setTipMsg] = useState('');
   const [imagePath, setImagePath] = useState(''); // this is used for the display imagepath in the input box
   // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
   const imagePathRef = useRef(''); // ref becuase doesn't require reender on change
@@ -32,7 +35,7 @@ export default function StartPage() {
   function getOrchestratorOptions(): OrchestratorOptions | undefined {
     const imagePathValue = imagePathRef.current;
     if (!imagePathValue || imagePathValue == null || !imageValid) {
-      setTipMsg(`Unable to analyse the image at ${imagePathValue}`);
+      setStatus(`Unable to analyse the image at ${imagePathValue}`);
       return;
     }
 
@@ -87,7 +90,7 @@ export default function StartPage() {
         <h2>Select Image</h2>
         <div
           onMouseEnter={() => {
-            setTipMsg('Enter Path to the disk image.');
+            setStatus('Enter Path to the disk image.');
           }}
         >
           <input
@@ -114,7 +117,7 @@ export default function StartPage() {
         <h2>Data Collection Options</h2>
         <div
           onMouseEnter={() => {
-            setTipMsg(
+            setStatus(
               'The report will include details of disk partitions in the image including the size and type of the partition.'
             );
           }}
@@ -124,7 +127,7 @@ export default function StartPage() {
         </div>
         <div
           onMouseEnter={() => {
-            setTipMsg(
+            setStatus(
               'The report will include details of any recently deleted files that have not yet become unallocated within the disk.'
             );
           }}
@@ -134,7 +137,7 @@ export default function StartPage() {
         </div>
         <div
           onMouseEnter={() => {
-            setTipMsg(
+            setStatus(
               'The report will include details of any files that have had their file extension obfuscated. (e.g. secret.txt -> secret.png)'
             );
           }}
@@ -144,7 +147,7 @@ export default function StartPage() {
         </div>
         <div
           onMouseEnter={() => {
-            setTipMsg(
+            setStatus(
               'The report will include details of any identfied files that remain in the unallocated space of the disk. And will atttempt to identify certain details such as: location, filename, MAC date'
             );
           }}
@@ -154,7 +157,7 @@ export default function StartPage() {
         </div>
         <div
           onMouseEnter={() => {
-            setTipMsg(
+            setStatus(
               'The report will include a timeline built form the modification date of the previously included suspicous file, and will attempt ot attribute a user and suspected operations conducted on the file'
             );
           }}
@@ -164,10 +167,12 @@ export default function StartPage() {
         </div>
         <div
           onMouseEnter={() => {
-            setTipMsg(
-              'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report. ' +
-                'Remember to separate each keyword with a single comma, and no spaces before or after the comma, for example: ' +
-                'keyword1,this is a keyword phrase,keyword 3'
+            setStatus(
+              [
+                'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report. ',
+                'Remember to separate each keyword with a single comma, and no spaces before or after the comma, for example: ',
+                'keyword1,this is a keyword phrase,keyword 3',
+              ].join('\n')
             );
           }}
         >
@@ -186,7 +191,6 @@ export default function StartPage() {
           GO!
         </button>
       </div>
-      <div>{tipMsg}</div>
     </article>
   );
 }
