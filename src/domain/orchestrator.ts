@@ -28,7 +28,7 @@ export type OrchestratorOptions = {
   includeDeletedFiles: boolean;
   includeKeywordSearchFiles: boolean;
   includeCarvedFiles: boolean;
-  keepRecoveredFiles: boolean;
+  keepKeywordFiles: boolean;
 };
 
 export type ReportDetails = {
@@ -204,7 +204,8 @@ export const orchestrator = async (
       keywordFiles = await getFilesForAllKeywords(
         orchestratorOptions.imagePath,
         orchestratorOptions.searchString,
-        partitionTable.partitions
+        partitionTable.partitions,
+        orchestratorOptions.keepKeywordFiles
       );
     } catch (error) {
       if (error instanceof Error) {

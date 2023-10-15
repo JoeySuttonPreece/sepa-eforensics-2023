@@ -22,8 +22,8 @@ export const getHashAsync = async (imagePath: string): Promise<Hash> => {
   ]);
 
   // For some reason, this picks up an empty string as the 2nd element.
-  const md5sumArray = md5sumFull.split(' ');
-  const sha1sumArray = sha1sumFull.split(' ');
+  const md5sumArray = md5sumFull.trim().split(' ');
+  const sha1sumArray = sha1sumFull.trim().split(' ');
 
   const fileName: string = md5sumArray[md5sumArray.length - 1];
   const md5sum: string = md5sumArray[0];
@@ -42,6 +42,7 @@ export const getFileHashAsync = async (
   inode: string,
   keepFile: boolean = true
 ): Promise<Hash> => {
+  // TODO: this just creates an empty file
   await runCliTool(
     `icat -o ${filePartition.start} ${imagePath} ${inode} > .${inode}`
   );
@@ -121,7 +122,8 @@ const processFileInformationRaw = (fileInformationRaw: string): iStatData => {
 const getFilesForKeyword = async (
   imagePath: string,
   keyword: string,
-  partitions: Partition[]
+  partitions: Partition[],
+  keepKeywordFiles: boolean
 ): Promise<KeywordFile[]> => {
   const result: KeywordFile[] = [];
 
@@ -173,10 +175,12 @@ const getFilesForKeyword = async (
     );
 
     // Find the inode.
-    const fileiNode = await runCliTool(
-      `ifind -o ${partitionContainingFile.start} ${imagePath}` +
-        ` -d ${matchedFileSectorOffsetFromPartitionStartSector} `
-    );
+    const fileiNode = (
+      await runCliTool(
+        `ifind -o ${partitionContainingFile.start} ${imagePath}` +
+          ` -d ${matchedFileSectorOffsetFromPartitionStartSector} `
+      )
+    ).trim();
 
     if (Number.isNaN(Number(fileiNode))) {
       console.log(`iNode not found for match at offset ${match.offset}`);
@@ -186,7 +190,7 @@ const getFilesForKeyword = async (
     console.log(`Found an iNode: ${fileiNode}`);
 
     // Find the file path (relative to the partition).
-    const filePath = await runCliTool(
+    let filePath = await runCliTool(
       `ffind -o ${partitionContainingFile.start} ${imagePath} ${fileiNode}`
     );
 
@@ -199,14 +203,14 @@ const getFilesForKeyword = async (
       processFileInformationRaw(fileInformationRaw);
 
     if (fileInformationProcessed.deleted) {
-      filePath.replace(/\*/g, '');
+      filePath = filePath.replace(/\* /g, '');
     }
 
     const hash = await getFileHashAsync(
       imagePath,
       partitionContainingFile,
       fileiNode,
-      true
+      keepKeywordFiles
     );
 
     const keywordWithMatches: KeywordWithMatches = {
@@ -298,7 +302,8 @@ const getFilesForKeyword = async (
 export const getFilesForAllKeywords = async (
   imagePath: string,
   searchString: string,
-  partitions: Partition[]
+  partitions: Partition[],
+  keepKeywordFiles: boolean
 ): Promise<KeywordFile[]> => {
   let result: KeywordFile[] = [];
 
@@ -308,7 +313,8 @@ export const getFilesForAllKeywords = async (
     const files: KeywordFile[] = await getFilesForKeyword(
       imagePath,
       keyword,
-      partitions
+      partitions,
+      keepKeywordFiles
     );
 
     result = result.concat(files);

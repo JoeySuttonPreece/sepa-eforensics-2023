@@ -19,7 +19,7 @@ export default function StartPage({
   const deletedInput = useRef<HTMLInputElement>(null);
   const renamedInput = useRef<HTMLInputElement>(null);
   const carvedInput = useRef<HTMLInputElement>(null);
-  const keepCarvedInput = useRef<HTMLInputElement>(null);
+  const keepKeywordInput = useRef<HTMLInputElement>(null);
   const timelineInput = useRef<HTMLInputElement>(null);
   const keywordInput = useRef<HTMLTextAreaElement>(null);
 
@@ -42,7 +42,7 @@ export default function StartPage({
     const includeDeletedFiles = deletedInput.current?.checked ?? false;
     const includeRenamedFiles = renamedInput.current?.checked ?? false;
     const includeCarvedFiles = carvedInput.current?.checked ?? false;
-    const keepRecoveredFiles = keepCarvedInput.current?.checked ?? false;
+    const keepKeywordFiles = keepKeywordInput.current?.checked ?? false;
     const showTimeline = timelineInput.current?.checked ?? false;
     const searchString = keywordInput.current?.value.trim() ?? '';
     const includeKeywordSearchFiles = searchString !== '';
@@ -56,7 +56,7 @@ export default function StartPage({
       includeDeletedFiles,
       includeKeywordSearchFiles,
       includeCarvedFiles,
-      keepRecoveredFiles,
+      keepKeywordFiles,
     };
   }
 
@@ -172,6 +172,18 @@ export default function StartPage({
           <label htmlFor="timeline">
             <input ref={timelineInput} id="timeline" type="checkbox" />
             File Modification Timeline
+          </label>
+        </div>
+        <div
+          onMouseEnter={() => {
+            setStatus(
+              'The scan will retain any files that contain any of the keywords below.'
+            );
+          }}
+        >
+          <label htmlFor="retain">
+            <input ref={keepKeywordInput} id="retain" type="checkbox" />
+            Keep Keyword Files
           </label>
         </div>
         <div
