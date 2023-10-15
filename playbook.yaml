@@ -66,6 +66,7 @@
     - name: Clone TestDisk repo
       ansible.builtin.git:
         repo: https://git.cgsecurity.org/testdisk.git
+        version: 7.1
         dest: /tmp/testdisk
 
     - name: Create TextDisk config folder
