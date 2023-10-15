@@ -46,7 +46,7 @@ export default function StartPage({
     }
   }
 
-  function handleValidateImage(imagePath: string) {
+  function handleValidateImage(path: string) {
     setImageStatus('awaiting preprocessing');
     window.electron.ipcRenderer.once(
       'validate:imagePath',
@@ -57,13 +57,13 @@ export default function StartPage({
       }
     );
 
-    window.electron.ipcRenderer.sendMessage('validate:imagePath', [imagePath]);
+    window.electron.ipcRenderer.sendMessage('validate:imagePath', [path]);
   }
 
   function handleFileSelect() {
-    window.electron.ipcRenderer.once('select:imagepath', ([imagePath]) => {
-      setImagePath(imagePath);
-      handleValidateImage(imagePath);
+    window.electron.ipcRenderer.once('select:imagepath', ([path]) => {
+      setImagePath(path);
+      handleValidateImage(path);
     });
 
     window.electron.ipcRenderer.sendMessage('select:imagepath', []);
