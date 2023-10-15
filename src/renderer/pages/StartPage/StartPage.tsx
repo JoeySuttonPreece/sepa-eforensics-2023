@@ -24,40 +24,26 @@ export default function StartPage({
   const keywordInput = useRef<HTMLTextAreaElement>(null);
 
   function handleStartAnalysis() {
-    const settings = getOrchestratorOptions();
-    if (settings) {
+    if (imageValid) {
+      const searchString = keywordInput.current?.value?.trim() ?? '';
+
+      const settings: OrchestratorOptions = {
+        imagePath: imagePathRef.current,
+        searchString,
+        showPartitions: partitionInput.current?.checked ?? false,
+        showTimeline: timelineInput.current?.checked ?? false,
+        includeRenamedFiles: renamedInput.current?.checked ?? false,
+        includeDeletedFiles: deletedInput.current?.checked ?? false,
+        includeKeywordSearchFiles: searchString !== '',
+        includeCarvedFiles: carvedInput.current?.checked ?? false,
+        keepKeywordFiles: keepKeywordInput.current?.checked ?? false,
+      };
+
       window.electron.ipcRenderer.sendMessage('do-everything', [settings]);
       navigate('/report');
+    } else {
+      setStatus(`Unable to analyse the image at ${imagePathRef.current}`);
     }
-  }
-
-  function getOrchestratorOptions(): OrchestratorOptions | undefined {
-    const imagePathValue = imagePathRef.current;
-    if (!imagePathValue || imagePathValue == null || !imageValid) {
-      setStatus(`Unable to analyse the image at ${imagePathValue}`);
-      return;
-    }
-
-    const showPartitions = partitionInput.current?.checked ?? false;
-    const includeDeletedFiles = deletedInput.current?.checked ?? false;
-    const includeRenamedFiles = renamedInput.current?.checked ?? false;
-    const includeCarvedFiles = carvedInput.current?.checked ?? false;
-    const keepKeywordFiles = keepKeywordInput.current?.checked ?? false;
-    const showTimeline = timelineInput.current?.checked ?? false;
-    const searchString = keywordInput.current?.value.trim() ?? '';
-    const includeKeywordSearchFiles = searchString !== '';
-
-    return {
-      imagePath: imagePathValue,
-      searchString,
-      showPartitions,
-      showTimeline,
-      includeRenamedFiles,
-      includeDeletedFiles,
-      includeKeywordSearchFiles,
-      includeCarvedFiles,
-      keepKeywordFiles,
-    };
   }
 
   function handleValidateImage(imagePath: string) {
