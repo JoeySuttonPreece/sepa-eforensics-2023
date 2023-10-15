@@ -359,6 +359,7 @@ export const getCarvedFiles = async (
       `photorec /d ${FOLDER_NAME} /cmd ${imagePath} wholespace,${i},options,paranoid,search `
     );
 
+    // TODO: scan all FOLDER_NAME.* folders in case photorec finds more than 500 files
     const report = parser.parse(
       fs.readFileSync(`./${FOLDER_NAME}.1/report.xml`, 'utf8'),
       {}
