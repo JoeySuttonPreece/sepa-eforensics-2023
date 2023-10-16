@@ -185,19 +185,16 @@ app
       const showTimeline = include.includes('t');
       const searchString = keywords;
 
-      const output = await orchestrator(
-        {
-          imagePath,
-          searchString,
-          showPartitions,
-          showTimeline,
-          includeRenamedFiles,
-          includeDeletedFiles,
-          includeKeywordSearchFiles,
-          includeCarvedFiles,
-        },
-        (msg) => {} // don't want to log it to prevent cluttering cli output
-      );
+      const output = await orchestrator({
+        imagePath,
+        searchString,
+        showPartitions,
+        showTimeline,
+        includeRenamedFiles,
+        includeDeletedFiles,
+        includeKeywordSearchFiles,
+        includeCarvedFiles,
+      });
       if (output != null) {
         Print(output, report, out);
         console.log('AEAS done!!!');

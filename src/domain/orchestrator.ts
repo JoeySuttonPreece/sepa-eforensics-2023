@@ -154,7 +154,7 @@ export const getSuspiciousFiles = async (
 
 export const orchestrator = async (
   orchestratorOptions: OrchestratorOptions,
-  statusCallback: (msg: string) => void
+  statusCallback?: (msg: string) => void
 ): Promise<ReportDetails | null> => {
   try {
     await runCliTool(
@@ -165,20 +165,20 @@ export const orchestrator = async (
   }
 
   let hash: Hash = {} as Hash;
-  statusCallback('Hashing Drive...');
+  statusCallback?.('Hashing Drive...');
   try {
     hash = await getHashAsync(orchestratorOptions.imagePath);
   } catch (error) {
     if (error instanceof Error) {
-      statusCallback(error.message);
+      statusCallback?.(error.message);
       throw error;
     }
   }
 
-  statusCallback('Reading Partition Table...');
+  statusCallback?.('Reading Partition Table...');
   const partitionTable = await getPartitionTable(orchestratorOptions.imagePath);
 
-  statusCallback('Locating Timezone...');
+  statusCallback?.('Locating Timezone...');
   const timezone = await getTimeZone(
     partitionTable,
     orchestratorOptions.imagePath
@@ -189,7 +189,7 @@ export const orchestrator = async (
     orchestratorOptions.includeDeletedFiles ||
     orchestratorOptions.includeRenamedFiles
   ) {
-    statusCallback('Processing Files...');
+    statusCallback?.('Processing Files...');
     suspiciousFiles = await getSuspiciousFiles(
       orchestratorOptions,
       partitionTable
@@ -198,7 +198,9 @@ export const orchestrator = async (
 
   let keywordFiles: KeywordFile[] = [];
   if (orchestratorOptions.includeKeywordSearchFiles) {
-    statusCallback('Searching for keyword matches. This might take a while...');
+    statusCallback?.(
+      'Searching for keyword matches. This might take a while...'
+    );
 
     try {
       keywordFiles = await getFilesForAllKeywords(
@@ -209,7 +211,7 @@ export const orchestrator = async (
       );
     } catch (error) {
       if (error instanceof Error) {
-        statusCallback(error.message);
+        statusCallback?.(error.message);
         throw error;
       }
     }
@@ -217,7 +219,7 @@ export const orchestrator = async (
 
   let carvedFiles: CarvedFile[] = [];
   if (orchestratorOptions.includeCarvedFiles) {
-    statusCallback('Carving Files...');
+    statusCallback?.('Carving Files...');
 
     carvedFiles = await getCarvedFiles(
       orchestratorOptions.imagePath,
@@ -228,7 +230,7 @@ export const orchestrator = async (
 
   let timeline: TimelineEntry[] | undefined;
   if (orchestratorOptions.showTimeline) {
-    statusCallback('Building Timeline...');
+    statusCallback?.('Building Timeline...');
     // consider some refactoring sprint 4
     const timelineFiles = [];
     if (suspiciousFiles !== undefined) {
@@ -266,12 +268,12 @@ export const orchestrator = async (
   }
 
   let hashFinal: Hash = {} as Hash;
-  statusCallback('Checking Integrity...');
+  statusCallback?.('Checking Integrity...');
   try {
     hashFinal = await getHashAsync(orchestratorOptions.imagePath);
   } catch (error) {
     if (error instanceof Error) {
-      statusCallback(error.message);
+      statusCallback?.(error.message);
       throw error;
     }
   }
