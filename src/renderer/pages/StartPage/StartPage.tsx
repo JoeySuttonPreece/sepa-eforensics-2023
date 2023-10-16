@@ -190,8 +190,8 @@ export default function StartPage() {
             setStatus(
               [
                 'List out any keywords you want flagged and if a file has any of the keywords it will be included in the report.',
-                'Remember to separate each keyword with a single comma, and no spaces before or after the comma, for example: ',
-                'keyword1,this is a keyword phrase,keyword 3',
+                'Remember to separate each keyword with a single comma and a space, for example: ',
+                'keyword1, this is a keyword phrase, keyword 3',
               ].join('\n')
             );
           }}
