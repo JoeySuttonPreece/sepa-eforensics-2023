@@ -63,7 +63,7 @@ export const fileListProcessor = (line: string): File => {
   const reallocated = inode.includes('(realloc)');
 
   if (reallocated) {
-    inode.replace('(realloc)', '');
+    inode = inode.replace('(realloc)', '');
   }
 
   const fileName = split[1];
