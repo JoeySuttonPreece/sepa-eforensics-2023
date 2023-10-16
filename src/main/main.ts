@@ -133,17 +133,25 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(async () => {
-    let { commandLine, imagePath, include, out, report, keywords } = yargs(
-      hideBin(process.argv)
-    )
+    const {
+      commandLine,
+      imagePath,
+      out,
+      report,
+      keywords,
+      showPartitions,
+      includeDeletedFiles,
+      includeRenamedFiles,
+      includeCarvedFiles,
+      includeKeywordSearchFiles,
+      showTimeline,
+      keepKeywordFiles,
+    } = yargs(hideBin(process.argv))
       .boolean('commandLine')
       .option('imagePath', {
         demandOption: false,
         type: 'string',
-      })
-      .option('include', {
-        demandOption: false,
-        type: 'string',
+        requiresArg: true,
       })
       .option('out', {
         demandOption: false,
@@ -156,47 +164,68 @@ app
       .options('keywords', {
         demandOption: false,
         type: 'string',
-      }).argv;
+      })
+      .options({
+        showPartitions: {
+          alias: 'p',
+          type: 'boolean',
+        },
+        includeDeletedFiles: {
+          alias: 'd',
+          type: 'boolean',
+        },
+        includeRenamedFiles: {
+          alias: 'r',
+          type: 'boolean',
+        },
+        includeCarvedFiles: {
+          alias: 'c',
+          type: 'boolean',
+        },
+        includeKeywordSearchFiles: {
+          alias: 'k',
+          type: 'boolean',
+        },
+        showTimeline: {
+          alias: 't',
+          type: 'boolean',
+        },
+        keepKeywordFiles: {
+          alias: 's',
+          type: 'boolean',
+        },
+      })
+      .parseSync();
 
     if (commandLine) {
-      if ((await validateImage(imagePath)) === false || imagePath == null) {
+      if (
+        imagePath === undefined ||
+        (await validateImage(imagePath)) === false
+      ) {
         console.log(
           `Image could not be found or is incorrect type: imagePath was ${imagePath}}`
         );
         return;
       }
-      imagePath = await validateZip(imagePath);
-      imagePath = await validateDMG(imagePath);
-      if (include == null) {
-        include = ['p', 'd', 'r', 'c', 'k', 't']; // 's' (for save carved files)
-      } else {
-        include = include.split(',');
-      }
 
-      out = out ?? 'stdout';
-      report = report ?? 'json';
-      keywords = keywords ?? '';
-
-      const showPartitions = include.includes('p');
-      const includeDeletedFiles = include.includes('d');
-      const includeRenamedFiles = include.includes('r');
-      const includeCarvedFiles = include.includes('c');
-      const includeKeywordSearchFiles = include.includes('k');
-      const showTimeline = include.includes('t');
-      const searchString = keywords;
+      let finalPath = imagePath;
+      finalPath = await validateZip(finalPath);
+      finalPath = await validateDMG(finalPath);
 
       const output = await orchestrator({
-        imagePath,
-        searchString,
-        showPartitions,
-        showTimeline,
-        includeRenamedFiles,
-        includeDeletedFiles,
-        includeKeywordSearchFiles,
-        includeCarvedFiles,
+        imagePath: finalPath,
+        searchString: keywords ?? '',
+        showPartitions: !!showPartitions,
+        showTimeline: !!showTimeline,
+        includeRenamedFiles: !!includeRenamedFiles,
+        includeDeletedFiles: !!includeDeletedFiles,
+        includeKeywordSearchFiles: !!includeKeywordSearchFiles,
+        includeCarvedFiles: !!includeCarvedFiles,
+        keepKeywordFiles: !!keepKeywordFiles,
       });
+
       if (output != null) {
-        Print(output, report, out);
+        Print(output, report ?? 'json', out ?? 'stdout');
         console.log('AEAS done!!!');
       }
     } else {
