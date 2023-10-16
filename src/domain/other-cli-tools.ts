@@ -42,7 +42,6 @@ export const getFileHashAsync = async (
   inode: string,
   keepFile: boolean = true
 ): Promise<Hash> => {
-  // TODO: this just creates an empty file
   await runCliTool(
     `icat -o ${filePartition.start} ${imagePath} ${inode} > .${inode}`
   );
