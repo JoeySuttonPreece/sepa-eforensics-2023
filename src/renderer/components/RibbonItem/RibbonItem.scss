@@ -1,0 +1,17 @@
+.ribbon-item {
+  padding: 0.25rem;
+}
+
+.ribbon-item--disabled {
+  cursor: not-allowed;
+  filter: contrast(0.5);
+}
+
+.ribbon-item__icon {
+  height: 4.25rem;
+}
+
+.ribbon-item__label {
+  display: block;
+  font-size: 1rem;
+}

@@ -1,0 +1,34 @@
+$border: 2px solid #555555;
+
+.layout {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: max-content auto max-content;
+}
+
+.ribbon:not(.ribbon--empty) {
+  display: flex;
+  justify-content: stretch;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  overflow-x: auto;
+  border-bottom: $border;
+  background-color: #f1f1f1;
+}
+
+.ribbon__separator {
+  flex-grow: 1;
+}
+
+.content {
+  overflow-y: auto;
+}
+
+.status-bar {
+  max-height: 6rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border-top: $border;
+  background-color: #f1f1f1;
+  white-space: pre-wrap;
+}

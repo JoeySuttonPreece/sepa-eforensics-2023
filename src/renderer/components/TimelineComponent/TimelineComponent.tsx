@@ -1,9 +1,9 @@
 import { TimelineEntry } from 'domain/timeline-tools';
-import styles from '../pages/ReportPage/ReportPage.scss';
+import styles from './TimelineComponent.scss';
 
 function TimelineComponent({ timeline }: { timeline: TimelineEntry[] }) {
   return (
-    <table id={styles.timeline}>
+    <table className={styles.timeline}>
       <caption>Timeline</caption>
       <tbody>
         <tr>

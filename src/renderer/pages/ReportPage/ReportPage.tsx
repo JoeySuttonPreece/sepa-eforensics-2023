@@ -1,47 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReportDetails } from 'domain/orchestrator';
-import TimelineComponent from 'renderer/components/TimelineComponent';
+import TimelineComponent from 'renderer/components/TimelineComponent/TimelineComponent';
 import CarvedFilesComponent from 'renderer/components/CarvedFilesComponent';
+import { useLayout } from 'renderer/components/Layout/Layout';
 import PartitionTableComponent from '../../components/PartitionTableComponent';
 import RenamedFilesComponent from '../../components/RenamedFilesComponent';
 import KeywordFilesComponent from '../../components/KeywordFilesComponent';
 import DeletedFilesComponent from '../../components/DeletedFilesComponent';
 import ImageHashComponent from '../../components/ImageHashComponent';
 import ErrorMessageComponent from '../../components/ErrorMessageComponent/ErrorMessageComponent';
-import PrintButton from './PrintButton';
+import { ReactComponent as BackIcon } from '../../../../assets/back.svg';
+import { ReactComponent as JsonIcon } from '../../../../assets/json.svg';
+import { ReactComponent as CsvIcon } from '../../../../assets/csv.svg';
+import { ReactComponent as PdfIcon } from '../../../../assets/pdf.svg';
 import styles from './ReportPage.scss';
 
 export default function ReportPage() {
+  const { setStatus, setMenuItems } = useLayout();
   const [reportReady, setReportReady] = useState(false);
-  const [message, setMessage] = useState('Finding Image...');
   const [details, setDetails] = useState<ReportDetails>();
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    window.electron.ipcRenderer.on('report:error', (errMsg: string) => {
-      setReportReady(false);
-      setErrorMsg(errMsg);
-    });
-
-    window.electron.ipcRenderer.on(
-      'report:details',
-      (reportDetails: ReportDetails) => {
-        setDetails(reportDetails);
-        setReportReady(true);
-        console.log(reportDetails);
-      }
-    );
-
-    window.electron.ipcRenderer.on('status:update', (msg) => {
-      setMessage(msg);
-    });
-  }, []);
-
-  function handleReturn() {
-    navigate('/');
-  }
 
   const handlePrint = useCallback((format: string) => {
     window.electron.ipcRenderer.on('select-dir', ([dir]) => {
@@ -52,26 +32,71 @@ export default function ReportPage() {
     window.electron.ipcRenderer.sendMessage('select-dir', []);
   }, []);
 
+  useEffect(() => {
+    setMenuItems({
+      left: [
+        {
+          icon: BackIcon,
+          label: 'New Report',
+          action: () => navigate('/start'),
+          disabled: !(reportReady || errorMsg !== ''),
+        },
+      ],
+      right: [
+        {
+          icon: JsonIcon,
+          label: 'Export JSON',
+          action: () => handlePrint('json'),
+          disabled: !reportReady,
+        },
+        {
+          icon: CsvIcon,
+          label: 'Export CSV',
+          action: () => handlePrint('csv'),
+          disabled: !reportReady,
+        },
+        {
+          icon: PdfIcon,
+          label: 'Export PDF',
+          disabled: !reportReady,
+          action: () => handlePrint('pdf'),
+        },
+      ],
+    });
+  }, [setMenuItems, reportReady, errorMsg, navigate, handlePrint]);
+
+  useEffect(() => {
+    setStatus('Kicking things into high gear!');
+    window.electron.ipcRenderer.on('report:error', (errMsg: string) => {
+      setReportReady(false);
+      setErrorMsg(errMsg);
+    });
+
+    window.electron.ipcRenderer.on(
+      'report:details',
+      (reportDetails: ReportDetails) => {
+        setDetails(reportDetails);
+        setStatus('Report Complete!');
+        setReportReady(true);
+        console.log(reportDetails);
+      }
+    );
+
+    window.electron.ipcRenderer.on('status:update', (msg) => {
+      setStatus(msg);
+    });
+  }, []);
+
   return (
-    <div>
+    <article>
       <header className={styles.reportHeader}>
-        {reportReady ? (
-          <button type="button" onClick={handleReturn}>
-            Discard
-          </button>
-        ) : null}
         <h1>AEAS Generated Report</h1>
-        {reportReady ? <PrintButton onPrint={handlePrint} /> : null}
       </header>
 
       {errorMsg !== '' ? (
         <div>
           <ErrorMessageComponent errorMessage={errorMsg} />
-          <div className={styles.newReportBtnContainer}>
-            <button type="button" onClick={handleReturn}>
-              New Report
-            </button>
-          </div>
+          <div className={styles.newReportBtnContainer} />
         </div>
       ) : null}
 
@@ -100,7 +125,7 @@ export default function ReportPage() {
                 title="Image Hash Post Analysis"
               />
             ) : null}
-            {details?.imageHash?.md5sum == details?.imageHashFinal?.md5sum ? (
+            {details?.imageHash?.md5sum === details?.imageHashFinal?.md5sum ? (
               <p>Image Integrity Passed</p>
             ) : (
               <p>Image Integrity Failed</p>
@@ -131,10 +156,9 @@ export default function ReportPage() {
           </article>
         ) : (
           <div className={styles.loadView}>
-            <div>{message}</div>
             <div className={styles.loader} />
           </div>
         ))}
-    </div>
+    </article>
   );
 }

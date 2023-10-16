@@ -1,13 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { useRef, useState } from 'react';
-import { OrchestratorOptions } from 'domain/orchestrator';
+import { useEffect, useRef, useState } from 'react';
+import { type OrchestratorOptions } from 'domain/orchestrator';
+import { useLayout } from 'renderer/components/Layout/Layout';
+import { ReactComponent as SearchIcon } from '../../../../assets/search.svg';
 import styles from './StartPage.scss';
 
-export default function StartPage({
-  setStatus,
-}: {
-  setStatus: (status: string) => void;
-}) {
+export default function StartPage() {
+  const { setStatus, setMenuItems } = useLayout();
   const navigate = useNavigate();
   const [imageValid, setImageValid] = useState(false);
   const [imageStatus, setImageStatus] = useState('enter image path above');
@@ -68,6 +67,20 @@ export default function StartPage({
 
     window.electron.ipcRenderer.sendMessage('select:imagepath', []);
   }
+
+  useEffect(() => {
+    setMenuItems({
+      left: [],
+      right: [
+        {
+          icon: SearchIcon,
+          label: 'GO!',
+          action: handleStartAnalysis,
+          disabled: !imageValid,
+        },
+      ],
+    });
+  }, [imageValid]);
 
   return (
     <article className={styles.startPage}>
@@ -189,16 +202,6 @@ export default function StartPage({
           </label>
         </div>
       </section>
-
-      <div>
-        <button
-          type="button"
-          onClick={handleStartAnalysis}
-          style={{ width: '5em' }}
-        >
-          GO!
-        </button>
-      </div>
     </article>
   );
 }

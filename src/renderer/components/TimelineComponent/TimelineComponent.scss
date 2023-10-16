@@ -1,0 +1,29 @@
+.timeline {
+  border: none;
+  position: relative;
+}
+
+.timeline td,
+.timeline th {
+  border: none;
+  padding: 0.25em;
+}
+
+.timeline .line {
+  border: none;
+  position: relative;
+  border-left: 1px solid black;
+  margin-left: 1.5em;
+  padding-left: 1.5em;
+}
+
+.timeline .line:before {
+  content: '';
+  background: black;
+  position: absolute;
+  bottom: 50%;
+  left: calc(-3px);
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+}

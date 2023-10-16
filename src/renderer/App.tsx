@@ -1,26 +1,24 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import {
+  MemoryRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import StartPage from './pages/StartPage/StartPage';
 import ReportPage from './pages/ReportPage/ReportPage';
-import styles from './App.scss';
+import Layout from './components/Layout/Layout';
+import './App.scss';
 
 export default function App() {
-  const [status, setStatus] = useState(
-    'This is the status bar. Status and tooltips will be displayed here'
-  );
-
   return (
-    <main className={styles.app}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<StartPage setStatus={setStatus} />} />
-          <Route
-            path="/report"
-            element={<ReportPage setStatus={setStatus} />}
-          />
-        </Routes>
-      </Router>
-      <div className={styles.statusBar}>{status}</div>
-    </main>
+    <Router initialEntries={['/start']}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/start" element={<StartPage />} />
+          <Route path="/report" element={<ReportPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/start" replace />} />
+      </Routes>
+    </Router>
   );
 }
