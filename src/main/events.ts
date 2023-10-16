@@ -6,28 +6,18 @@ import {
   validateImage,
   validateZip,
   validateDMG,
+  type ReportDetails,
 } from '../domain/orchestrator';
 import { Print } from './output-parser';
+
+let output: ReportDetails | null = null;
 
 ipcMain.on('do-everything', async (event, [options]) => {
   // insert loading while orchestrator is going, this means we can't await,
   // perhaps a callback is put into orchestrator to define what it should do??
-
   try {
-    const output = await orchestrator(options, (msg) => {
+    output = await orchestrator(options, (msg) => {
       event.sender.send('status:update', msg);
-    });
-
-    ipcMain.on('select-dir', (event) => {
-      const path = dialog.showOpenDialogSync({
-        properties: ['openDirectory'],
-      });
-      console.log(path);
-      event.sender.send('select-dir', path);
-    });
-
-    ipcMain.on('print', (event, [format, destination]) => {
-      if (output !== null) Print(output, format, destination);
     });
 
     // first send event that route should be changed to report then:
@@ -75,4 +65,16 @@ ipcMain.on('select:imagepath', (event) => {
     properties: ['openFile'],
   });
   event.sender.send('select:imagepath', path);
+});
+
+ipcMain.on('select-dir', (event) => {
+  const path = dialog.showOpenDialogSync({
+    properties: ['openDirectory'],
+  });
+  console.log(path);
+  event.sender.send('select-dir', path);
+});
+
+ipcMain.on('print', (event, [format, destination]) => {
+  if (output !== null) Print(output, format, destination);
 });
