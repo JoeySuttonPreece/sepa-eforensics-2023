@@ -1,7 +1,6 @@
 #!/bin/sh
 sudo apt install ansible
-echo "BECOME password is your sudo password"
-ansible-playbook playbook.yaml --ask-become-pass
+sudo ansible-playbook install.yaml
 sudo mkdir -p /opt/AEAS/
 sudo cp ElectronReact-4.6.0.AppImage /opt/AEAS/AEAS.AppImage
 sudo chmod +x /opt/AEAS/AEAS.AppImage
