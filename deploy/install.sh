@@ -8,4 +8,4 @@ sudo cp ICON-V1.gif /opt/AEAS/ICON-V1.gif
 sudo cp AEAS /usr/local/bin/AEAS
 sudo chmod +x /usr/local/bin/AEAS
 sudo cp AEAS.desktop /usr/local/share/applications/AEAS.desktop
-echo "AEAS has been installed"
+echo "AEAS installation complete"
