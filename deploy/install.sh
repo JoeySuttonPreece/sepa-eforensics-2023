@@ -1,5 +1,5 @@
 #!/bin/sh
-sudo apt install ansible
+sudo apt install ansible -y
 sudo ansible-playbook install.yaml
 sudo mkdir -p /opt/AEAS/
 sudo cp ElectronReact-4.6.0.AppImage /opt/AEAS/AEAS.AppImage
