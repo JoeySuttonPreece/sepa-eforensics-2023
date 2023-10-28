@@ -355,9 +355,12 @@ function pdfTimeline(timeline: TimelineEntry[], doc: PDF, y: number): number {
         }
       }
     }
-    doc.line(30, y - doc.getLineHeight() / 2, 200, y - doc.getLineHeight() / 2);
+
+    if (y + 10 > doc.internal.pageSize.height) {
+      doc.addPage();
+      y = 20;
+    }
   }
-  doc.line(27, start, 27, y);
   doc.setFontSize(14);
   return y;
 }
