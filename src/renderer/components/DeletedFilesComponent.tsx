@@ -8,7 +8,7 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
         <tr>
           <th>Inode</th>
           <th>FilePath</th>
-          <th>True Ext.</th>
+          {/* <th>True Ext.</th> */}
           <th>Size</th>
           <th>MAC Date</th>
           <th>Hash</th>
@@ -18,7 +18,7 @@ function DeletedFilesComponent({ deletedFiles }: { deletedFiles: File[] }) {
             <tr key={index}>
               <td>{deleted.inode}</td>
               <td>{deleted.fileName}</td>
-              <td>{deleted.fileNameFileType}</td>
+              {/* <td>{deleted.fileNameFileType}</td> */}
 
               {/* size was missing, but not sure to call it as this or as
               part of file like in renamed */}
