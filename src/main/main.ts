@@ -226,7 +226,8 @@ app
 
       if (output != null) {
         Print(output, report ?? 'json', out ?? 'stdout');
-        console.log('AEAS done!!!');
+        console.log('\nAnalysis Complete');
+        app.quit();
       }
     } else {
       createWindow();
