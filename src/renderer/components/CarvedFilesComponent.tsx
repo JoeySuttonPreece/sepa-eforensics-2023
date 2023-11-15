@@ -1,4 +1,5 @@
 import { CarvedFile } from 'domain/other-cli-tools';
+import styles from '../pages/ReportPage/ReportPage.scss';
 
 export default function CarvedFilesComponent({
   carvedFiles,
@@ -6,28 +7,30 @@ export default function CarvedFilesComponent({
   carvedFiles: CarvedFile[];
 }) {
   return (
-    <table>
-      <caption>Carved Files</caption>
-      <tbody>
-        <tr>
-          <th>File Name</th>
-          <th>Size</th>
-          <th>Sector</th>
-          <th>Modified Date</th>
-          <th>Filetype</th>
-        </tr>
-        {carvedFiles?.map((file) => {
-          return (
-            <tr key={file.filename}>
-              <td>{file.filename}</td>
-              <td>{file.size}</td>
-              <td>{file.sector}</td>
-              <td>{file.modifiedDate?.toLocaleString()}</td>
-              <td>{file.finalfileextension}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <>
+      <h2 className={styles.tableTitle}>Carved Files</h2>
+      <table className={styles.tableSingleHeader}>
+        <tbody>
+          <tr>
+            <th>File Name</th>
+            <th>Size</th>
+            <th>Sector</th>
+            <th>Modified Date</th>
+            <th>Filetype</th>
+          </tr>
+          {carvedFiles?.map((file) => {
+            return (
+              <tr key={file.filename}>
+                <td>{file.filename}</td>
+                <td>{file.size}</td>
+                <td>{file.sector}</td>
+                <td>{file.modifiedDate?.toLocaleString()}</td>
+                <td>{file.finalfileextension}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
   );
 }

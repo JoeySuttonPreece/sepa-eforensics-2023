@@ -9,7 +9,7 @@ export default function StartPage() {
   const { setStatus, setMenuItems } = useLayout();
   const navigate = useNavigate();
   const [imageValid, setImageValid] = useState(false);
-  const [imageStatus, setImageStatus] = useState('enter image path above');
+  const [imageStatus, setImageStatus] = useState('');
   const [imagePath, setImagePath] = useState(''); // this is used for the display imagepath in the input box
   // this stores the actual imagePath which is usually the same as the input, but may be different in the case of zip as extraction occurs first
   const imagePathRef = useRef(''); // ref because doesn't require rerender on change
@@ -95,6 +95,7 @@ export default function StartPage() {
             type="text"
             id="imagePath"
             value={imagePath}
+            placeholder="Path to disk image"
             onChange={(e) => {
               setImagePath(e.currentTarget.value);
               handleValidateImage(e.currentTarget.value);
@@ -106,7 +107,7 @@ export default function StartPage() {
               handleFileSelect();
             }}
           >
-            Select Image
+            Browse...
           </button>
           <p>{imageStatus}</p>
         </div>
